@@ -83,3 +83,10 @@ def test_invalid_email_rejected_and_never_rendered_as_markup(anon, outbox):
 def test_magic_sent_page_escapes_email(anon):
     response = anon.post("/login", data={"email": "a+<b>@loge.test"})
     assert "<b>" not in response.text
+
+
+def test_register_confirmation_does_not_say_maybe_known(anon, outbox):
+    new = anon.post("/register", data={"name": "L", "email": "a@loge.test"}).text
+    again = anon.post("/register", data={"name": "L", "email": "a@loge.test"}).text
+    for html in (new, again):
+        assert "Falls die Adresse" not in html and "Wir haben eine E-Mail an a@loge.test gesendet" in html

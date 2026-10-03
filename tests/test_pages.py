@@ -113,3 +113,22 @@ def test_vote_page_has_no_site_navigation(create_election, anon):
     _, tokens = create_election()
     html = anon.get(f"/v/{tokens['a@x.test']}").text
     assert 'class="main-nav"' not in html and 'href="/register"' not in html
+
+
+def test_new_election_defaults(orga):
+    html = orga.get("/elections/new").text
+    assert 'value="Weiß, Schwarz, Enthaltung"' in html
+    assert re.search(r'name="reminder_enabled" value="true" checked', html)
+
+
+def test_scheduled_election_is_not_shown_as_running(create_election, orga):
+    election_id, _ = create_election(start=60 * 24, end=60 * 48)
+    assert "Geplant" in orga.get("/dashboard").text
+    assert "Geplant" in orga.get(f"/elections/{election_id}").text
+    other, _ = create_election(title="läuft", start=-5, end=60)
+    assert "Läuft" in orga.get(f"/elections/{other}").text
+
+
+def test_dark_mode_sets_native_color_scheme(anon):
+    css = anon.get("/static/style.css").text
+    assert "color-scheme: dark" in css

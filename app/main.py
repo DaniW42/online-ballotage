@@ -63,6 +63,8 @@ def _template_context(request: Request) -> dict:
         "cfg": settings,
         "now_year": utcnow().year,
         "static_v": STATIC_VERSION,
+        "phase": election_phase,
+        "reminder_hours": settings.reminder_hours_before,
         "base_url": settings.base_url,
     }
 
@@ -142,6 +144,13 @@ PUBLIC_PAGES = {
 }
 
 
+def election_phase(election: Election) -> str:
+    """Anzeigestatus: scheduled | open | finished | aborted ('open' erst ab Beginn)."""
+    if election.status == "open" and utcnow() < election.starts_at:
+        return "scheduled"
+    return election.status
+
+
 def _register_public(path: str, template: str):
     def view(request: Request):
         return render(request, template)
@@ -214,7 +223,9 @@ def register_submit(
 
     if limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
         _send_magic_link(background_tasks, db, org, request.state.lang)
-    return render(request, "magic_sent.html", {"email": email, "minutes": settings.magic_link_ttl_minutes})
+    # Gleiche Antwort für neue und bestehende Adressen (keine Enumeration)
+    return render(request, "magic_sent.html",
+                  {"email": email, "minutes": settings.magic_link_ttl_minutes, "registered": True})
 
 
 @app.get("/login", response_class=HTMLResponse)

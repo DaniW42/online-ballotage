@@ -139,7 +139,7 @@
       },
       {
         "t": "Abstimmung anlegen",
-        "d": "Titel, Beginn und Ende festlegen. Standard ist die klassische Kugelung mit Ja, Nein und Enthaltung; eigene Optionen sind möglich."
+        "d": "Titel, Beginn und Ende festlegen. Standard ist die klassische Kugelung mit Weiß, Schwarz und Enthaltung; eigene Optionen sind möglich."
       },
       {
         "t": "Empfänger einfügen",
@@ -341,7 +341,7 @@
           },
           {
             "q": "Welche Antwortmöglichkeiten gibt es?",
-            "a": "Standard ist die klassische Kugelung: Ja, Nein, Enthaltung. Unter „Erweiterte Einstellungen“ lassen sich eigene Optionen festlegen (mindestens zwei, kommagetrennt)."
+            "a": "Standard ist die klassische Kugelung: Weiß, Schwarz, Enthaltung. Unter „Erweiterte Einstellungen“ lassen sich eigene Optionen festlegen (mindestens zwei, kommagetrennt)."
           },
           {
             "q": "Wann endet eine Abstimmung?",
@@ -564,7 +564,8 @@
       "meta_title": "E-Mail unterwegs",
       "title": "E-Mail unterwegs",
       "text": "Falls die Adresse {email} bei uns bekannt ist, finden Sie dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
-      "hint": "Nichts erhalten? Schauen Sie auch im Spam-Ordner nach."
+      "hint": "Nichts erhalten? Schauen Sie auch im Spam-Ordner nach.",
+      "text_register": "Wir haben eine E-Mail an {email} gesendet. Darin finden Sie den Link zum Anmelden. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
     },
     "confirm": {
       "meta_title": "Anmelden",
@@ -587,7 +588,8 @@
     "status": {
       "open": "Läuft",
       "finished": "Beendet",
-      "aborted": "Abgebrochen"
+      "aborted": "Abgebrochen",
+      "scheduled": "Geplant"
     },
     "recipients_title": "Gespeicherte Empfängerliste",
     "recipients_text": "{n} Adressen werden bei neuen Abstimmungen vorbefüllt.",
@@ -615,14 +617,14 @@
       "options": "Abstimmungsoptionen",
       "options_hint": "Komma-getrennt, mindestens zwei. Standard ist die klassische Kugelung.",
       "reminder": "Erinnerung vor Fristende an alle, die noch nicht abgestimmt haben",
-      "reminder_hint": "Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
+      "reminder_hint": "Wird {h} Stunden vor Fristende versendet (entfällt bei Abstimmungen, die kürzer als {h} Stunden laufen). Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
       "receipts": "Stimmen nachprüfbar machen",
       "receipts_hint": "Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss wird eine Liste aller Stimmen (Code und Auswahl) angezeigt, damit jede Person prüfen kann, dass die eigene Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.",
       "submit": "Abstimmung erstellen und einladen",
       "err_min_voters": "Mindestens {n} E-Mail-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
       "err_options": "Mindestens zwei Abstimmungsoptionen angeben.",
       "err_unverified": "Ihre Loge wurde noch nicht freigegeben.",
-      "options_default": "Ja, Nein, Enthaltung"
+      "options_default": "Weiß, Schwarz, Enthaltung"
     },
     "detail": {
       "period": "Zeitraum",

@@ -3,6 +3,6 @@
 {% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <h1>{{ t('auth.sent.title') }}</h1>
-<div class="notice ok">{{ t('auth.sent.text', email=email, minutes=minutes) }}</div>
+<div class="notice ok">{% if registered %}{{ t('auth.sent.text_register', email=email, minutes=minutes) }}{% else %}{{ t('auth.sent.text', email=email, minutes=minutes) }}{% endif %}</div>
 <p class="hint">{{ t('auth.sent.hint') }}</p>
 {% endblock %}

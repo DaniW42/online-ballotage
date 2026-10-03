@@ -43,10 +43,10 @@
     <input type="text" id="options_raw" name="options_raw" value="{{ t('election.new.options_default') }}">
 
     <label class="check">
-      <input type="checkbox" name="reminder_enabled" value="true">
+      <input type="checkbox" name="reminder_enabled" value="true" checked>
       <span>{{ t('election.new.reminder') }}</span>
     </label>
-    <div class="hint">{{ t('election.new.reminder_hint') }}</div>
+    <div class="hint">{{ t('election.new.reminder_hint', h=reminder_hours) }}</div>
 
     <label class="check">
       <input type="checkbox" name="receipts_enabled" value="true">

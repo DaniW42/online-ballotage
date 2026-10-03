@@ -15,7 +15,7 @@
   <tr>
     <td>{{ e.title }}</td>
     <td>{{ fmt_date(e.starts_at) }} – {{ fmt_date(e.ends_at) }}</td>
-    <td><span class="status {{ e.status }}">{{ t('dashboard.status.' ~ e.status) }}</span></td>
+    <td><span class="status {{ phase(e) }}">{{ t('dashboard.status.' ~ phase(e)) }}</span></td>
     <td><a href="/elections/{{ e.id }}">{{ t('dashboard.details') }}</a></td>
   </tr>
   {% endfor %}

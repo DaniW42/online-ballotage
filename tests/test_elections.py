@@ -30,7 +30,7 @@ def test_options_default_dedupe_and_minimum(orga, db):
     orga.post("/elections/new", data=_form(ok))
     orga.post("/elections/new", data=_form(ok, options_raw="Rot, rot, Blau , ,Blau"))
     options = [e.options for e in db.query(Election).order_by(Election.created_at)]
-    assert options[0] == ["Ja", "Nein", "Enthaltung"]
+    assert options[0] == ["Weiß", "Schwarz", "Enthaltung"]  # klassische Kugelung
     assert options[1] == ["Rot", "Blau"]
     assert orga.post("/elections/new", data=_form(ok, options_raw="Nur eine")).status_code == 400
 

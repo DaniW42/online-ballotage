@@ -21,6 +21,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --bg: #11151d; --surface: #181e2a; --surface-alt: #1d2433; --fg: #e9e6df; --muted: #a2a8b6;
     --primary: #d9b872; --primary-fg: #11151d; --accent: #d9b872; --accent-soft: #2b2a24;
     --border: #2d3548; --error: #f0a0a0; --error-bg: #2e1c1f; --ok: #8fd0a6; --ok-bg: #18271f;
@@ -114,6 +115,7 @@ summary { cursor: pointer; font-weight: 600; }
 .notice p:last-child { margin-bottom: 0; }
 .badge { font-size: .75rem; background: var(--ok); color: #fff; padding: .1rem .5rem; border-radius: 999px; font-family: var(--sans); vertical-align: middle; }
 .status { display: inline-block; font-size: .8rem; padding: .05rem .6rem; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); }
+.status.scheduled { background: var(--accent-soft); border-color: var(--accent); }
 .status.open { background: var(--ok-bg); border-color: var(--ok); }
 .status.aborted { background: var(--error-bg); border-color: var(--error); }
 

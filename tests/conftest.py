@@ -133,7 +133,7 @@ def create_election(orga, outbox):
             "starts_at": local_input(start),
             "ends_at": local_input(end),
             "emails_raw": "\n".join(emails),
-            "options_raw": "",
+            "options_raw": "Ja, Nein, Enthaltung",
             **extra,
         }
         response = orga.post("/elections/new", data=data)

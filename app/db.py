@@ -50,7 +50,7 @@ class Election(Base):
     org_id = Column(UUID(as_uuid=False), ForeignKey("organizations.id"), nullable=False)
     title = Column(String, nullable=False)
     # Standard: klassische Kugelung. Über "Erweiterte Einstellungen" änderbar.
-    options = Column(JSON, default=lambda: ["Ja", "Nein", "Enthaltung"])
+    options = Column(JSON, default=lambda: ["Weiß", "Schwarz", "Enthaltung"])
     starts_at = Column(DateTime, nullable=False)
     ends_at = Column(DateTime, nullable=False)
     reminder_enabled = Column(Boolean, default=False, nullable=False)

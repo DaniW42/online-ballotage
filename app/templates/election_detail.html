@@ -4,7 +4,7 @@
 {% block content %}
 <div class="app-nav"><a href="/dashboard">{{ t('common.back') }}</a></div>
 
-<h1>{{ election.title }} <span class="status {{ election.status }}">{{ t('dashboard.status.' ~ election.status) }}</span></h1>
+<h1>{{ election.title }} <span class="status {{ phase(election) }}">{{ t('dashboard.status.' ~ phase(election)) }}</span></h1>
 <p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
 {% if message %}
