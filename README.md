@@ -32,8 +32,7 @@ statt "Open Source" zu bezeichnen.
    (Mailpit, nur für die Entwicklung) bewusst nicht. Lokal reicht
    `docker compose up -d --build`; Mails erscheinen dann auf
    http://localhost:8025.
-   Tabellen werden beim ersten Start automatisch angelegt (kein separater
-   Migrationsschritt für den aktuellen Stand nötig).
+   Die Tabellen werden beim Start per Alembic angelegt bzw. aktualisiert.
 
 3. Hinter Nginx Proxy Manager: Proxy-Host auf den `app`-Container,
    Port 8000, SSL aktivieren. Danach in `docker-compose.yml` den
@@ -56,11 +55,30 @@ statt "Open Source" zu bezeichnen.
   gespeichert. Magic Links und Wahl-Links sind strukturell identisch,
   nur mit unterschiedlicher Gültigkeitsdauer.
 
-## Offene Punkte (bewusst nicht im MVP)
+## Funktionen im Überblick
 
-- Erinnerungsmails vor Fristende (Feld `reminder_enabled` existiert bereits
-  im Datenmodell, es fehlt der Cron-/Scheduler-Job, der es ausliest)
-- Opt-in-Verifizierungsprozess für Logen (aktuell nur das `verified`-Flag
-  im Datenmodell, kein Antragsworkflow)
-- Alembic-Migrationen (aktuell `create_all` beim Start – für den MVP
-  ausreichend, bei Schema-Änderungen im Produktivbetrieb nachrüsten)
+Kurzfassung; die ausführliche Beschreibung steht in [docs/FAQ.md](docs/FAQ.md).
+
+- Abschluss bei Fristende oder wenn alle abgestimmt haben, Ergebnis einmalig per Mail
+- Abbruch (nie ein Ergebnis, Stimmen gelöscht), Verlängern solange offen
+- Mindestens 3 Eingeladene und 3 Stimmen, sonst kein Ergebnis
+- Teilnehmerliste, Nachladen, neuer Link, Versandstatus, Erinnerungen
+- Gespeicherte Empfängerliste pro Loge, Löschung eingeladener Adressen nach 30 Tagen
+- Optionale Prüfbarkeit (Quittungscode + Stimmenliste)
+
+Konfiguration über Umgebungsvariablen (siehe `.env.example` und `app/config.py`):
+`TIMEZONE`, `REQUIRE_VERIFICATION`, `MIN_VOTERS`, `RETENTION_DAYS`,
+`REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`.
+Alle sind in `docker-compose.yml` mit Standardwerten durchgereicht.
+
+Betrieb: genau **ein** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im
+Prozess). Schema-Änderungen laufen über Alembic (`migrations/`); der Container
+führt beim Start `alembic upgrade head` aus.
+
+## Offene Punkte
+
+- Antragsworkflow für die Verifizierung von Logen (aktuell: `REQUIRE_VERIFICATION`
+  plus `python -m app.cli verify`)
+- Mehrere Administratoren pro Loge
+- Automatisierte Tests (bisher nur manuelle End-to-End-Läufe)
+- Kryptografische Entkopplung von Token und Stimme (Blind Signatures)
