@@ -1,6 +1,14 @@
+# Container-Logs begrenzen (enthalten u. a. Fehlermeldungen des Mailversands)
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:16-alpine
+    logging: *default-logging
     restart: unless-stopped
     environment:
       POSTGRES_DB: kugelung
@@ -16,6 +24,7 @@ services:
 
   app:
     build: .
+    logging: *default-logging
     restart: unless-stopped
     depends_on:
       db:
