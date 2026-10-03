@@ -1,97 +1,87 @@
 {% extends "base.html" %}
 {% block title %}{{ election.title }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<nav><a href="/dashboard">&larr; Zurück zur Übersicht</a></nav>
+<div class="app-nav"><a href="/dashboard">{{ t('common.back') }}</a></div>
 
-<h1>{{ election.title }}</h1>
-<p>Zeitraum: {{ election.starts_at|local }} – {{ election.ends_at|local }}</p>
+<h1>{{ election.title }} <span class="status {{ election.status }}">{{ t('dashboard.status.' ~ election.status) }}</span></h1>
+<p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
-{% if message == "aborted" %}<div class="notice ok">Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.</div>{% endif %}
-{% if message == "extended" %}<div class="notice ok">Die Frist wurde verlängert.</div>{% endif %}
-{% if message == "extend_failed" %}<div class="notice error">Verlängern nicht möglich: Die Abstimmung ist nicht mehr offen oder das neue Ende liegt nicht nach dem bisherigen.</div>{% endif %}
-{% if message == "added" %}<div class="notice ok">{{ added }} neue Einladung(en) versendet. Bereits eingeladene Adressen wurden übersprungen.</div>{% endif %}
-{% if message == "reissued" %}<div class="notice ok">Neuer Link versendet; der alte ist ungültig.</div>{% endif %}
-{% if message == "reissue_failed" %}<div class="notice error">Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen).</div>{% endif %}
-{% if message == "not_open" %}<div class="notice error">Die Abstimmung ist nicht mehr offen.</div>{% endif %}
-
-<h2>Beteiligung</h2>
-<p>{{ used }} von {{ total }} haben abgestimmt.</p>
-<div class="hint">
-  Wer bereits abgestimmt hat, sehen Sie – was gestimmt wurde, ist technisch
-  nicht einsehbar, auch nicht für Sie als Organisator.
-</div>
-
-{% if election.purged %}
-<p class="hint">Die Einladungsdaten (Email-Adressen) wurden nach Ablauf der Aufbewahrungsfrist gelöscht.</p>
+{% if message %}
+<div class="notice {% if message in ('extend_failed', 'not_open', 'reissue_failed') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
 {% endif %}
+
+<h2>{{ t('election.detail.participation') }}</h2>
+<p>{{ t('election.detail.voted_of', used=used, total=total) }}</p>
+<div class="hint">{{ t('election.detail.participation_hint') }}</div>
+
+{% if election.purged %}<p class="hint">{{ t('election.detail.purged') }}</p>{% endif %}
 {% if invitations %}
+<div class="table-wrap">
 <table>
-  <tr><th>Adresse</th><th>Stimme</th><th>Mail</th>{% if election.status == "open" %}<th></th>{% endif %}</tr>
+  <tr><th>{{ t('election.detail.col_email') }}</th><th>{{ t('election.detail.col_vote') }}</th><th>{{ t('election.detail.col_mail') }}</th>{% if election.status == "open" %}<th></th>{% endif %}</tr>
   {% for inv in invitations %}
   <tr>
     <td>{{ inv.email }}</td>
-    <td>{% if inv.used %}abgegeben{% else %}ausstehend{% endif %}</td>
-    <td>{% if inv.send_error %}<span style="color:var(--error)" title="{{ inv.send_error }}">Fehler</span>{% elif inv.sent_at %}gesendet{% else %}wird gesendet…{% endif %}</td>
+    <td>{% if inv.used %}{{ t('election.detail.vote_cast') }}{% else %}{{ t('election.detail.vote_pending') }}{% endif %}</td>
+    <td>{% if inv.send_error %}<span title="{{ inv.send_error }}">{{ t('election.detail.mail_error') }}</span>{% elif inv.sent_at %}{{ t('election.detail.mail_sent') }}{% else %}{{ t('election.detail.mail_sending') }}{% endif %}</td>
     {% if election.status == "open" %}
     <td>{% if not inv.used %}
       <form method="post" action="/elections/{{ election.id }}/invitations/{{ inv.id }}/reissue" class="inline">
-        <button type="submit" class="linkbtn">Neuer Link</button>
+        <button type="submit" class="linkbtn">{{ t('election.detail.reissue') }}</button>
       </form>{% endif %}</td>
     {% endif %}
   </tr>
   {% endfor %}
 </table>
+</div>
 {% endif %}
 
 {% if election.status == "open" %}
-<p class="hint">Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird Ihnen dann einmalig per E-Mail geschickt.</p>
+<p class="hint">{{ t('election.detail.open_hint') }}</p>
 
-<h2>Weitere Wähler einladen</h2>
+<h2>{{ t('election.detail.add_title') }}</h2>
 <form method="post" action="/elections/{{ election.id }}/voters">
-  <textarea name="emails_raw" placeholder="Email-Adressen, beliebig formatiert"></textarea>
-  <div class="hint">Bereits eingeladene Adressen werden übersprungen – jede Adresse kann nur einmal abstimmen.</div>
-  <button type="submit" class="secondary">Einladen</button>
+  <textarea name="emails_raw" placeholder="{{ t('election.detail.add_ph') }}"></textarea>
+  <div class="hint">{{ t('election.detail.add_hint') }}</div>
+  <button type="submit" class="secondary">{{ t('election.detail.add_submit') }}</button>
 </form>
 
-<h2>Verlängern</h2>
+<h2>{{ t('election.detail.extend_title') }}</h2>
 <form method="post" action="/elections/{{ election.id }}/extend">
-  <label for="ends_at">Neues Ende</label>
+  <label for="ends_at">{{ t('election.detail.extend_label') }}</label>
   <input type="datetime-local" id="ends_at" name="ends_at" required>
-  <button type="submit" class="secondary">Frist verlängern</button>
+  <button type="submit" class="secondary">{{ t('election.detail.extend_submit') }}</button>
 </form>
 
-<h2>Abbrechen</h2>
-<p class="hint">Bricht die Abstimmung ab. Es wird <strong>nie</strong> ein Ergebnis angezeigt, die bisherigen Stimmen werden gelöscht.</p>
-<form method="post" action="/elections/{{ election.id }}/abort" onsubmit="return confirm('Abstimmung wirklich abbrechen? Das kann nicht rückgängig gemacht werden.')">
-  <button type="submit" class="secondary">Abstimmung abbrechen</button>
-</form>
+<h2>{{ t('election.detail.abort_title') }}</h2>
+<div class="hint">{{ t('election.detail.abort_hint')|md }}</div>
+<p><a class="btn secondary" href="/elections/{{ election.id }}/abort">{{ t('election.detail.abort_submit') }}</a></p>
 
 {% elif election.status == "aborted" %}
-<div class="notice error">Diese Abstimmung wurde abgebrochen. Es gibt kein Ergebnis.</div>
+<div class="notice error">{{ t('election.detail.aborted') }}</div>
 
 {% else %}
-<h2>Ergebnis</h2>
-<p class="hint">
-  {% if election.finish_reason == "all_voted" %}Beendet, weil alle abgestimmt haben.{% else %}Beendet, weil die Frist abgelaufen ist.{% endif %}
-</p>
+<h2>{{ t('election.detail.result_title') }}</h2>
+<p class="hint">{{ t('election.detail.reason_' ~ election.finish_reason) }}</p>
 {% if results %}
 <table>
   {% for choice, count in results.items() %}
   <tr><td>{{ choice }}</td><td>{{ count }}</td></tr>
   {% endfor %}
 </table>
-<p class="hint">Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.</p>
+<p class="hint">{{ t('election.detail.result_note') }}</p>
 {% if ballots %}
 <details>
-  <summary>Alle Stimmen zur Nachprüfung ({{ ballots|length }})</summary>
-  <p class="hint">Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge.</p>
+  <summary>{{ t('election.detail.ballots_title', n=ballots|length) }}</summary>
+  <p class="hint">{{ t('election.detail.ballots_hint') }}</p>
   <table>
     {% for code, choice in ballots %}<tr><td><code>{{ code }}</code></td><td>{{ choice }}</td></tr>{% endfor %}
   </table>
 </details>
 {% endif %}
 {% else %}
-<div class="notice error">Weniger als {{ min_voters }} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt; die Stimmen wurden gelöscht.</div>
+<div class="notice error">{{ t('election.detail.suppressed', n=min_voters) }}</div>
 {% endif %}
 {% endif %}
 {% endblock %}

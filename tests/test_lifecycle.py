@@ -57,7 +57,12 @@ def test_fewer_than_three_votes_means_no_result_and_votes_deleted(create_electio
 def test_abort_deletes_votes_and_never_shows_result(create_election, anon, orga, db, outbox):
     election_id, tokens = create_election()
     _vote(anon, tokens, {"a@x.test": "Ja", "b@x.test": "Ja"})
-    assert orga.post(f"/elections/{election_id}/abort").status_code == 303
+    # ohne Bestätigung passiert nichts - der Abbruch geht nur über die Bestätigungsseite
+    unconfirmed = orga.post(f"/elections/{election_id}/abort")
+    assert unconfirmed.headers["location"].endswith(f"/elections/{election_id}/abort")
+    assert db.query(Vote).count() == 2
+    assert orga.get(f"/elections/{election_id}/abort").status_code == 200
+    assert orga.post(f"/elections/{election_id}/abort", data={"confirm": "yes"}).status_code == 303
     assert db.query(Vote).count() == 0
     page = orga.get(f"/elections/{election_id}").text
     assert "<td>Ja</td>" not in page

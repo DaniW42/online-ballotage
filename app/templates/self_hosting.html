@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('selfhost.meta_title') }}{% endblock %}
+{% block description %}{{ t('selfhost.meta_description') }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <div class="page-head"><h1>{{ t('selfhost.title') }}</h1><p class="lead">{{ t('selfhost.lead') }}</p></div>
+  {% for s in tl('selfhost.sections') %}
+  <h2>{{ s.t }}</h2>
+  {{ s.p|md }}
+  {% if s.code %}<pre><code>{{ s.code }}</code></pre>{% endif %}
+  {% endfor %}
+</div>
+{% endblock %}

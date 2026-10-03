@@ -1,0 +1,13 @@
+{% if cfg.legal_complete %}
+<address>
+  {{ cfg.legal_name }}<br>
+  {{ cfg.legal_street }}<br>
+  {{ cfg.legal_city }}<br>
+  {{ cfg.legal_country }}
+</address>
+<p>{{ t('impressum.email') }}: <a href="mailto:{{ cfg.legal_email }}">{{ cfg.legal_email }}</a>
+{% if cfg.legal_phone %}<br>{{ t('impressum.phone') }}: {{ cfg.legal_phone }}{% endif %}
+{% if cfg.legal_vat_id %}<br>{{ t('impressum.vat') }}: {{ cfg.legal_vat_id }}{% endif %}</p>
+{% else %}
+<div class="notice error">{{ t('impressum.missing')|md }}</div>
+{% endif %}

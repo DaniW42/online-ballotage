@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Registrieren{% endblock %}
+{% block title %}{{ t('auth.register.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<h1>Neue Loge anlegen</h1>
-<p>Kein Passwort nötig. Sie melden sich künftig per Link an, den Sie per Email erhalten.</p>
-<form method="post" action="/register">
-  <label for="name">Name der Loge</label>
-  <input type="text" id="name" name="name" required>
-
-  <label for="email">Email-Adresse (für den Login)</label>
-  <input type="email" id="email" name="email" required>
-  <div class="hint">An diese Adresse senden wir künftig Ihre Login-Links.</div>
-
-  <button type="submit">Loge anlegen</button>
+<h1>{{ t('auth.register.title') }}</h1>
+<p>{{ t('auth.register.lead') }}</p>
+<form method="post" action="/register" class="card-form">
+  <label for="name">{{ t('auth.register.name') }}</label>
+  <input type="text" id="name" name="name" required autocomplete="organization">
+  <label for="email">{{ t('auth.register.email') }}</label>
+  <input type="email" id="email" name="email" required autocomplete="email">
+  <div class="hint">{{ t('auth.register.email_hint') }}</div>
+  <div class="actions"><button type="submit">{{ t('auth.register.submit') }}</button></div>
+  <div class="hint">{{ t('auth.register.privacy_note')|md }}</div>
 </form>
-<p style="margin-top:2rem">Schon registriert? <a href="/login">Hier anmelden</a></p>
+<p>{{ t('auth.register.have_account') }} <a href="/login">{{ t('auth.register.login_link') }}</a></p>
 {% endblock %}

@@ -1,10 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Email gesendet{% endblock %}
+{% block title %}{{ t('auth.sent.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<h1>Email unterwegs</h1>
-<div class="notice ok">
-  Falls die Adresse <strong>{{ email }}</strong> bei uns bekannt ist, finden Sie dort
-  in Kürze einen Anmelde-Link. Der Link ist 15 Minuten gültig und kann nur einmal
-  verwendet werden.
-</div>
+<h1>{{ t('auth.sent.title') }}</h1>
+<div class="notice ok">{{ t('auth.sent.text', email=email, minutes=15)|md }}</div>
+<p class="hint">{{ t('auth.sent.hint') }}</p>
 {% endblock %}

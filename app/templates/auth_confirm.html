@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Anmelden{% endblock %}
+{% block title %}{{ t('auth.confirm.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<h1>Anmeldung bestätigen</h1>
-<form method="post" action="/auth/{{ token }}">
-  <p>Mit einem Klick melden Sie sich an.</p>
-  <button type="submit">Jetzt anmelden</button>
+<h1>{{ t('auth.confirm.title') }}</h1>
+<form method="post" action="/auth/{{ token }}" class="card-form">
+  <p>{{ t('auth.confirm.text') }}</p>
+  <button type="submit">{{ t('auth.confirm.submit') }}</button>
 </form>
 {% endblock %}

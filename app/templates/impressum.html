@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ t('impressum.meta_title') }}{% endblock %}
+{% block description %}{{ t('impressum.meta_description') }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>{{ t('impressum.title') }}</h1>
+  <h2>{{ t('impressum.provider') }}</h2>
+  {% include "_controller.html" %}
+  {% for s in tl('impressum.sections') %}<h2>{{ s.t }}</h2>{{ s.p|md }}{% endfor %}
+</div>
+{% endblock %}

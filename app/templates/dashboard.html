@@ -1,41 +1,37 @@
 {% extends "base.html" %}
-{% block title %}Übersicht{% if org.saved_recipients %}
-<h2>Gespeicherte Empfängerliste</h2>
-<p class="hint">{{ org.saved_recipients|length }} Adressen werden bei neuen Abstimmungen vorbefüllt.</p>
-<form method="post" action="/recipients/clear" onsubmit="return confirm('Gespeicherte Empfängerliste löschen?')">
-  <button type="submit" class="secondary">Liste löschen</button>
-</form>
-{% endif %}
-{% endblock %}
-{% block content %}
-<nav>
-  {{ org.name }}
-  {% if org.verified %}<span class="badge">Verifiziert</span>{% endif %}
-  &middot; <form method="post" action="/logout" class="inline"><button type="submit" class="linkbtn">Abmelden</button></form>
-</nav>
-
-<h1>Ihre Abstimmungen</h1>
-<p><a class="btn" href="/elections/new">+ Neue Abstimmung</a></p>
+{% block title %}{{ t('dashboard.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+<div class="app-nav"><span>{{ org.name }} {% if org.verified %}<span class="badge">{{ t('dashboard.verified') }}</span>{% endif %}</span></div>
+<h1>{{ t('dashboard.title') }}</h1>
+<p><a class="btn" href="/elections/new">{{ t('dashboard.new') }}</a></p>
 
 {% if elections %}
+<div class="table-wrap">
 <table>
-  <tr><th>Titel</th><th>Zeitraum</th><th></th></tr>
+  <tr><th>{{ t('dashboard.col_title') }}</th><th>{{ t('dashboard.col_period') }}</th><th>{{ t('dashboard.col_status') }}</th><th></th></tr>
   {% for e in elections %}
   <tr>
     <td>{{ e.title }}</td>
-    <td>{{ e.starts_at|local_date }} – {{ e.ends_at|local_date }}</td>
-    <td><a href="/elections/{{ e.id }}">Details</a></td>
+    <td>{{ fmt_date(e.starts_at) }} – {{ fmt_date(e.ends_at) }}</td>
+    <td><span class="status {{ e.status }}">{{ t('dashboard.status.' ~ e.status) }}</span></td>
+    <td><a href="/elections/{{ e.id }}">{{ t('dashboard.details') }}</a></td>
   </tr>
   {% endfor %}
 </table>
+</div>
 {% else %}
-<p>Noch keine Abstimmung angelegt.</p>
+<p>{{ t('dashboard.empty') }}</p>
 {% endif %}
+
 {% if org.saved_recipients %}
-<h2>Gespeicherte Empfängerliste</h2>
-<p class="hint">{{ org.saved_recipients|length }} Adressen werden bei neuen Abstimmungen vorbefüllt.</p>
-<form method="post" action="/recipients/clear" onsubmit="return confirm('Gespeicherte Empfängerliste löschen?')">
-  <button type="submit" class="secondary">Liste löschen</button>
+<h2>{{ t('dashboard.recipients_title') }}</h2>
+<p class="hint">{{ t('dashboard.recipients_text', n=org.saved_recipients|length) }}</p>
+<form method="post" action="/recipients/clear" data-confirm="{{ t('dashboard.recipients_confirm') }}">
+  <button type="submit" class="secondary">{{ t('dashboard.recipients_delete') }}</button>
 </form>
 {% endif %}
+</div>
+<script src="/static/js/confirm.js"></script>
 {% endblock %}

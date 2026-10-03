@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ t('security.meta_title') }}{% endblock %}
+{% block description %}{{ t('security.meta_description') }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <div class="page-head"><h1>{{ t('security.title') }}</h1><p class="lead">{{ t('security.lead') }}</p></div>
+
+  <h2>{{ t('security.principle_title') }}</h2>
+  {{ t('security.principle')|md }}
+  <div class="card">{% include "_diagram.html" %}</div>
+
+  <h2>{{ t('security.data_title') }}</h2>
+  <div class="table-wrap">
+    <table>
+      <tr>{% for h in tl('security.data_head') %}<th>{{ h }}</th>{% endfor %}</tr>
+      {% for row in tl('security.data_rows') %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+    </table>
+  </div>
+
+  {% for s in tl('security.sections') %}
+  <h2>{{ s.t }}</h2>
+  {{ s.p|md }}
+  {% endfor %}
+
+  <h2>{{ t('security.limits_title') }}</h2>
+  <div class="notice error">{{ t('security.limits')|md }}</div>
+
+  <h2>{{ t('security.report_title') }}</h2>
+  {{ t('security.report')|md }}
+  <h2>{{ t('security.source_title') }}</h2>
+  {{ t('security.source')|md }}
+</div>
+{% endblock %}

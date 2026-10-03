@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('source.meta_title') }}{% endblock %}
+{% block description %}{{ t('source.meta_description') }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <div class="page-head"><h1>{{ t('source.title') }}</h1><p class="lead">{{ t('source.lead') }}</p></div>
+  {% if cfg.repo_url %}<p><a class="btn" href="{{ cfg.repo_url }}" rel="noopener">{{ t('source.repo') }}</a></p>{% endif %}
+  <h2>{{ t('source.license_title') }}</h2>
+  {{ t('source.license')|md }}
+  <h2>{{ t('source.verify_title') }}</h2>
+  {{ t('source.verify')|md }}
+</div>
+{% endblock %}

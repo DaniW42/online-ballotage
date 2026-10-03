@@ -1,12 +1,85 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ t('meta.html_lang') }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Kugelung{% endblock %}</title>
+  <title>{% block title %}{{ t('brand.tagline') }}{% endblock %} – {{ t('brand.name') }}</title>
+  <meta name="description" content="{% block description %}{{ t('brand.tagline') }}{% endblock %}">
+  <meta name="robots" content="{% block robots %}index,follow{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ t('brand.name') }}">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  {% block content %}{% endblock %}
+  <a class="skip" href="#main">{{ t('nav.skip') }}</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="{{ t('brand.name') }} – {{ t('nav.home') }}">
+        {% include "_logo.html" %}
+        <span>{{ t('brand.name') }}</span>
+      </a>
+      <nav class="main-nav" aria-label="{{ t('nav.main') }}">
+        <a href="/how-it-works"{% if request.url.path == '/how-it-works' %} aria-current="page"{% endif %}>{{ t('nav.how') }}</a>
+        <a href="/security"{% if request.url.path == '/security' %} aria-current="page"{% endif %}>{{ t('nav.security') }}</a>
+        <a href="/faq"{% if request.url.path == '/faq' %} aria-current="page"{% endif %}>{{ t('nav.faq') }}</a>
+        <a href="/self-hosting"{% if request.url.path == '/self-hosting' %} aria-current="page"{% endif %}>{{ t('nav.selfhost') }}</a>
+      </nav>
+      <div class="header-actions">
+        {% if logged_in %}
+          <a href="/dashboard">{{ t('nav.dashboard') }}</a>
+          <form method="post" action="/logout" class="inline"><button type="submit" class="linkbtn">{{ t('nav.logout') }}</button></form>
+        {% else %}
+          <a href="/login">{{ t('nav.login') }}</a>
+          <a class="btn" href="/register">{{ t('nav.register') }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    {% block main %}<div class="wrap narrow">{% block content %}{% endblock %}</div>{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/">{% include "_logo.html" %}<span>{{ t('brand.name') }}</span></a>
+          <p>{{ t('footer.blurb') }}</p>
+        </div>
+        <div>
+          <h2>{{ t('footer.product') }}</h2>
+          <ul>
+            <li><a href="/how-it-works">{{ t('nav.how') }}</a></li>
+            <li><a href="/security">{{ t('nav.security') }}</a></li>
+            <li><a href="/faq">{{ t('nav.faq') }}</a></li>
+            <li><a href="/self-hosting">{{ t('nav.selfhost') }}</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>{{ t('footer.legal') }}</h2>
+          <ul>
+            <li><a href="/impressum">{{ t('footer.imprint') }}</a></li>
+            <li><a href="/datenschutz">{{ t('footer.privacy') }}</a></li>
+            <li><a href="/source">{{ t('footer.source') }}</a></li>
+          </ul>
+        </div>
+        {% if languages|length > 1 %}
+        <div class="lang-switch">
+          <h2>{{ t('footer.language') }}</h2>
+          <ul>
+            {% for code, name in languages %}
+            <li><a href="/lang/{{ code }}?next={{ request.url.path }}"{% if code == lang %} aria-current="true"{% endif %} lang="{{ code }}">{{ name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+      <p class="footer-note">© {{ now_year }} {{ cfg.legal_name or t('brand.name') }} · {{ t('footer.license_note') }}</p>
+    </div>
+  </footer>
 </body>
 </html>

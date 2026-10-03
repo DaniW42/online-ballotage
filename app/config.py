@@ -15,6 +15,19 @@ class Settings(BaseSettings):
     # Magic Links: Gültigkeitsdauer in Minuten
     magic_link_ttl_minutes: int = 15
 
+    # Anbieterkennzeichnung (Impressum/Datenschutz). Muss für den öffentlichen
+    # Betrieb gesetzt werden; solange Pflichtangaben fehlen, zeigt die Seite
+    # einen deutlichen Hinweis.
+    legal_name: str = ""
+    legal_street: str = ""
+    legal_city: str = ""          # PLZ und Ort
+    legal_country: str = "Deutschland"
+    legal_email: str = ""
+    legal_phone: str = ""         # optional
+    legal_vat_id: str = ""        # optional (USt-IdNr.)
+    legal_hosting: str = ""       # optional: Hosting-Anbieter für die Datenschutzerklärung
+    repo_url: str = ""            # optional: Link zum Quelltext
+
     # Zeitzone, in der Beginn/Ende eingegeben und angezeigt werden.
     # Intern wird alles als naive UTC gespeichert.
     timezone: str = "Europe/Berlin"
@@ -37,6 +50,11 @@ class Settings(BaseSettings):
     # Rate-Limits (pro Stunde) für Login/Registrierung
     rate_limit_per_email: int = 5
     rate_limit_per_ip: int = 20
+
+
+    @property
+    def legal_complete(self) -> bool:
+        return all([self.legal_name, self.legal_street, self.legal_city, self.legal_email])
 
 
 settings = Settings()

@@ -1,16 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Stimme abgegeben{% endblock %}
+{% block title %}{{ t('vote.done_meta') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<h1>Vielen Dank</h1>
-<div class="notice ok">
-  Ihre Stimme zu "{{ election.title }}" wurde erfasst. Das Ergebnis wird hier
-  nicht angezeigt.
-</div>
+<h1>{{ t('vote.done_title') }}</h1>
+<div class="notice ok">{{ t('vote.done_text', title=election.title) }}</div>
 {% if code %}
-<p>Quittungscode: <code>{{ code }}</code></p>
-<p class="hint">Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung
-  erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person
-  zugeordnet; wer ihn kennt, kann Ihre Stimme erkennen – bewahren Sie ihn nur auf, wenn Sie
-  prüfen möchten.</p>
+<p>{{ t('vote.receipt') }}: <code>{{ code }}</code></p>
+<p class="hint">{{ t('vote.receipt_hint') }}</p>
 {% endif %}
 {% endblock %}

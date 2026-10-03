@@ -65,6 +65,9 @@ def test_privacy_headers(anon):
     response = anon.get("/login")
     assert response.headers["referrer-policy"] == "no-referrer"
     assert response.headers["cache-control"] == "no-store"
+    assert "unsafe-inline" not in response.headers["content-security-policy"]
+    assert response.headers["x-frame-options"] == "DENY"
+    assert anon.get("/static/style.css").headers["cache-control"].startswith("public")
 
 
 def test_vote_is_stored_without_link_to_invitation(db, create_election, anon):

@@ -1,17 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Link ungültig{% endblock %}
+{% block title %}{{ t('vote.invalid_meta') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
-<h1>Link nicht gültig</h1>
+<h1>{{ t('vote.invalid_title') }}</h1>
 <div class="notice error">
-  {% if reason == "used" %}
-    Mit diesem Link wurde bereits abgestimmt. Jeder Link ist nur einmal gültig.
-  {% elif reason == "window" %}
-    Diese Abstimmung ist aktuell nicht aktiv (Zeitraum: 
-    {{ election.starts_at|local }} – {{ election.ends_at|local }}).
-  {% elif reason == "bad_choice" %}
-    Ungültige Auswahl.
-  {% else %}
-    Dieser Link ist unbekannt oder fehlerhaft.
-  {% endif %}
+  {% if reason == "used" %}{{ t('vote.used') }}
+  {% elif reason == "window" %}{{ t('vote.window', start=fmt_dt(election.starts_at), end=fmt_dt(election.ends_at)) }}
+  {% elif reason == "bad_choice" %}{{ t('vote.bad_choice') }}
+  {% else %}{{ t('vote.unknown') }}{% endif %}
 </div>
 {% endblock %}

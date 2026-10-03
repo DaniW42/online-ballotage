@@ -1,0 +1,728 @@
+{
+  "meta": {
+    "name": "Deutsch",
+    "html_lang": "de",
+    "datetime_format": "%d.%m.%Y %H:%M",
+    "date_format": "%d.%m.%Y"
+  },
+  "brand": {
+    "name": "ballotage.online",
+    "tagline": "Anonyme Abstimmungen für Logen und Vereine"
+  },
+  "nav": {
+    "skip": "Zum Inhalt springen",
+    "home": "Startseite",
+    "how": "So funktioniert’s",
+    "security": "Sicherheit",
+    "faq": "FAQ",
+    "selfhost": "Selbst hosten",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "dashboard": "Dashboard",
+    "logout": "Abmelden",
+    "main": "Hauptnavigation"
+  },
+  "footer": {
+    "blurb": "Geheime Abstimmungen für Logen und Vereine – technisch so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat.",
+    "product": "Produkt",
+    "legal": "Rechtliches",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "source": "Quelltext & Lizenz",
+    "language": "Sprache",
+    "license_note": "Source-available unter der Elastic License 2.0"
+  },
+  "common": {
+    "back": "← Zurück zur Übersicht",
+    "optional": "optional",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "errors": {
+    "not_found": "Diese Seite gibt es nicht.",
+    "too_many": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+    "heading": "Hinweis",
+    "home": "Zur Startseite"
+  },
+  "home": {
+    "meta_title": "Anonyme Online-Kugelung für Logen und Vereine",
+    "meta_description": "ballotage.online: geheime Abstimmungen und Kugelungen per E-Mail-Link – ohne Passwort, technisch anonym, selbst hostbar und mit einsehbarem Quelltext.",
+    "eyebrow": "Digitale Kugelung",
+    "title": "Geheime Abstimmungen. Digital – und wirklich anonym.",
+    "lead": "ballotage.online ist das Werkzeug für Kugelungen und andere geheime Abstimmungen in Logen und Vereinen. Einladung per E-Mail, Stimme per Klick – und so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat. Auch der Organisator nicht.",
+    "cta_register": "Loge registrieren",
+    "cta_login": "Anmelden",
+    "cta_dashboard": "Zum Dashboard",
+    "cta_how": "So funktioniert’s",
+    "chips": [
+      "Kein Passwort nötig",
+      "Strukturell anonym",
+      "Quelltext einsehbar",
+      "Selbst hostbar"
+    ],
+    "steps_title": "In drei Schritten zum Ergebnis",
+    "steps": [
+      {
+        "t": "Anlegen",
+        "d": "Titel, Zeitraum und Empfänger festlegen. Adressen lassen sich einfach aus Outlook, Excel oder einer Mail einfügen – das Tool findet sie selbst."
+      },
+      {
+        "t": "Einladen",
+        "d": "Jede Person erhält einen persönlichen Einmal-Link. Kein Konto, kein Passwort, kein Download – ein Klick genügt."
+      },
+      {
+        "t": "Ergebnis erhalten",
+        "d": "Nach Fristende oder sobald alle abgestimmt haben, erhalten Sie das Ergebnis einmalig per E-Mail – mit der genauen Zahl je Option."
+      }
+    ],
+    "anon_title": "Anonymität ist gebaut, nicht versprochen",
+    "anon_lead": "Viele Tools versprechen Anonymität und trennen Stimme und Person nur über Zugriffsrechte. Hier ist die Trennung Teil der Datenstruktur: Es gibt schlicht keine Verbindung, die man auslesen könnte.",
+    "anon_points": [
+      "Stimmen und Einladungen liegen in getrennten Tabellen – ohne Fremdschlüssel, ohne gemeinsame ID.",
+      "Es wird kein Zeitpunkt der Stimmabgabe gespeichert. Eine Zuordnung über Zeitnähe ist damit nicht möglich.",
+      "Mindestens drei Stimmen, sonst gibt es kein Ergebnis – damit keine einzelne Stimme erkennbar wird."
+    ],
+    "anon_link": "Mehr zur Sicherheit",
+    "diagram_label": "Schema: Die Tabellen für Einladungen und Stimmen haben keine Verbindung zueinander.",
+    "diagram_inv": "Einladungen",
+    "diagram_inv_fields": "E-Mail-Adresse",
+    "diagram_inv_fields2": "hat abgestimmt: ja / nein",
+    "diagram_votes": "Stimmen",
+    "diagram_votes_fields": "Auswahl",
+    "diagram_votes_fields2": "Zufalls-ID",
+    "diagram_nolink": "keine Verbindung",
+    "features_title": "Gemacht für Kugelungen",
+    "features_lead": "Die Funktionen orientieren sich an dem, was Logen tatsächlich brauchen – nicht an dem, was Umfrage-Tools bieten.",
+    "features": [
+      {
+        "t": "Genaue Zählung",
+        "d": "Anzahl je Option, damit Ihre Loge nach ihrem eigenen Ritual und ihren eigenen Schwellenwerten bewerten kann."
+      },
+      {
+        "t": "Fristen im Griff",
+        "d": "Automatischer Abschluss bei Fristende oder wenn alle abgestimmt haben. Verlängern, solange die Abstimmung läuft."
+      },
+      {
+        "t": "Sauberer Abbruch",
+        "d": "Wird abgebrochen, gibt es nie ein Ergebnis und die Stimmen werden gelöscht – kein Spähen auf Zwischenstände."
+      },
+      {
+        "t": "Wer fehlt noch?",
+        "d": "Sehen Sie, wer schon abgestimmt hat – nicht, wie. Erinnerungen und neue Links gehen gezielt an die Offenen."
+      },
+      {
+        "t": "Empfängerliste merken",
+        "d": "Die zuletzt genutzte Liste wird vorbefüllt, wenn Sie die nächste Kugelung anlegen. Jederzeit löschbar."
+      },
+      {
+        "t": "Optional nachprüfbar",
+        "d": "Wer möchte, schaltet Quittungscodes ein: Jede Person kann prüfen, dass die eigene Stimme gezählt wurde."
+      }
+    ],
+    "open_title": "Offen einsehbar, selbst betreibbar",
+    "open_text": "Der Quelltext ist öffentlich einsehbar. Wer der Software nicht vertrauen will, muss es nicht: Sie läuft als Docker-Stack auch auf Ihrem eigenen Server.",
+    "open_link_source": "Quelltext & Lizenz",
+    "open_link_self": "Selbst hosten",
+    "cta_title": "Die nächste Kugelung digital?",
+    "cta_text": "Registrieren Sie Ihre Loge in einer Minute – ohne Passwort, ohne Kreditkarte."
+  },
+  "how": {
+    "meta_title": "So funktioniert’s",
+    "meta_description": "Von der Einladung bis zum Ergebnis: So läuft eine anonyme Online-Abstimmung mit ballotage.online ab.",
+    "title": "So funktioniert’s",
+    "lead": "Eine Abstimmung besteht aus wenigen Schritten – für Organisatoren und für Stimmberechtigte.",
+    "org_title": "Für Organisatoren",
+    "org_steps": [
+      {
+        "t": "Registrieren und anmelden",
+        "d": "Name der Loge und eine E-Mail-Adresse genügen. Sie melden sich künftig per Link an, der an diese Adresse geht – ohne Passwort."
+      },
+      {
+        "t": "Abstimmung anlegen",
+        "d": "Titel, Beginn und Ende festlegen. Standard ist die klassische Kugelung mit Ja, Nein und Enthaltung; eigene Optionen sind möglich."
+      },
+      {
+        "t": "Empfänger einfügen",
+        "d": "Adressen beliebig formatiert einfügen. Mindestens drei sind nötig. Die Liste wird für die nächste Kugelung vorbefüllt, wenn Sie das möchten."
+      },
+      {
+        "t": "Verlauf beobachten",
+        "d": "Sie sehen, wer bereits abgestimmt hat, und können nachträglich weitere Personen einladen oder einen verlorenen Link ersetzen."
+      },
+      {
+        "t": "Ergebnis erhalten",
+        "d": "Mit Fristende oder sobald alle abgestimmt haben, erhalten Sie das Ergebnis einmalig per E-Mail. Es bleibt außerdem auf der Detailseite einsehbar."
+      }
+    ],
+    "voter_title": "Für Stimmberechtigte",
+    "voter_steps": [
+      {
+        "t": "E-Mail öffnen",
+        "d": "Sie erhalten einen persönlichen Link. Er ist nur für Sie bestimmt und nur einmal gültig."
+      },
+      {
+        "t": "Auswahl treffen",
+        "d": "Sie wählen Ihre Option und senden ab. Es ist kein Konto und keine Installation nötig."
+      },
+      {
+        "t": "Fertig",
+        "d": "Ihre Stimme wird anonym erfasst. Der Link ist danach verbraucht, das Ergebnis sehen Sie dort nicht."
+      }
+    ],
+    "rules_title": "Die Spielregeln",
+    "rules_lead": "Einige Regeln sind bewusst fest eingebaut, weil sie die Anonymität schützen.",
+    "rules": [
+      {
+        "t": "Mindestens drei Empfänger und drei Stimmen",
+        "d": "Bei weniger Beteiligung würde die einzelne Stimme erkennbar. Dann gibt es kein Ergebnis, und die Stimmen werden gelöscht."
+      },
+      {
+        "t": "Kein Zwischenstand",
+        "d": "Das Ergebnis erscheint erst nach dem Ende – nie vorher, auch nicht teilweise."
+      },
+      {
+        "t": "Abbruch ohne Ergebnis",
+        "d": "Wer abbricht, sieht kein Ergebnis. Die bisherigen Stimmen werden gelöscht."
+      },
+      {
+        "t": "Nach dem Ende ist Schluss",
+        "d": "Verlängern und Nachladen weiterer Wähler sind nur möglich, solange die Abstimmung läuft. Sonst ließe sich eine Stimme aus dem Unterschied ableiten."
+      },
+      {
+        "t": "Eine Adresse, eine Stimme",
+        "d": "Jede Adresse wird pro Abstimmung nur einmal eingeladen, jeder Link gilt nur einmal."
+      }
+    ],
+    "cta": "Jetzt ausprobieren"
+  },
+  "security": {
+    "meta_title": "Sicherheit und Aufbau",
+    "meta_description": "Wie ballotage.online Anonymität und Sicherheit technisch umsetzt: Datentrennung, Tokens, Logging, Mindestbeteiligung – und wo die Grenzen liegen.",
+    "title": "Sicherheit und Aufbau",
+    "lead": "Eine geheime Abstimmung steht und fällt mit dem Vertrauen in die Technik. Deshalb beschreiben wir hier offen, wie das System aufgebaut ist, was es schützt – und was nicht.",
+    "principle_title": "Das Grundprinzip: Trennung durch Aufbau",
+    "principle": "Zwei Dinge dürfen nie zusammenkommen: **wer** abstimmen darf und **was** abgestimmt wurde. Beides liegt in getrennten Tabellen ohne jede Verbindung.\n\nDie Einladung weiß nur, dass eine Adresse bereits abgestimmt hat (ja oder nein). Die Stimme kennt nur die Auswahl und eine Zufalls-ID. Es gibt keinen Fremdschlüssel, keine gemeinsame ID und keinen Zeitstempel, über den sich beide wieder zusammenführen ließen. Auch der Organisator und der Administrator mit reinem Datenbankzugriff können Stimmen daher keiner Person zuordnen.",
+    "data_title": "Was gespeichert wird",
+    "data_head": [
+      "Daten",
+      "Inhalt",
+      "Aufbewahrung"
+    ],
+    "data_rows": [
+      [
+        "Organisation",
+        "Name der Loge, E-Mail-Adresse für den Login",
+        "bis zur Löschung der Organisation"
+      ],
+      [
+        "Einladung",
+        "E-Mail-Adresse, Versandstatus, ob abgestimmt wurde (ja/nein), Hash des Links",
+        "30 Tage nach Abschluss oder Abbruch, dann gelöscht"
+      ],
+      [
+        "Stimme",
+        "Gewählte Option, Zufalls-ID – ohne Zeitstempel und ohne Personenbezug",
+        "bleibt für das Ergebnis; sofort gelöscht bei Abbruch oder zu geringer Beteiligung"
+      ],
+      [
+        "Empfängerliste",
+        "zuletzt verwendete Adressen Ihrer Loge",
+        "bis Sie sie löschen"
+      ],
+      [
+        "Login-Links",
+        "Hash, Ablaufzeit",
+        "kurz gültig, nach Ablauf gelöscht"
+      ]
+    ],
+    "sections": [
+      {
+        "t": "Links und Tokens",
+        "p": "Jeder Link enthält ein zufälliges Token mit 256 Bit Entropie. Gespeichert wird nur dessen SHA-256-Hash, das Token selbst existiert nur in der E-Mail. Ein Datenbankauszug reicht deshalb nicht, um in fremdem Namen abzustimmen.\n\nLogin-Links werden erst durch einen Klick auf einen Button eingelöst, nicht schon beim bloßen Aufruf. So verbrauchen Link-Scanner von Mailsystemen sie nicht versehentlich."
+      },
+      {
+        "t": "Einmaligkeit und Gleichzeitigkeit",
+        "p": "Beim Absenden wird die Einladung in der Datenbank gesperrt. Doppelklicks oder doppelte Aufrufe zählen genau einmal. Stimme und „hat abgestimmt“-Markierung werden in einer einzigen Transaktion geschrieben: entweder beides oder nichts."
+      },
+      {
+        "t": "Keine Zeitstempel, keine Reihenfolge",
+        "p": "Weder bei Stimmen noch bei Einladungen wird festgehalten, wann abgestimmt wurde. Die Liste der Beteiligten ist alphabetisch sortiert, die optionale Stimmenliste nach Zufalls-ID. So lässt sich auch über Zeitnähe oder Einfügereihenfolge nichts zuordnen."
+      },
+      {
+        "t": "Logging",
+        "p": "Die Anwendung schreibt keine Zugriffsprotokolle, weil die Links geheime Tokens enthalten. Der vorgeschaltete Webserver ist so zu konfigurieren, dass er die Pfade `/v/` und `/auth/` ebenfalls nicht protokolliert. Seiten werden mit `no-store` und ohne Referrer ausgeliefert."
+      },
+      {
+        "t": "Mindestbeteiligung",
+        "p": "Eine Abstimmung braucht mindestens drei Empfänger. Ein Ergebnis wird nur angezeigt, wenn mindestens drei Stimmen abgegeben wurden. Andernfalls erscheint kein Ergebnis, und die Stimmen werden gelöscht."
+      },
+      {
+        "t": "Kein Zwischenstand, kein Nachladen",
+        "p": "Das Ergebnis erscheint erst nach Abschluss. Abbruch zeigt nie ein Ergebnis und löscht die Stimmen. Nach Abschluss lassen sich weder Frist verlängern noch Wähler nachladen – sonst ließe sich eine einzelne Stimme aus dem Unterschied zweier Zwischenstände ableiten."
+      },
+      {
+        "t": "Login ohne Passwort",
+        "p": "Organisatoren melden sich per Einmal-Link an, der 15 Minuten gültig ist. Es gibt keine Passwörter, die gestohlen werden können. Anfragen sind pro Adresse und IP begrenzt, die Antwort verrät nicht, ob eine Adresse existiert. Sitzungen laufen über signierte, nur per HTTP übertragene Cookies mit `SameSite=Lax`."
+      },
+      {
+        "t": "Browser-Härtung",
+        "p": "Die Seiten laden keinerlei Skripte, Schriften oder Bilder von Dritten. Eine strikte Content-Security-Policy erlaubt nur eigene Ressourcen. Es gibt keine Tracker und keine Analyse-Dienste."
+      },
+      {
+        "t": "Betrieb",
+        "p": "Der Container läuft ohne Root-Rechte. Das Datenbankschema wird über versionierte Migrationen verwaltet. Eine automatische Testsuite prüft die Anonymitäts-Eigenschaften bei jeder Änderung, etwa dass bei Stimmen kein Zeitstempel und keine Verbindung zu Einladungen existiert."
+      },
+      {
+        "t": "Optional: Nachprüfbarkeit",
+        "p": "Auf Wunsch der Loge erhalten Wähler einen Quittungscode. Nach Abschluss erscheint eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So kann jeder prüfen, dass die eigene Stimme enthalten ist. Standardmäßig ist das aus."
+      }
+    ],
+    "limits_title": "Die Grenzen – ehrlich benannt",
+    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank oder ein Backup liest, einschließlich Organisator und Administratoren mit reinem Datenbankzugriff.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Betreiben Sie eine Instanz deshalb in der Hand einer Stelle, der Ihre Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.",
+    "report_title": "Schwachstelle gefunden?",
+    "report": "Bitte melden Sie sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
+    "source_title": "Nachprüfen statt glauben",
+    "source": "Der gesamte Quelltext ist einsehbar, die Tests ebenfalls. Siehe [Quelltext & Lizenz](/source)."
+  },
+  "faq": {
+    "meta_title": "Häufige Fragen",
+    "meta_description": "Antworten zu Anonymität, Ablauf, Datenschutz und Betrieb von ballotage.online.",
+    "title": "Häufige Fragen",
+    "lead": "Hier steht, wie sich ballotage.online tatsächlich verhält. Weitere Details finden Sie unter [Sicherheit](/security).",
+    "groups": [
+      {
+        "t": "Grundlagen",
+        "items": [
+          {
+            "q": "Wofür ist das Tool gedacht?",
+            "a": "Für geheime Abstimmungen in Vereinen und Logen, zum Beispiel Kugelungen: Eine Person legt eine Abstimmung an, die Stimmberechtigten erhalten per E-Mail einen persönlichen Link und stimmen darüber anonym ab."
+          },
+          {
+            "q": "Brauche ich ein Passwort?",
+            "a": "Nein. Organisatoren melden sich mit einem Link an, den sie per E-Mail erhalten (15 Minuten gültig, einmal verwendbar). Wähler brauchen gar kein Konto, nur den Link aus ihrer Einladung."
+          },
+          {
+            "q": "Unter welcher Lizenz steht es?",
+            "a": "Der Quelltext steht unter der Elastic License 2.0. Sie dürfen die Software einsehen, nutzen, verändern und weitergeben, auch kommerziell. Nicht erlaubt ist, sie Dritten als gehosteten oder verwalteten Dienst mit im Wesentlichen gleicher Funktionalität anzubieten. Das ist „source-available“, aber nicht „Open Source“ im Sinne der OSI. Mehr dazu unter [Quelltext & Lizenz](/source)."
+          }
+        ]
+      },
+      {
+        "t": "Anonymität",
+        "items": [
+          {
+            "q": "Wie wird die Anonymität sichergestellt?",
+            "a": "Die Tabelle der Stimmen hat keine Verbindung zur Tabelle der Einladungen: keinen Fremdschlüssel, keine gemeinsame ID. Zusätzlich speichern wir bewusst keinen Zeitpunkt der Stimmabgabe. Die Einladung merkt sich nur „hat abgestimmt: ja/nein“, die Stimme nur Auswahl und eine Zufalls-ID. Die Liste der Beteiligten ist nach E-Mail-Adresse sortiert, nicht nach Reihenfolge."
+          },
+          {
+            "q": "Kann der Organisator sehen, wer wie abgestimmt hat?",
+            "a": "Nein. Er sieht, wer **schon abgestimmt hat** und wer noch nicht, aber nicht, wie. Das Ergebnis erscheint erst nach Abschluss."
+          },
+          {
+            "q": "Gegen wen schützt das, und gegen wen nicht?",
+            "a": "Es schützt gegen jeden, der nachträglich die Datenbank oder ein Backup liest, einschließlich des Organisators und von Administratoren mit reinem Datenbankzugriff.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert und den Programmcode verändert oder Zugriff auf alle Server- und Proxy-Logs hat. Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Eine kryptografische Lösung, die auch das ausschließt, bietet das Tool bisher nicht."
+          },
+          {
+            "q": "Was passiert bei sehr kleinen Gruppen?",
+            "a": "Eine Abstimmung braucht mindestens **drei** E-Mail-Adressen. Ein Ergebnis wird außerdem nur angezeigt, wenn mindestens drei Stimmen abgegeben wurden. Bei weniger würde die einzelne Stimme erkennbar. In diesem Fall wird kein Ergebnis angezeigt, und die abgegebenen Stimmen werden gelöscht.\n\nAuch bei größeren Gruppen gilt: Fällt das Ergebnis einstimmig aus, ist die Wahl jedes Einzelnen damit logischerweise bekannt. Das lässt sich technisch nicht vermeiden."
+          },
+          {
+            "q": "Kann dieselbe Person zweimal abstimmen?",
+            "a": "Pro Abstimmung wird jede E-Mail-Adresse nur einmal eingeladen, und jeder Link ist nur einmal gültig. Adressen werden in Kleinschreibung verglichen. Zwei verschiedene Adressen derselben Person (zum Beispiel `max@…` und `max+loge@…`) erkennt das Tool nicht als dieselbe Person. Das prüft die Loge bei der Empfängerliste."
+          }
+        ]
+      },
+      {
+        "t": "Ablauf einer Abstimmung",
+        "items": [
+          {
+            "q": "Wie lege ich eine Abstimmung an?",
+            "a": "Titel, Beginn und Ende angeben, E-Mail-Adressen einfügen (beliebig formatiert, etwa aus Outlook oder Excel; das Tool zieht die Adressen selbst heraus) und abschicken. Alle erhalten sofort ihren Link. Beginn und Ende gelten in der Zeitzone des Servers (Standard: Europe/Berlin)."
+          },
+          {
+            "q": "Welche Antwortmöglichkeiten gibt es?",
+            "a": "Standard ist die klassische Kugelung: Ja, Nein, Enthaltung. Unter „Erweiterte Einstellungen“ lassen sich eigene Optionen festlegen (mindestens zwei, kommagetrennt)."
+          },
+          {
+            "q": "Wann endet eine Abstimmung?",
+            "a": "Entweder wenn die Frist abläuft oder sobald alle Eingeladenen abgestimmt haben, je nachdem, was zuerst eintritt. Danach lassen sich keine Stimmen mehr abgeben."
+          },
+          {
+            "q": "Wann und wie bekomme ich das Ergebnis?",
+            "a": "Nach dem Ende wird das Ergebnis **einmalig** per E-Mail an den Organisator gesendet: Zeitraum, Beteiligung und Anzahl je Option. Es bleibt außerdem auf der Detailseite einsehbar. Vorher ist es nicht abrufbar, auch nicht teilweise. Die Bewertung, ab wann eine Kugelung als angenommen oder abgelehnt gilt, überlässt das Tool bewusst der Loge. Es zeigt die genaue Zahl je Option."
+          },
+          {
+            "q": "Kann ich eine Abstimmung abbrechen?",
+            "a": "Ja, nach einer zusätzlichen Bestätigung. Ein Abbruch zeigt **nie** ein Ergebnis an, und die bis dahin abgegebenen Stimmen werden gelöscht. Das ist Absicht: Sonst ließe sich eine Abstimmung nach den ersten Stimmen stoppen, um das Zwischenergebnis zu sehen."
+          },
+          {
+            "q": "Kann ich die Frist verlängern?",
+            "a": "Ja, solange die Abstimmung noch läuft. Nach dem Ende ist das nicht mehr möglich. Sonst ließe sich durch Verlängern und Nachladen weiterer Wähler eine einzelne Stimme aus der Differenz ableiten."
+          },
+          {
+            "q": "Wie lade ich nachträglich jemanden ein, oder wie stelle ich einen verlorenen Link neu aus?",
+            "a": "Auf der Detailseite einer laufenden Abstimmung: weitere Adressen einfügen (bereits eingeladene werden übersprungen) oder bei einer Person auf „Neuer Link“ klicken. Der alte Link wird dabei ungültig, und das funktioniert nur, solange die Person noch nicht abgestimmt hat. Gespeichert wird nur eine Prüfsumme des Links; deshalb lässt sich ein alter Link nicht noch einmal verschicken, nur ersetzen."
+          },
+          {
+            "q": "Was ist, wenn eine Einladung nicht ankommt?",
+            "a": "In der Teilnehmerliste sehen Sie pro Adresse, ob der Versand geklappt hat oder fehlgeschlagen ist. Mit „Neuer Link“ versenden Sie die Einladung erneut."
+          },
+          {
+            "q": "Gibt es Erinnerungen?",
+            "a": "Optional (Erweiterte Einstellungen): 24 Stunden vor Fristende erhalten alle, die noch nicht abgestimmt haben, eine Erinnerung. Sie enthält einen **neuen** Link; der früher zugesandte Link wird damit ungültig, und die Mail weist darauf hin. Bei Abstimmungen, die ohnehin nur kurz laufen, wird keine Erinnerung versendet."
+          },
+          {
+            "q": "Kann ich die Empfängerliste wiederverwenden?",
+            "a": "Ja. Die zuletzt verwendete Liste wird gespeichert und bei der nächsten Abstimmung vorbefüllt. Beim Anlegen können Sie das abwählen. Im Dashboard lässt sich die Liste jederzeit löschen."
+          }
+        ]
+      },
+      {
+        "t": "Nachprüfbarkeit",
+        "items": [
+          {
+            "q": "Kann ich als Wähler prüfen, dass meine Stimme gezählt wurde?",
+            "a": "Optional, vom Organisator einzuschalten (Erweiterte Einstellungen, „Stimmen nachprüfbar machen“). Dann erhalten Wähler nach der Stimmabgabe einen Quittungscode. Nach dem Ende erscheint eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So kann jeder prüfen, dass die eigene Stimme enthalten und korrekt erfasst ist. Der Code ist keiner Person zugeordnet. Wer ihn weitergibt, kann allerdings seine Stimme belegen. Ohne Aktivierung gibt es weder Code noch Liste; die Standardeinstellung ist aus."
+          }
+        ]
+      },
+      {
+        "t": "Datenschutz",
+        "items": [
+          {
+            "q": "Welche Daten werden gespeichert, und wie lange?",
+            "a": "- **Organisation:** Name der Loge und E-Mail-Adresse für den Login.\n- **Einladungen:** E-Mail-Adresse, Versandstatus und „hat abgestimmt“ je Wähler. Sie werden **30 Tage nach Abschluss oder Abbruch gelöscht**. Die Anzahl Eingeladener und Beteiligter bleibt als Zahl erhalten.\n- **Stimmen:** Auswahl und Zufalls-ID, ohne Zeitstempel, ohne Personenbezug. Sie bleiben für das Ergebnis erhalten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen unter drei Stimmen werden sofort gelöscht.\n- **Gespeicherte Empfängerliste:** bis Sie sie löschen.\n- **Login-Links:** werden nach Ablauf aufgeräumt.\n\nDetails stehen in der [Datenschutzerklärung](/datenschutz)."
+          },
+          {
+            "q": "Werden Daten an Dritte übertragen?",
+            "a": "Nur die E-Mails über den eingesetzten Mailserver. Es gibt keine Tracker, keine externen Schriftarten oder Skripte."
+          }
+        ]
+      },
+      {
+        "t": "Betrieb",
+        "items": [
+          {
+            "q": "Kann ich es selbst betreiben?",
+            "a": "Ja, als Docker-Stack. Siehe [Selbst hosten](/self-hosting). Sie benötigen einen SMTP-Zugang und am besten einen Reverse-Proxy oder die mitgelieferte Caddy-Variante mit automatischem HTTPS."
+          },
+          {
+            "q": "Kann sich jeder als Loge registrieren?",
+            "a": "Auf ballotage.online ja; der Login-Link beweist den Zugriff auf die E-Mail-Adresse. Selbst betriebene Instanzen können die Anlage von Abstimmungen auf freigegebene Logen beschränken. Login und Registrierung sind pro Adresse und IP begrenzt."
+          },
+          {
+            "q": "Gibt es weitere Sprachen?",
+            "a": "Die Oberfläche ist mehrsprachig aufgebaut; derzeit ist Deutsch verfügbar. Weitere Sprachen werden als einzelne Sprachdateien ergänzt."
+          }
+        ]
+      }
+    ]
+  },
+  "selfhost": {
+    "meta_title": "Selbst hosten",
+    "meta_description": "ballotage.online als Docker-Stack auf dem eigenen Server betreiben – mit eigenem Reverse-Proxy oder mit automatischem HTTPS über Caddy.",
+    "title": "Selbst hosten",
+    "lead": "Wer niemandem vertrauen möchte, betreibt die Software selbst. Sie läuft als Docker-Compose-Stack mit App, PostgreSQL und optional Caddy für HTTPS.",
+    "sections": [
+      {
+        "t": "Voraussetzungen",
+        "p": "- Ein Server mit Docker und Docker Compose\n- Eine Domain, die auf den Server zeigt\n- Ein SMTP-Zugang für den Mailversand"
+      },
+      {
+        "t": "Konfiguration",
+        "p": "Kopieren Sie `.env.example` nach `.env` und tragen Sie Datenbankpasswort, geheimen Schlüssel, öffentliche URL und SMTP-Zugang ein. Impressum und Datenschutz werden über die `LEGAL_*`-Variablen befüllt.",
+        "code": "cp .env.example .env\npython3 -c \"import secrets;print(secrets.token_urlsafe(32))\""
+      },
+      {
+        "t": "Variante A: Eigenständig mit automatischem HTTPS",
+        "p": "Die mitgelieferte Caddy-Konfiguration besorgt und erneuert Zertifikate selbst und schreibt keine Zugriffsprotokolle. Tragen Sie `SITE_ADDRESS` (Ihre Domain) in der `.env` ein und starten Sie:",
+        "code": "docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build"
+      },
+      {
+        "t": "Variante B: Hinter einem eigenen Reverse-Proxy",
+        "p": "Starten Sie nur die Anwendung und lassen Sie Ihren Proxy (z. B. Nginx Proxy Manager) auf Port 8000 des App-Containers zeigen. Wichtig:\n\n- Aktivieren Sie HTTPS.\n- Schließen Sie die Pfade `/v/` und `/auth/` vom Access-Log aus.\n- Setzen Sie `FORWARDED_ALLOW_IPS` auf die IP des Proxys, damit Rate-Limits die echte Client-IP sehen.",
+        "code": "docker compose -f docker-compose.yml up -d --build"
+      },
+      {
+        "t": "Hinweise zum Betrieb",
+        "p": "- Betreiben Sie genau **einen** App-Prozess; Wartungslauf und Rate-Limits liegen im Prozess.\n- Sichern Sie das Datenbank-Volume. Stimmen enthalten keine Personenbezüge, Einladungen schon.\n- Der Container führt beim Start die Datenbank-Migrationen aus.\n- Eine Gesundheitsprüfung steht unter `/healthz` bereit."
+      }
+    ]
+  },
+  "source": {
+    "meta_title": "Quelltext und Lizenz",
+    "meta_description": "ballotage.online ist source-available unter der Elastic License 2.0.",
+    "title": "Quelltext und Lizenz",
+    "lead": "Der Quelltext von ballotage.online ist öffentlich einsehbar. Vertrauen in eine geheime Abstimmung sollte sich prüfen lassen.",
+    "repo": "Quelltext ansehen",
+    "license_title": "Elastic License 2.0 (ELv2)",
+    "license": "Sie dürfen die Software einsehen, nutzen, verändern und weitergeben – auch kommerziell, etwa für Ihre Loge oder Ihren Verein.\n\nEinzige wesentliche Einschränkung: Niemand darf die Software Dritten als gehosteten oder verwalteten Dienst anbieten, der im Wesentlichen dieselbe Funktionalität bereitstellt. Außerdem dürfen Lizenzhinweise nicht entfernt werden.\n\nDas erfüllt nicht die Open-Source-Definition der OSI, weil sie jede Nutzungsbeschränkung ausschließt. Die korrekte Bezeichnung ist deshalb **source-available**.",
+    "verify_title": "Was Sie prüfen können",
+    "verify": "- Das Datenmodell: Die Tabelle der Stimmen hat weder Fremdschlüssel zu Einladungen noch Zeitstempel.\n- Den Ablauf der Stimmabgabe: eine Transaktion, keine Protokollierung von Tokens.\n- Die Tests, die diese Eigenschaften bei jeder Änderung absichern."
+  },
+  "impressum": {
+    "meta_title": "Impressum",
+    "meta_description": "Anbieterkennzeichnung von ballotage.online",
+    "title": "Impressum",
+    "missing": "Die Pflichtangaben für das Impressum sind noch nicht hinterlegt. Setzen Sie die Variablen `LEGAL_NAME`, `LEGAL_STREET`, `LEGAL_CITY` und `LEGAL_EMAIL` in der `.env`.",
+    "provider": "Angaben gemäß § 5 DDG",
+    "contact": "Kontakt",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "vat": "Umsatzsteuer-Identifikationsnummer",
+    "sections": [
+      {
+        "t": "Haftung für Inhalte",
+        "p": "Die Inhalte dieser Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte kann jedoch keine Gewähr übernommen werden. Als Diensteanbieter sind wir für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich."
+      },
+      {
+        "t": "Haftung für Links",
+        "p": "Diese Seiten enthalten nur in Ausnahmefällen Links auf externe Seiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Für diese fremden Inhalte übernehmen wir keine Gewähr; verantwortlich ist stets der jeweilige Anbieter."
+      },
+      {
+        "t": "Verbraucherstreitbeilegung",
+        "p": "Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+      }
+    ]
+  },
+  "privacy": {
+    "meta_title": "Datenschutzerklärung",
+    "meta_description": "Wie ballotage.online mit personenbezogenen Daten umgeht.",
+    "title": "Datenschutzerklärung",
+    "updated": "Stand: Oktober 2026",
+    "controller_title": "1. Verantwortlicher",
+    "controller_text": "Verantwortlich für die Verarbeitung auf dieser Website und für den Betrieb des Dienstes ist:",
+    "missing": "Die Angaben zum Verantwortlichen sind noch nicht hinterlegt (`LEGAL_*` in der `.env`).",
+    "hosting_line": "Hosting: {provider}",
+    "sections": [
+      {
+        "t": "2. Grundsätze",
+        "p": "Wir verarbeiten nur die Daten, die für den Betrieb des Dienstes nötig sind, und löschen sie, sobald sie nicht mehr gebraucht werden. Es gibt keine Werbung, keine Tracker, keine Analyse-Dienste und keine Einbindung von Inhalten Dritter (Schriftarten, Skripte, Karten oder Ähnliches)."
+      },
+      {
+        "t": "3. Aufruf der Website, Server-Logs",
+        "p": "Die Anwendung selbst schreibt keine Zugriffsprotokolle. Der vorgeschaltete Webserver ist so eingerichtet, dass Aufrufe der Pfade `/v/` (Stimmabgabe) und `/auth/` (Login) nicht protokolliert werden, weil diese Adressen geheime Tokens enthalten. Technisch notwendige Verbindungsdaten (z. B. IP-Adresse) werden vom Webserver nur kurzzeitig verarbeitet, um die Seite auszuliefern und Missbrauch abzuwehren (Art. 6 Abs. 1 lit. f DSGVO)."
+      },
+      {
+        "t": "4. Registrierung und Login von Organisatoren",
+        "p": "Bei der Registrierung speichern wir den Namen der Loge bzw. des Vereins und eine E-Mail-Adresse. An diese Adresse senden wir Login-Links. Rechtsgrundlage ist die Durchführung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO). Login-Links werden nur als Hash gespeichert und nach Ablauf gelöscht. Zur Anmeldung setzen wir ein Sitzungs-Cookie (siehe Abschnitt 8). Die Daten bleiben gespeichert, solange das Konto besteht."
+      },
+      {
+        "t": "5. Durchführung von Abstimmungen",
+        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden 30 Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als drei Stimmen werden sofort gelöscht. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
+      },
+      {
+        "t": "6. E-Mail-Versand",
+        "p": "Login-Links, Einladungen, Erinnerungen und Ergebnisse werden per E-Mail versendet. Dafür werden die Empfängeradresse und der Inhalt an den von uns eingesetzten Mailserver übermittelt. E-Mails können auf dem Transportweg technisch mitgelesen werden; die Links in den Mails sind deshalb persönlich und sollten nicht weitergegeben werden."
+      },
+      {
+        "t": "7. Weitergabe an Dritte",
+        "p": "Eine Weitergabe von Daten an Dritte findet nicht statt, außer an Dienstleister, die für Hosting und E-Mail-Versand notwendig sind und vertraglich zur Einhaltung des Datenschutzes verpflichtet wurden, oder wenn wir gesetzlich dazu verpflichtet sind."
+      },
+      {
+        "t": "8. Cookies",
+        "p": "Wir setzen ausschließlich technisch notwendige Cookies: ein Sitzungs-Cookie (`session`) hält Organisatoren nach dem Login angemeldet (bis zu 30 Tage, nur per HTTP übertragen), ein Cookie `lang` merkt die gewählte Sprache (ein Jahr). Beide dienen allein dem Betrieb der Seite und erfordern keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG). Tracking-Cookies gibt es nicht."
+      },
+      {
+        "t": "9. Ihre Rechte",
+        "p": "Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21 DSGVO). Wenn Ihre Adresse von einer Loge oder einem Verein für eine Abstimmung eingegeben wurde, wenden Sie sich bitte zunächst an diese. Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren."
+      },
+      {
+        "t": "10. Sicherheit",
+        "p": "Die Übertragung erfolgt verschlüsselt über HTTPS. Zugangs-Tokens werden nur als Hash gespeichert, die Datenbank ist nicht öffentlich erreichbar. Wie die Anonymität technisch gesichert wird, steht auf der Seite [Sicherheit](/security)."
+      },
+      {
+        "t": "11. Änderungen",
+        "p": "Wir passen diese Erklärung an, wenn sich der Dienst oder die Rechtslage ändert. Es gilt die jeweils hier veröffentlichte Fassung."
+      }
+    ]
+  },
+  "auth": {
+    "login": {
+      "meta_title": "Anmelden",
+      "title": "Anmelden",
+      "lead": "Geben Sie Ihre E-Mail-Adresse ein. Sie erhalten einen Link zum Anmelden – ein Passwort brauchen Sie nicht.",
+      "email": "E-Mail-Adresse",
+      "submit": "Login-Link senden",
+      "no_account": "Noch keine Loge angelegt?",
+      "register_link": "Hier registrieren",
+      "expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordern Sie einen neuen an."
+    },
+    "register": {
+      "meta_title": "Registrieren",
+      "title": "Neue Loge anlegen",
+      "lead": "Kein Passwort nötig. Sie melden sich künftig per Link an, den Sie per E-Mail erhalten.",
+      "name": "Name der Loge oder des Vereins",
+      "email": "E-Mail-Adresse (für den Login)",
+      "email_hint": "An diese Adresse senden wir Ihre Login-Links und die Ergebnisse Ihrer Abstimmungen.",
+      "submit": "Loge anlegen",
+      "have_account": "Schon registriert?",
+      "login_link": "Hier anmelden",
+      "privacy_note": "Mit der Registrierung nehmen Sie die [Datenschutzerklärung](/datenschutz) zur Kenntnis."
+    },
+    "sent": {
+      "meta_title": "E-Mail unterwegs",
+      "title": "E-Mail unterwegs",
+      "text": "Falls die Adresse **{email}** bei uns bekannt ist, finden Sie dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
+      "hint": "Nichts erhalten? Schauen Sie auch im Spam-Ordner nach."
+    },
+    "confirm": {
+      "meta_title": "Anmelden",
+      "title": "Anmeldung bestätigen",
+      "text": "Mit einem Klick melden Sie sich an.",
+      "submit": "Jetzt anmelden"
+    }
+  },
+  "dashboard": {
+    "meta_title": "Übersicht",
+    "title": "Ihre Abstimmungen",
+    "verified": "Verifiziert",
+    "new": "+ Neue Abstimmung",
+    "empty": "Noch keine Abstimmung angelegt.",
+    "col_title": "Titel",
+    "col_period": "Zeitraum",
+    "col_status": "Status",
+    "details": "Details",
+    "status": {
+      "open": "Läuft",
+      "finished": "Beendet",
+      "aborted": "Abgebrochen"
+    },
+    "recipients_title": "Gespeicherte Empfängerliste",
+    "recipients_text": "{n} Adressen werden bei neuen Abstimmungen vorbefüllt.",
+    "recipients_delete": "Liste löschen",
+    "recipients_confirm": "Gespeicherte Empfängerliste wirklich löschen?"
+  },
+  "election": {
+    "new": {
+      "meta_title": "Neue Abstimmung",
+      "title": "Neue Abstimmung",
+      "f_title": "Titel",
+      "f_title_ph": "z. B. Aufnahme Br. Mustermann",
+      "f_start": "Beginn",
+      "f_end": "Ende",
+      "tz_hint": "Zeiten gelten in der Zeitzone {tz}.",
+      "f_emails": "E-Mail-Adressen",
+      "emails_hint": "Beliebig formatiert einfügen – aus Outlook, Excel, Fließtext, egal. Mehrere Blöcke nacheinander möglich, jeweils auf „Übernehmen“ klicken. Mindestens {n} Adressen.",
+      "emails_ph": "z. B.\nMax Mustermann <max@loge.de>\nanna@loge.de, bruder@loge.de",
+      "take_over": "Übernehmen",
+      "add_row": "+ Adresse hinzufügen",
+      "remove": "Entfernen",
+      "prefilled": "Die zuletzt verwendete Empfängerliste ist vorbefüllt.",
+      "save_list": "Diese Liste für die nächste Kugelung merken",
+      "advanced": "Erweiterte Einstellungen",
+      "options": "Abstimmungsoptionen",
+      "options_hint": "Komma-getrennt, mindestens zwei. Standard ist die klassische Kugelung.",
+      "reminder": "Erinnerung vor Fristende an alle, die noch nicht abgestimmt haben",
+      "reminder_hint": "Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
+      "receipts": "Stimmen nachprüfbar machen",
+      "receipts_hint": "Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss wird eine Liste aller Stimmen (Code und Auswahl) angezeigt, damit jede Person prüfen kann, dass die eigene Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.",
+      "submit": "Abstimmung erstellen und einladen",
+      "err_min_voters": "Mindestens {n} E-Mail-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
+      "err_options": "Mindestens zwei Abstimmungsoptionen angeben.",
+      "err_unverified": "Ihre Loge wurde noch nicht freigegeben.",
+      "options_default": "Ja, Nein, Enthaltung"
+    },
+    "detail": {
+      "period": "Zeitraum",
+      "participation": "Beteiligung",
+      "voted_of": "{used} von {total} haben abgestimmt.",
+      "participation_hint": "Wer bereits abgestimmt hat, sehen Sie – was gestimmt wurde, ist technisch nicht einsehbar, auch nicht für Sie als Organisator.",
+      "col_email": "Adresse",
+      "col_vote": "Stimme",
+      "col_mail": "Mail",
+      "vote_cast": "abgegeben",
+      "vote_pending": "ausstehend",
+      "mail_error": "Fehler",
+      "mail_sent": "gesendet",
+      "mail_sending": "wird gesendet…",
+      "reissue": "Neuer Link",
+      "purged": "Die Einladungsdaten (E-Mail-Adressen) wurden nach Ablauf der Aufbewahrungsfrist gelöscht.",
+      "open_hint": "Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird Ihnen dann einmalig per E-Mail geschickt.",
+      "add_title": "Weitere Wähler einladen",
+      "add_ph": "E-Mail-Adressen, beliebig formatiert",
+      "add_hint": "Bereits eingeladene Adressen werden übersprungen – jede Adresse kann nur einmal abstimmen.",
+      "add_submit": "Einladen",
+      "extend_title": "Verlängern",
+      "extend_label": "Neues Ende",
+      "extend_submit": "Frist verlängern",
+      "abort_title": "Abbrechen",
+      "abort_hint": "Bricht die Abstimmung ab. Es wird **nie** ein Ergebnis angezeigt, die bisherigen Stimmen werden gelöscht.",
+      "abort_submit": "Abstimmung abbrechen…",
+      "aborted": "Diese Abstimmung wurde abgebrochen. Es gibt kein Ergebnis.",
+      "result_title": "Ergebnis",
+      "reason_all_voted": "Beendet, weil alle abgestimmt haben.",
+      "reason_deadline": "Beendet, weil die Frist abgelaufen ist.",
+      "result_note": "Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.",
+      "suppressed": "Weniger als {n} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt; die Stimmen wurden gelöscht.",
+      "ballots_title": "Alle Stimmen zur Nachprüfung ({n})",
+      "ballots_hint": "Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge."
+    },
+    "msg": {
+      "aborted": "Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.",
+      "extended": "Die Frist wurde verlängert.",
+      "extend_failed": "Verlängern nicht möglich: Die Abstimmung ist nicht mehr offen oder das neue Ende liegt nicht nach dem bisherigen.",
+      "not_open": "Die Abstimmung ist nicht mehr offen.",
+      "added": "{n} neue Einladung(en) versendet. Bereits eingeladene Adressen wurden übersprungen.",
+      "reissued": "Neuer Link versendet; der alte ist ungültig.",
+      "reissue_failed": "Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen)."
+    },
+    "abort": {
+      "meta_title": "Abstimmung abbrechen",
+      "title": "Abstimmung wirklich abbrechen?",
+      "intro": "Sie sind dabei, die Abstimmung **{title}** abzubrechen. Das hat folgende Folgen:",
+      "consequences": [
+        "Es wird **nie** ein Ergebnis angezeigt oder versendet – auch nicht teilweise.",
+        "Alle bereits abgegebenen Stimmen werden **endgültig gelöscht**.",
+        "Die Links der Eingeladenen werden ungültig; es kann nicht mehr abgestimmt werden.",
+        "Das lässt sich **nicht rückgängig** machen. Für einen neuen Anlauf legen Sie eine neue Abstimmung an."
+      ],
+      "submit": "Ja, endgültig abbrechen",
+      "back": "Nein, zurück"
+    }
+  },
+  "vote": {
+    "meta_title": "Abstimmen",
+    "intro": "Ihre Stimme wird anonym erfasst. Nach dem Absenden ist dieser Link nicht mehr nutzbar.",
+    "submit": "Stimme abgeben",
+    "choose": "Ihre Auswahl",
+    "done_meta": "Stimme abgegeben",
+    "done_title": "Vielen Dank",
+    "done_text": "Ihre Stimme zu „{title}“ wurde erfasst. Das Ergebnis wird hier nicht angezeigt.",
+    "receipt": "Quittungscode",
+    "receipt_hint": "Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person zugeordnet; wer ihn kennt, kann Ihre Stimme erkennen – bewahren Sie ihn nur auf, wenn Sie prüfen möchten.",
+    "invalid_meta": "Link ungültig",
+    "invalid_title": "Link nicht gültig",
+    "used": "Mit diesem Link wurde bereits abgestimmt. Jeder Link ist nur einmal gültig.",
+    "window": "Diese Abstimmung ist aktuell nicht aktiv (Zeitraum: {start} – {end}).",
+    "bad_choice": "Ungültige Auswahl.",
+    "unknown": "Dieser Link ist unbekannt oder fehlerhaft."
+  },
+  "mail": {
+    "magic": {
+      "subject": "Ihr Login-Link",
+      "body": "Klicken Sie auf den folgenden Link, um sich anzumelden:\n\n{link}\n\nDer Link ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
+    },
+    "invite": {
+      "subject": "Abstimmung: {title}",
+      "intro": "Sie sind zur Abstimmung \"{title}\" eingeladen.\n\n"
+    },
+    "reissue": {
+      "subject": "Abstimmung (neuer Link): {title}",
+      "intro": "Für die Abstimmung \"{title}\" wurde Ihnen ein neuer Link ausgestellt.\nWichtig: Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwenden Sie nur diesen.\n\n"
+    },
+    "reminder": {
+      "subject": "Erinnerung: {title}",
+      "intro": "Erinnerung: Sie haben bei der Abstimmung \"{title}\" noch nicht abgestimmt.\nWichtig: Diese E-Mail enthält einen neuen Link. Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwenden Sie nur den Link unten.\n\n"
+    },
+    "vote_body": "Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\nDie Abstimmung endet am {ends}.\n\nIhre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an.",
+    "result": {
+      "subject": "Ergebnis: {title}",
+      "reason_deadline": "Die Frist ist abgelaufen.",
+      "reason_all_voted": "Alle Eingeladenen haben abgestimmt.",
+      "results": "Ergebnis:\n{lines}",
+      "suppressed": "Es wurden weniger als {min} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt und die Stimmen wurden gelöscht.",
+      "body": "Die Abstimmung \"{title}\" ist beendet. {reason}\n\nZeitraum: {period}\nBeteiligung: {voted} von {total}\n\n{block}\n\nDie Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.\nDiese E-Mail wird nur einmal versendet. Details: {link}"
+    }
+  }
+}

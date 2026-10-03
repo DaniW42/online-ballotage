@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t('how.meta_title') }}{% endblock %}
+{% block description %}{{ t('how.meta_description') }}{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+  <div class="page-head prose"><h1>{{ t('how.title') }}</h1><p class="lead">{{ t('how.lead') }}</p></div>
+  <h2>{{ t('how.org_title') }}</h2>
+  <ol class="steps">{% for s in tl('how.org_steps') %}<li><h3>{{ s.t }}</h3><p>{{ s.d }}</p></li>{% endfor %}</ol>
+  <h2>{{ t('how.voter_title') }}</h2>
+  <ol class="steps">{% for s in tl('how.voter_steps') %}<li><h3>{{ s.t }}</h3><p>{{ s.d }}</p></li>{% endfor %}</ol>
+  <h2>{{ t('how.rules_title') }}</h2>
+  <p class="lead">{{ t('how.rules_lead') }}</p>
+  <div class="grid three">{% for r in tl('how.rules') %}<div class="card"><h3>{{ r.t }}</h3><p>{{ r.d }}</p></div>{% endfor %}</div>
+  <p class="actions"><a class="btn large" href="/register">{{ t('how.cta') }}</a></p>
+</div>
+{% endblock %}

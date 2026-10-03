@@ -11,18 +11,19 @@ from .config import settings
 from .db import SessionLocal, Election, Invitation, Vote, Organization, MagicLink
 from .mail import send_result_mail, send_vote_invitation
 from .tokens import generate_token
-from .timeutil import utcnow, fmt_local
+from .i18n import fmt_datetime
+from .timeutil import utcnow
 
 log = logging.getLogger("kugelung")
 
 
 def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
-                       ends_at_str: str, kind: str = "invite") -> None:
+                       ends_at_str: str, kind: str = "invite", lang: str = "de") -> None:
     """Versendet eine Einladung (läuft im Hintergrund, daher eigene DB-Session)
     und hält das Ergebnis am Einladungseintrag fest, damit Fehler sichtbar sind."""
     error = None
     try:
-        send_vote_invitation(to, title, link, ends_at_str, kind=kind)
+        send_vote_invitation(to, title, link, ends_at_str, kind=kind, lang=lang)
     except Exception as exc:
         log.exception("Einladungsmail an %s fehlgeschlagen", to)
         error = str(exc)[:200] or exc.__class__.__name__
@@ -167,12 +168,14 @@ def send_pending_result_mails(db: Session) -> None:
                 to=org.email,
                 title=election.title,
                 reason=election.finish_reason,
-                period=f"{fmt_local(election.starts_at)} – {fmt_local(election.ends_at)}",
+                period=f"{fmt_datetime(election.language, election.starts_at)} – "
+                       f"{fmt_datetime(election.language, election.ends_at)}",
                 total=election.total_invited,
                 voted=election.total_voted,
                 results=get_results(db, election),
                 min_voters=settings.min_voters,
                 link=f"{settings.base_url}/elections/{election.id}",
+                lang=election.language,
             )
         except Exception:
             log.exception("Ergebnis-Mail für %s fehlgeschlagen, nächster Versuch folgt", election.id)
@@ -210,7 +213,8 @@ def send_due_reminders(db: Session) -> None:
             if result:
                 inv_id, email, link = result
                 deliver_invitation(inv_id, email, election.title, link,
-                                   fmt_local(election.ends_at), kind="reminder")
+                                   fmt_datetime(election.language, election.ends_at),
+                                   kind="reminder", lang=election.language)
 
 
 def purge_expired(db: Session) -> None:

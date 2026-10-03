@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t('faq.meta_title') }}{% endblock %}
+{% block description %}{{ t('faq.meta_description') }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <div class="page-head"><h1>{{ t('faq.title') }}</h1><div class="lead">{{ t('faq.lead')|md }}</div></div>
+  {% for g in tl('faq.groups') %}
+  <section class="faq-group">
+    <h2>{{ g.t }}</h2>
+    {% for item in g['items'] %}
+    <details><summary>{{ item.q }}</summary><div>{{ item.a|md }}</div></details>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

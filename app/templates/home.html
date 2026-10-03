@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ t('home.meta_title') }}{% endblock %}
+{% block description %}{{ t('home.meta_description') }}{% endblock %}
+{% block main %}
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">{{ t('home.eyebrow') }}</p>
+    <h1>{{ t('home.title') }}</h1>
+    <p class="lead">{{ t('home.lead') }}</p>
+    <div class="actions">
+      {% if logged_in %}
+        <a class="btn large" href="/dashboard">{{ t('home.cta_dashboard') }}</a>
+      {% else %}
+        <a class="btn large" href="/register">{{ t('home.cta_register') }}</a>
+        <a class="btn large secondary" href="/login">{{ t('home.cta_login') }}</a>
+      {% endif %}
+      <a class="btn large secondary" href="/how-it-works">{{ t('home.cta_how') }}</a>
+    </div>
+    <ul class="chips">
+      {% for chip in tl('home.chips') %}<li>{{ chip }}</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>{{ t('home.steps_title') }}</h2>
+    <ol class="steps">
+      {% for s in tl('home.steps') %}<li><h3>{{ s.t }}</h3><p>{{ s.d }}</p></li>{% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="wrap split">
+    <div>
+      <h2>{{ t('home.anon_title') }}</h2>
+      <p class="lead">{{ t('home.anon_lead') }}</p>
+      <ul class="checklist">
+        {% for p in tl('home.anon_points') %}<li>{{ p }}</li>{% endfor %}
+      </ul>
+      <p><a href="/security">{{ t('home.anon_link') }} →</a></p>
+    </div>
+    <div class="card">{% include "_diagram.html" %}</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>{{ t('home.features_title') }}</h2>
+    <p class="lead">{{ t('home.features_lead') }}</p>
+    <div class="grid three">
+      {% for f in tl('home.features') %}<div class="card"><h3>{{ f.t }}</h3><p>{{ f.d }}</p></div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="wrap">
+    <h2>{{ t('home.open_title') }}</h2>
+    <p class="lead">{{ t('home.open_text') }}</p>
+    <div class="actions">
+      <a class="btn secondary" href="/source">{{ t('home.open_link_source') }}</a>
+      <a class="btn secondary" href="/self-hosting">{{ t('home.open_link_self') }}</a>
+    </div>
+  </div>
+</section>
+
+{% if not logged_in %}
+<section class="cta-band">
+  <div class="wrap">
+    <h2>{{ t('home.cta_title') }}</h2>
+    <p>{{ t('home.cta_text') }}</p>
+    <div class="actions"><a class="btn large light" href="/register">{{ t('home.cta_register') }}</a></div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from sqlalchemy import (
     Column, String, Boolean, DateTime, ForeignKey, Integer, JSON, UniqueConstraint, create_engine
@@ -8,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .config import settings
+from .timeutil import utcnow
 
 engine = create_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
@@ -28,7 +28,7 @@ class Organization(Base):
     # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
     # Kann jederzeit gelöscht werden (Datensparsamkeit).
     saved_recipients = Column(JSON, default=list, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class MagicLink(Base):
@@ -40,7 +40,7 @@ class MagicLink(Base):
     token_hash = Column(String, nullable=False, unique=True, index=True)
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class Election(Base):
@@ -54,7 +54,9 @@ class Election(Base):
     starts_at = Column(DateTime, nullable=False)
     ends_at = Column(DateTime, nullable=False)
     reminder_enabled = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    # Sprache für Einladungs-/Ergebnis-Mails und die Abstimmungsseiten der Wähler
+    language = Column(String, default="de", nullable=False, server_default="de")
 
     # Lebenszyklus: open -> finished (Frist abgelaufen / alle abgestimmt) oder aborted.
     # Ab "finished"/"aborted" ist die Wählerliste eingefroren (kein Verlängern,
@@ -87,7 +89,7 @@ class Invitation(Base):
     # Bewusst nur Boolean statt Zeitstempel: ein used_at wäre per Zeitvergleich
     # mit der Stimme korrelierbar und würde die Anonymität aushebeln.
     used = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     # Versandstatus der Einladungsmail. Wird nur beim (Neu-)Versand beschrieben,
     # NIE im Zuge einer Stimmabgabe - sonst wäre die Zeitkorrelation wieder da.
     sent_at = Column(DateTime, nullable=True)
