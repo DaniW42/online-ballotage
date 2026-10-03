@@ -69,7 +69,15 @@ li { margin-bottom: .35em; }
 .main-nav { display: flex; gap: 4px 18px; flex-wrap: wrap; flex: 1; }
 .main-nav a { color: var(--muted); text-decoration: none; padding: 6px 2px; font-size: .95rem; }
 .main-nav a:hover, .main-nav a[aria-current="page"] { color: var(--fg); text-decoration: underline; }
-.header-actions { display: flex; align-items: center; gap: 12px; }
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.header-actions a, .header-actions button.linkbtn {
+  font: inherit; font-size: .95rem; font-weight: 400; line-height: 1.6; padding: 6px 2px; margin: 0;
+  color: var(--muted); text-decoration: none;
+}
+.header-actions a:hover, .header-actions button.linkbtn:hover { color: var(--fg); text-decoration: underline; filter: none; }
+.header-actions a.btn { color: var(--primary-fg); padding: .65rem 1.2rem; font-weight: 600; }
+.header-actions a.btn:hover { text-decoration: none; filter: brightness(1.12); color: var(--primary-fg); }
+.header-actions form.inline { display: flex; align-items: center; }
 form.inline { display: inline; margin: 0; }
 
 /* Buttons */
@@ -86,7 +94,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .btn.light { background: var(--primary-fg); color: var(--primary); border-color: var(--primary-fg); }
 .btn.ghost-light { background: transparent; color: var(--primary-fg); border-color: var(--primary-fg); }
 button.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font-weight: 500; font-size: inherit; }
-.header-actions button.linkbtn { color: var(--muted); }
 .stack > * + * { margin-top: 1rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 1.4rem; }
 

@@ -26,7 +26,6 @@
         <a href="/how-it-works"{% if request.url.path == '/how-it-works' %} aria-current="page"{% endif %}>{{ t('nav.how') }}</a>
         <a href="/security"{% if request.url.path == '/security' %} aria-current="page"{% endif %}>{{ t('nav.security') }}</a>
         <a href="/faq"{% if request.url.path == '/faq' %} aria-current="page"{% endif %}>{{ t('nav.faq') }}</a>
-        <a href="/self-hosting"{% if request.url.path == '/self-hosting' %} aria-current="page"{% endif %}>{{ t('nav.selfhost') }}</a>
       </nav>
       <div class="header-actions">
         {% if logged_in %}
