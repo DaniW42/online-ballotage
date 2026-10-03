@@ -70,6 +70,9 @@ class Election(Base):
     total_voted = Column(Integer, nullable=True)
     result_mail_sent = Column(Boolean, default=False, nullable=False)
     reminder_sent = Column(Boolean, default=False, nullable=False)
+    # False bei geplanter Abstimmung: Einladungsmails gehen erst zum Beginn raus
+    # (die Roh-Tokens existieren vorher nicht; sie werden beim Versand erzeugt).
+    invitations_dispatched = Column(Boolean, default=True, nullable=False, server_default="true")
     # Optional: Stimmen-Quittung + Liste aller Stimmen nach Abschluss (Prüfbarkeit)
     receipts_enabled = Column(Boolean, default=False, nullable=False)
     # Einladungsdaten (Emails) nach Ablauf der Aufbewahrungsfrist gelöscht

@@ -202,3 +202,4 @@ fieldset.choices label.check { padding: .7rem .9rem; border: 1px solid var(--bor
   .hero { padding: 48px 0; }
   .section { padding: 48px 0; }
 }
+button.small { padding: .3rem .8rem; font-size: .85rem; margin-top: .5rem; }

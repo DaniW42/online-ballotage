@@ -8,7 +8,11 @@
 <p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
 {% if message %}
-<div class="notice {% if message in ('extend_failed', 'not_open', 'reissue_failed') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
+<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
+{% endif %}
+
+{% if phase(election) == "scheduled" %}
+<div class="notice ok">{{ t('election.detail.scheduled_notice', start=fmt_dt(election.starts_at)) }}</div>
 {% endif %}
 
 <h2>{{ t('election.detail.participation') }}</h2>
@@ -24,9 +28,9 @@
   <tr>
     <td>{{ inv.email }}</td>
     <td>{% if inv.used %}{{ t('election.detail.vote_cast') }}{% else %}{{ t('election.detail.vote_pending') }}{% endif %}</td>
-    <td>{% if inv.send_error %}<span title="{{ inv.send_error }}">{{ t('election.detail.mail_error') }}</span>{% elif inv.sent_at %}{{ t('election.detail.mail_sent') }}{% else %}{{ t('election.detail.mail_sending') }}{% endif %}</td>
+    <td>{% if inv.send_error %}<span title="{{ inv.send_error }}">{{ t('election.detail.mail_error') }}</span>{% elif inv.sent_at %}{{ t('election.detail.mail_sent') }}{% elif not election.invitations_dispatched %}{{ t('election.detail.mail_scheduled') }}{% else %}{{ t('election.detail.mail_sending') }}{% endif %}</td>
     {% if election.status == "open" %}
-    <td>{% if not inv.used %}
+    <td>{% if not inv.used and election.invitations_dispatched %}
       <form method="post" action="/elections/{{ election.id }}/invitations/{{ inv.id }}/reissue" class="inline">
         <button type="submit" class="linkbtn">{{ t('election.detail.reissue') }}</button>
       </form>{% endif %}</td>
@@ -39,6 +43,7 @@
 
 {% if election.status == "open" %}
 <p class="hint">{{ t('election.detail.open_hint') }}</p>
+{% if reminder_at %}<p class="hint">{{ t('election.detail.reminder_planned', when=fmt_dt(reminder_at)) }}</p>{% endif %}
 
 <h2>{{ t('election.detail.add_title') }}</h2>
 <form method="post" action="/elections/{{ election.id }}/voters">
@@ -47,11 +52,16 @@
   <button type="submit" class="secondary">{{ t('election.detail.add_submit') }}</button>
 </form>
 
-<h2>{{ t('election.detail.extend_title') }}</h2>
-<form method="post" action="/elections/{{ election.id }}/extend">
-  <label for="ends_at">{{ t('election.detail.extend_label') }}</label>
-  <input type="datetime-local" id="ends_at" name="ends_at" required>
-  <button type="submit" class="secondary">{{ t('election.detail.extend_submit') }}</button>
+<h2>{{ t('election.detail.schedule_title') }}</h2>
+<form method="post" action="/elections/{{ election.id }}/schedule">
+  {% if can_move_start %}
+  <label for="starts_at">{{ t('election.detail.schedule_start') }}</label>
+  <input type="datetime-local" id="starts_at" name="starts_at" value="{{ input_dt(election.starts_at) }}" required>
+  {% endif %}
+  <label for="ends_at">{{ t('election.detail.schedule_end') }}</label>
+  <input type="datetime-local" id="ends_at" name="ends_at" value="{{ input_dt(election.ends_at) }}" required>
+  <div class="hint">{% if can_move_start %}{{ t('election.detail.schedule_free') }}{% else %}{{ t('election.detail.schedule_locked') }}{% endif %}</div>
+  <button type="submit" class="secondary">{{ t('election.detail.schedule_submit') }}</button>
 </form>
 
 <h2>{{ t('election.detail.abort_title') }}</h2>

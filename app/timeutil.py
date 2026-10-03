@@ -24,3 +24,8 @@ def to_local(dt: datetime) -> datetime:
 
 def fmt_local(dt: datetime, fmt: str = DISPLAY_FORMAT) -> str:
     return to_local(dt).strftime(fmt)
+
+
+def to_input_value(dt: datetime) -> str:
+    """Für <input type=datetime-local> (Lokalzeit)."""
+    return to_local(dt).strftime("%Y-%m-%dT%H:%M")

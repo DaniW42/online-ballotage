@@ -57,5 +57,28 @@
     document.getElementById('emails_raw').value = emails.join('\n');
     if (!emails.length) event.preventDefault();
   });
+  // Standardzeiten: Beginn morgen 00:00, Ende am letzten Tag 23:59
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmt(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  var startEl = document.getElementById('starts_at');
+  var endEl = document.getElementById('ends_at');
+  var days = parseInt(form.dataset.defaultDays || '7', 10);
+  if (!startEl.value) {
+    var start = new Date();
+    start.setDate(start.getDate() + 1);
+    start.setHours(0, 0, 0, 0);
+    var end = new Date(start);
+    end.setDate(end.getDate() + days - 1);
+    end.setHours(23, 59, 0, 0);
+    startEl.value = fmt(start);
+    endEl.value = fmt(end);
+  }
+  document.getElementById('start-now').addEventListener('click', function () {
+    startEl.value = fmt(new Date());
+  });
+
   render();
 })();

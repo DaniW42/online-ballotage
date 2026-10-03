@@ -139,7 +139,8 @@ def create_election(orga, outbox):
         response = orga.post("/elections/new", data=data)
         assert response.status_code == 303, response.text[:300]
         election_id = response.headers["location"].rsplit("/", 1)[-1]
-        return election_id, {e: vote_token(outbox, e) for e in emails}
+        # Geplante Abstimmungen versenden noch nichts -> noch keine Tokens
+        return election_id, {e: vote_token(outbox, e) for e in emails if any("/v/" in m.body for m in outbox.to(e))}
     return _create
 
 

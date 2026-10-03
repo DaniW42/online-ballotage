@@ -71,17 +71,83 @@ def test_abort_deletes_votes_and_never_shows_result(create_election, anon, orga,
     assert not _results_mails(outbox)  # bei Abbruch keine Ergebnis-Mail
 
 
-def test_extend_only_while_open(create_election, orga, db):
+def _schedule(orga, election_id, end, start=None):
+    data = {"ends_at": local_input(end)}
+    if start is not None:
+        data["starts_at"] = local_input(start)
+    return orga.post(f"/elections/{election_id}/schedule", data=data).headers["location"]
+
+
+def test_schedule_is_free_until_first_vote_then_only_extendable(create_election, anon, orga, db):
     election_id, tokens = create_election()
     before = db.query(Election).one().ends_at
-    assert "msg=extended" in orga.post(f"/elections/{election_id}/extend", data={"ends_at": local_input(180)}).headers["location"]
+    # ohne Stimme: Beginn und Ende frei änderbar, auch verkürzen
+    assert "schedule_updated" in _schedule(orga, election_id, end=30, start=-10)
     db.expire_all()
-    assert db.query(Election).one().ends_at > before
-    # nicht verkürzen
-    assert "extend_failed" in orga.post(f"/elections/{election_id}/extend", data={"ends_at": local_input(5)}).headers["location"]
-    # nach Abschluss gesperrt
+    assert db.query(Election).one().ends_at < before
+    assert "schedule_failed" in _schedule(orga, election_id, end=-5, start=-30)   # Ende in der Vergangenheit
+    assert "schedule_failed" in _schedule(orga, election_id, end=10, start=20)    # Ende vor Beginn
+    anon.post(f"/v/{tokens['a@x.test']}", data={"choice": "Ja"})
+    # nach der ersten Stimme: nur verlängern, Beginn bleibt
+    assert "schedule_failed" in _schedule(orga, election_id, end=5)
+    start_before = db.query(Election).one().starts_at
+    assert "schedule_updated" in _schedule(orga, election_id, end=300, start=5000)
+    db.expire_all()
+    election = db.query(Election).one()
+    assert election.starts_at == start_before and election.ends_at > before
+
+
+def test_schedule_locked_after_finish(create_election, orga, db):
+    election_id, _ = create_election()
     sql(db, "update elections set ends_at = now() at time zone 'utc' - interval '1 minute'")
-    assert "extend_failed" in orga.post(f"/elections/{election_id}/extend", data={"ends_at": local_input(500)}).headers["location"]
+    assert "schedule_failed" in _schedule(orga, election_id, end=500)
+
+
+def test_scheduled_election_sends_invitations_only_at_start(create_election, anon, orga, outbox, db):
+    election_id, tokens = create_election(start=60 * 24, end=60 * 72)
+    assert not outbox.to("a@x.test")                       # nichts beim Anlegen
+    assert db.query(Election).one().invitations_dispatched is False
+    page = orga.get(f"/elections/{election_id}").text
+    assert "bei Beginn" in page and "Neuer Link" not in page
+    services.run_maintenance()
+    assert not outbox.to("a@x.test")                       # noch vor dem Beginn
+    # Empfänger nachladen vor dem Beginn: ebenfalls erst später
+    assert "added_scheduled" in orga.post(f"/elections/{election_id}/voters", data={"emails_raw": "d@x.test"}).headers["location"]
+    assert not outbox.to("d@x.test")
+    inv = db.query(Invitation).filter_by(email="a@x.test").one()
+    assert "reissue_failed" in orga.post(f"/elections/{election_id}/invitations/{inv.id}/reissue").headers["location"]
+    # Beginn erreicht -> Versand
+    sql(db, "update elections set starts_at = now() at time zone 'utc' - interval '1 minute'")
+    services.run_maintenance(); services.run_maintenance()
+    for email in ("a@x.test", "b@x.test", "c@x.test", "d@x.test"):
+        assert len(outbox.to(email)) == 1, email
+    assert "Zeitraum" in outbox.to("a@x.test")[0].body
+    token = re.search(r"/v/([\w-]+)", outbox.to("a@x.test")[0].body).group(1)
+    assert anon.post(f"/v/{token}", data={"choice": "Ja"}).status_code == 200
+    assert tokens == {}  # beim Anlegen gab es keine Links (Tokens entstehen erst beim Versand)
+
+
+def test_scheduled_election_can_be_moved_forward(create_election, outbox, orga, db):
+    election_id, _ = create_election(start=60 * 24, end=60 * 72)
+    _schedule(orga, election_id, end=120, start=-1)        # Beginn jetzt -> Versand im nächsten Lauf
+    services.run_maintenance()
+    assert len(outbox.to("a@x.test")) == 1
+
+
+def test_creation_with_start_now_sends_immediately(create_election, outbox, db):
+    create_election(start=0)
+    assert len(outbox.to("a@x.test")) == 1
+    assert db.query(Election).one().invitations_dispatched is True
+
+
+def test_reminder_info_and_no_reminder_before_dispatch(create_election, orga, outbox, db):
+    election_id, _ = create_election(start=60 * 24 * 3, end=60 * 24 * 6, reminder_enabled="true")
+    assert "Erinnerung an alle" in orga.get(f"/elections/{election_id}").text
+    sql(db, "update elections set ends_at = now() at time zone 'utc' + interval '20 hours', "
+            "starts_at = now() at time zone 'utc' + interval '10 hours'")
+    outbox.clear()
+    services.run_maintenance()
+    assert not outbox                                       # nicht dispatched -> keine Erinnerung
 
 
 def test_finalized_election_is_frozen_for_voters_and_reissue(create_election, anon, orga, db):
@@ -148,6 +214,7 @@ def test_reminder_goes_to_pending_voters_with_new_link_once(create_election, ano
     election_id, tokens = create_election(reminder_enabled="true")
     anon.post(f"/v/{tokens['a@x.test']}", data={"choice": "Ja"})
     sql(db, "update elections set created_at = created_at - interval '3 days', "
+            "starts_at = starts_at - interval '3 days', "
             "ends_at = now() at time zone 'utc' + interval '20 hours'")
     outbox.clear()
     services.run_maintenance(); services.run_maintenance()

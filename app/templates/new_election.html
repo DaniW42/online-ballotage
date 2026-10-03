@@ -7,17 +7,18 @@
 {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
 
 <form method="post" action="/elections/new" id="election-form" class="card-form"
-      data-emails='{{ saved|tojson }}' data-remove-label="{{ t('election.new.remove') }}">
+      data-emails='{{ saved|tojson }}' data-default-days="7" data-remove-label="{{ t('election.new.remove') }}">
 
   <label for="title">{{ t('election.new.f_title') }}</label>
   <input type="text" id="title" name="title" required placeholder="{{ t('election.new.f_title_ph') }}">
 
   <label for="starts_at">{{ t('election.new.f_start') }}</label>
   <input type="datetime-local" id="starts_at" name="starts_at" required>
+  <button type="button" class="secondary small" id="start-now">{{ t('election.new.start_now') }}</button>
 
   <label for="ends_at">{{ t('election.new.f_end') }}</label>
   <input type="datetime-local" id="ends_at" name="ends_at" required>
-  <div class="hint">{{ t('election.new.tz_hint', tz=cfg.timezone) }}</div>
+  <div class="hint">{{ t('election.new.tz_hint', tz=cfg.timezone) }} {{ t('election.new.start_hint') }}</div>
 
   <label for="paste_area">{{ t('election.new.f_emails') }}</label>
   <div class="hint">{{ t('election.new.emails_hint', n=cfg.min_voters) }}</div>

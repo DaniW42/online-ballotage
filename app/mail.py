@@ -31,14 +31,14 @@ def send_magic_link(to: str, link: str, lang: str) -> None:
     )
 
 
-def send_vote_invitation(to: str, election_title: str, link: str, ends_at_str: str,
+def send_vote_invitation(to: str, election_title: str, link: str, period: str,
                          kind: str = "invite", lang: str = "de") -> None:
     """kind: invite | reissue | reminder"""
     send_mail(
         to=to,
         subject=t(lang, f"mail.{kind}.subject", title=election_title),
         body=t(lang, f"mail.{kind}.intro", title=election_title)
-        + t(lang, "mail.vote_body", link=link, ends=ends_at_str),
+        + t(lang, "mail.vote_body", link=link, period=period),
     )
 
 

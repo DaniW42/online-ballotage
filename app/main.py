@@ -21,9 +21,9 @@ from .mail import send_magic_link
 from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
-    deliver_invitation, create_invitations, reissue_invitation,
+    deliver_invitation, create_invitations, reissue_invitation, period_text,
 )
-from .timeutil import utcnow, local_input_to_utc
+from .timeutil import utcnow, local_input_to_utc, to_input_value
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 
 log = logging.getLogger("kugelung")
@@ -64,6 +64,7 @@ def _template_context(request: Request) -> dict:
         "now_year": utcnow().year,
         "static_v": STATIC_VERSION,
         "phase": election_phase,
+        "input_dt": to_input_value,
         "reminder_hours": settings.reminder_hours_before,
         "base_url": settings.base_url,
     }
@@ -346,10 +347,10 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
 
 def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
                        kind: str = "invite"):
-    ends = i18n.fmt_datetime(election.language, election.ends_at)
+    period = period_text(election)
     for inv_id, email, link in created:
         background_tasks.add_task(
-            deliver_invitation, inv_id, email, election.title, link, ends, kind, election.language
+            deliver_invitation, inv_id, email, election.title, link, period, kind, election.language
         )
 
 
@@ -413,11 +414,18 @@ def new_election_submit(
     if settings.require_verification and not org.verified:
         return _form_error(request, org, "election.new.err_unverified", emails)
 
+    starts, ends, now = local_input_to_utc(starts_at), local_input_to_utc(ends_at), utcnow()
+    if ends <= starts or ends <= now:
+        return _form_error(request, org, "election.new.err_period", emails)
+    # Beginn in der Zukunft: Einladungen erst zum Beginn versenden
+    scheduled = starts > now + timedelta(minutes=1)
+
     election = Election(
         org_id=org.id,
         title=title,
-        starts_at=local_input_to_utc(starts_at),
-        ends_at=local_input_to_utc(ends_at),
+        starts_at=starts,
+        ends_at=ends,
+        invitations_dispatched=not scheduled,
         options=options,
         reminder_enabled=reminder_enabled,
         receipts_enabled=receipts_enabled,
@@ -431,12 +439,14 @@ def new_election_submit(
     if save_recipients:
         org.saved_recipients = emails
     db.commit()
-    _queue_invitations(background_tasks, election, created)
+    if not scheduled:
+        _queue_invitations(background_tasks, election, created)
 
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
 
-MESSAGES = {"aborted", "extended", "extend_failed", "not_open", "added", "reissued", "reissue_failed"}
+MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "added", "added_scheduled",
+            "reissued", "reissue_failed"}
 
 
 @app.get("/elections/{election_id}", response_class=HTMLResponse)
@@ -468,6 +478,11 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
 
     results = get_results(db, election)
     message = request.query_params.get("msg")
+    reminder_at = None
+    if election.status == "open" and election.reminder_enabled and not election.reminder_sent:
+        candidate = election.ends_at - timedelta(hours=settings.reminder_hours_before)
+        if candidate > max(election.created_at, election.starts_at) + timedelta(hours=1):
+            reminder_at = candidate
     return render(request, "election_detail.html", {
         "org": org,
         "election": election,
@@ -481,6 +496,8 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
             if election.receipts_enabled and results_available(election) else []
         ),
         "min_voters": settings.min_voters,
+        "reminder_at": reminder_at,
+        "can_move_start": election.status == "open" and used == 0,
         "invitations": db.query(Invitation)
         .filter(Invitation.election_id == election.id)
         .order_by(Invitation.email)  # alphabetisch, nicht nach Einfügereihenfolge
@@ -515,8 +532,12 @@ def election_add_voters(
         return RedirectResponse(f"/elections/{election_id}?msg=not_open", status_code=303)
     created = create_invitations(db, election, extract_emails(emails_raw))
     db.commit()
-    _queue_invitations(background_tasks, election, created)
-    return RedirectResponse(f"/elections/{election_id}?msg=added&n={len(created)}", status_code=303)
+    if election.invitations_dispatched:
+        _queue_invitations(background_tasks, election, created)
+        msg = "added"
+    else:
+        msg = "added_scheduled"  # Mails folgen zum Beginn
+    return RedirectResponse(f"/elections/{election_id}?msg={msg}&n={len(created)}", status_code=303)
 
 
 @app.post("/elections/{election_id}/invitations/{invitation_id}/reissue")
@@ -528,7 +549,8 @@ def election_reissue(
         return RedirectResponse("/login", status_code=303)
     finalize_due(db, election_id)
     election = db.query(Election).filter(Election.id == election_id).first()
-    result = reissue_invitation(db, election, invitation_id) if election.status == "open" else None
+    can_reissue = election.status == "open" and election.invitations_dispatched
+    result = reissue_invitation(db, election, invitation_id) if can_reissue else None
     if not result:
         return RedirectResponse(f"/elections/{election_id}?msg=reissue_failed", status_code=303)
     _queue_invitations(background_tasks, election, [result], kind="reissue")
@@ -558,25 +580,42 @@ def election_abort(
     return RedirectResponse(f"/elections/{election_id}?msg={msg}", status_code=303)
 
 
-@app.post("/elections/{election_id}/extend")
-def election_extend(
-    election_id: str, request: Request, ends_at: str = Form(...), db: Session = Depends(get_db)
+@app.post("/elections/{election_id}/schedule")
+def election_schedule(
+    election_id: str, request: Request, ends_at: str = Form(...), starts_at: str = Form(""),
+    db: Session = Depends(get_db),
 ):
+    """Zeitplan ändern. Solange noch keine Stimme abgegeben wurde, ist alles frei änderbar.
+    Danach darf das Ende nur noch verlängert werden: Ein Verkürzen würde erlauben, den
+    Abschluss gezielt dann auszulösen, wenn nur wenige (bekannte) Teilnehmer abgestimmt
+    haben, und so ein Ergebnis mit minimaler Anonymitätsmenge zu erzeugen."""
     if not _own_election(db, request, election_id):
         return RedirectResponse("/login", status_code=303)
-    finalize_due(db, election_id)  # ggf. erst abschließen; danach ist Verlängern gesperrt
+    finalize_due(db, election_id)  # ggf. erst abschließen; danach ist alles gesperrt
     election = (
         db.query(Election).filter(Election.id == election_id).with_for_update().first()
     )
-    new_end = local_input_to_utc(ends_at)
-    if election.status != "open" or new_end <= election.ends_at:
+    failed = RedirectResponse(f"/elections/{election_id}?msg=schedule_failed", status_code=303)
+    if election.status != "open":
         db.rollback()
-        return RedirectResponse(f"/elections/{election_id}?msg=extend_failed", status_code=303)
-    election.ends_at = new_end
-    if election.reminder_enabled:
+        return failed
+    used = db.query(func.count(Invitation.id)).filter(
+        Invitation.election_id == election.id, Invitation.used.is_(True)).scalar()
+    new_end = local_input_to_utc(ends_at)
+    if used == 0:
+        new_start = local_input_to_utc(starts_at) if starts_at else election.starts_at
+        valid = new_end > new_start and new_end > utcnow()
+    else:
+        new_start = election.starts_at
+        valid = new_end > election.ends_at
+    if not valid:
+        db.rollback()
+        return failed
+    if new_end != election.ends_at and election.reminder_enabled:
         election.reminder_sent = False  # neue Frist -> Erinnerung wieder möglich
+    election.starts_at, election.ends_at = new_start, new_end
     db.commit()
-    return RedirectResponse(f"/elections/{election_id}?msg=extended", status_code=303)
+    return RedirectResponse(f"/elections/{election_id}?msg=schedule_updated", status_code=303)
 
 
 # ---------- Abstimmen (Token-Link, kein Login) ----------

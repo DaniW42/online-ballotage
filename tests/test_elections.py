@@ -37,11 +37,11 @@ def test_options_default_dedupe_and_minimum(orga, db):
 
 def test_times_are_local_and_stored_as_utc(orga, db):
     ok = ["a@x.test", "b@x.test", "c@x.test"]
-    orga.post("/elections/new", data=_form(ok, starts_at="2026-07-01T20:00", ends_at="2026-07-02T20:00"))
-    orga.post("/elections/new", data=_form(ok, starts_at="2026-12-01T20:00", ends_at="2026-12-02T20:00"))
+    orga.post("/elections/new", data=_form(ok, starts_at="2027-07-01T20:00", ends_at="2027-07-02T20:00"))
+    orga.post("/elections/new", data=_form(ok, starts_at="2027-12-01T20:00", ends_at="2027-12-02T20:00"))
     elections = db.query(Election).order_by(Election.starts_at).all()
-    assert elections[0].starts_at == datetime(2026, 7, 1, 18, 0)   # Sommerzeit: UTC+2
-    assert elections[1].starts_at == datetime(2026, 12, 1, 19, 0)  # Winterzeit: UTC+1
+    assert elections[0].starts_at == datetime(2027, 7, 1, 18, 0)   # Sommerzeit: UTC+2
+    assert elections[1].starts_at == datetime(2027, 12, 1, 19, 0)  # Winterzeit: UTC+1
 
 
 def test_title_newlines_are_removed(orga, db, outbox):
@@ -80,3 +80,10 @@ def test_saved_recipients_roundtrip(orga, db):
     assert '"a@x.test"' in orga.get("/elections/new").text
     orga.post("/recipients/clear")
     assert '"a@x.test"' not in orga.get("/elections/new").text
+
+
+def test_period_validation(orga, db):
+    ok = ["a@x.test", "b@x.test", "c@x.test"]
+    assert orga.post("/elections/new", data=_form(ok, starts_at=local_input(60), ends_at=local_input(30))).status_code == 400
+    assert orga.post("/elections/new", data=_form(ok, starts_at=local_input(-120), ends_at=local_input(-60))).status_code == 400
+    assert db.query(Election).count() == 0

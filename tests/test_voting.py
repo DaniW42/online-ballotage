@@ -35,8 +35,9 @@ def test_invalid_choice_rejected_and_token_stays_valid(create_election, anon, db
     assert anon.post(f"/v/{tokens['a@x.test']}", data={"choice": "Ja"}).status_code == 200
 
 
-def test_not_started_and_expired_windows(create_election, anon):
-    _, future = create_election(start=60, end=120)
+def test_not_started_and_expired_windows(create_election, anon, db):
+    _, future = create_election()
+    sql(db, "update elections set starts_at = now() at time zone 'utc' + interval '1 hour'")
     assert anon.get(f"/v/{future['a@x.test']}").status_code == 403
     assert anon.post(f"/v/{future['a@x.test']}", data={"choice": "Ja"}).status_code == 403
 

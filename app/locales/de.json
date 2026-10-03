@@ -624,7 +624,10 @@
       "err_min_voters": "Mindestens {n} E-Mail-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
       "err_options": "Mindestens zwei Abstimmungsoptionen angeben.",
       "err_unverified": "Ihre Loge wurde noch nicht freigegeben.",
-      "options_default": "Weiß, Schwarz, Enthaltung"
+      "options_default": "Weiß, Schwarz, Enthaltung",
+      "err_period": "Das Ende muss nach dem Beginn und in der Zukunft liegen.",
+      "start_now": "Sofort starten",
+      "start_hint": "Vorbelegt: Beginn morgen 00:00 Uhr, Ende nach 7 Tagen um 23:59 Uhr. Liegt der Beginn in der Zukunft, werden die Einladungen erst dann versendet."
     },
     "detail": {
       "period": "Zeitraum",
@@ -646,9 +649,6 @@
       "add_ph": "E-Mail-Adressen, beliebig formatiert",
       "add_hint": "Bereits eingeladene Adressen werden übersprungen – jede Adresse kann nur einmal abstimmen.",
       "add_submit": "Einladen",
-      "extend_title": "Verlängern",
-      "extend_label": "Neues Ende",
-      "extend_submit": "Frist verlängern",
       "abort_title": "Abbrechen",
       "abort_hint": "Bricht die Abstimmung ab. Es wird **nie** ein Ergebnis angezeigt, die bisherigen Stimmen werden gelöscht.",
       "abort_submit": "Abstimmung abbrechen…",
@@ -659,16 +659,26 @@
       "result_note": "Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.",
       "suppressed": "Weniger als {n} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt; die Stimmen wurden gelöscht.",
       "ballots_title": "Alle Stimmen zur Nachprüfung ({n})",
-      "ballots_hint": "Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge."
+      "ballots_hint": "Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge.",
+      "schedule_title": "Zeitplan ändern",
+      "schedule_start": "Beginn",
+      "schedule_end": "Ende",
+      "schedule_submit": "Zeitplan speichern",
+      "schedule_free": "Solange noch keine Stimme abgegeben wurde, lassen sich Beginn und Ende frei ändern. Bereits versendete Einladungen bleiben gültig.",
+      "schedule_locked": "Es wurde bereits abgestimmt: Der Beginn steht fest, und das Ende kann nur verlängert werden. Ein Verkürzen würde es erlauben, den Abschluss gezielt dann auszulösen, wenn nur wenige bekannte Personen abgestimmt haben – und so die Anonymität zu verringern. Wer vorzeitig beenden möchte, kann die Abstimmung abbrechen.",
+      "scheduled_notice": "Diese Abstimmung beginnt am {start}. Die Einladungen werden zu diesem Zeitpunkt versendet.",
+      "mail_scheduled": "bei Beginn",
+      "reminder_planned": "Erinnerung an alle, die noch nicht abgestimmt haben: {when}."
     },
     "msg": {
       "aborted": "Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.",
-      "extended": "Die Frist wurde verlängert.",
-      "extend_failed": "Verlängern nicht möglich: Die Abstimmung ist nicht mehr offen oder das neue Ende liegt nicht nach dem bisherigen.",
       "not_open": "Die Abstimmung ist nicht mehr offen.",
       "added": "{n} neue Einladung(en) versendet. Bereits eingeladene Adressen wurden übersprungen.",
       "reissued": "Neuer Link versendet; der alte ist ungültig.",
-      "reissue_failed": "Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen)."
+      "reissue_failed": "Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen).",
+      "schedule_updated": "Der Zeitplan wurde gespeichert.",
+      "schedule_failed": "Zeitplan nicht geändert: Das Ende muss nach dem Beginn und in der Zukunft liegen. Nach der ersten Stimme kann das Ende nur noch verlängert werden.",
+      "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet."
     },
     "abort": {
       "meta_title": "Abstimmung abbrechen",
@@ -718,7 +728,7 @@
       "subject": "Erinnerung: {title}",
       "intro": "Erinnerung: Sie haben bei der Abstimmung \"{title}\" noch nicht abgestimmt.\nWichtig: Diese E-Mail enthält einen neuen Link. Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwenden Sie nur den Link unten.\n\n"
     },
-    "vote_body": "Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\nDie Abstimmung endet am {ends}.\n\nIhre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an.",
+    "vote_body": "Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\nZeitraum der Abstimmung: {period}\n\nIhre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an.",
     "result": {
       "subject": "Ergebnis: {title}",
       "reason_deadline": "Die Frist ist abgelaufen.",

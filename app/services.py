@@ -17,13 +17,18 @@ from .timeutil import utcnow
 log = logging.getLogger("kugelung")
 
 
+def period_text(election: Election) -> str:
+    return (f"{fmt_datetime(election.language, election.starts_at)} – "
+            f"{fmt_datetime(election.language, election.ends_at)}")
+
+
 def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
-                       ends_at_str: str, kind: str = "invite", lang: str = "de") -> None:
+                       period: str, kind: str = "invite", lang: str = "de") -> None:
     """Versendet eine Einladung (läuft im Hintergrund, daher eigene DB-Session)
     und hält das Ergebnis am Einladungseintrag fest, damit Fehler sichtbar sind."""
     error = None
     try:
-        send_vote_invitation(to, title, link, ends_at_str, kind=kind, lang=lang)
+        send_vote_invitation(to, title, link, period, kind=kind, lang=lang)
     except Exception as exc:
         log.exception("Einladungsmail an %s fehlgeschlagen", to)
         error = str(exc)[:200] or exc.__class__.__name__
@@ -168,8 +173,7 @@ def send_pending_result_mails(db: Session) -> None:
                 to=org.email,
                 title=election.title,
                 reason=election.finish_reason,
-                period=f"{fmt_datetime(election.language, election.starts_at)} – "
-                       f"{fmt_datetime(election.language, election.ends_at)}",
+                period=period_text(election),
                 total=election.total_invited,
                 voted=election.total_voted,
                 results=get_results(db, election),
@@ -196,12 +200,14 @@ def send_due_reminders(db: Session) -> None:
         .all()
     )
     for election in due:
+        if not election.invitations_dispatched:
+            continue  # noch gar nicht eingeladen
         reminder_at = election.ends_at - timedelta(hours=settings.reminder_hours_before)
         if now < reminder_at or now >= election.ends_at:
             continue
         election.reminder_sent = True  # auch bei sehr kurzen Abstimmungen nur einmal prüfen
         db.commit()
-        if reminder_at <= election.created_at + timedelta(hours=1):
+        if reminder_at <= max(election.created_at, election.starts_at) + timedelta(hours=1):
             continue  # Abstimmung zu kurz: Erinnerung direkt nach der Einladung wäre Spam
         pending = [
             i for (i,) in db.query(Invitation.id).filter(
@@ -213,8 +219,33 @@ def send_due_reminders(db: Session) -> None:
             if result:
                 inv_id, email, link = result
                 deliver_invitation(inv_id, email, election.title, link,
-                                   fmt_datetime(election.language, election.ends_at),
-                                   kind="reminder", lang=election.language)
+                                   period_text(election), kind="reminder", lang=election.language)
+
+
+def dispatch_due_invitations(db: Session) -> None:
+    """Geplante Abstimmungen: Einladungen erst zum Beginn versenden. Die Tokens werden
+    erst jetzt erzeugt (beim Anlegen wurde nur ein Platzhalter gespeichert)."""
+    now = utcnow()
+    due = (
+        db.query(Election)
+        .filter(Election.status == "open", Election.invitations_dispatched.is_(False),
+                Election.starts_at <= now)
+        .all()
+    )
+    for election in due:
+        election.invitations_dispatched = True  # zuerst: nie doppelt versenden
+        db.commit()
+        pending = [
+            i for (i,) in db.query(Invitation.id)
+            .filter(Invitation.election_id == election.id, Invitation.used.is_(False))
+            .order_by(Invitation.email)
+        ]
+        for invitation_id in pending:
+            result = reissue_invitation(db, election, invitation_id)
+            if result:
+                inv_id, email, link = result
+                deliver_invitation(inv_id, email, election.title, link, period_text(election),
+                                   kind="invite", lang=election.language)
 
 
 def purge_expired(db: Session) -> None:
@@ -243,6 +274,7 @@ def run_maintenance() -> None:
     try:
         for (election_id,) in db.query(Election.id).filter(Election.status == "open").all():
             finalize_due(db, election_id)
+        dispatch_due_invitations(db)
         send_pending_result_mails(db)
         send_due_reminders(db)
         purge_expired(db)
