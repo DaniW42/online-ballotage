@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # (Email-Adressen, Teilnahmestatus) gelöscht. Stimmen/Ergebnis bleiben.
     retention_days: int = 30
 
+    # Globales Limit für den Mailversand: Mindestabstand zwischen zwei E-Mails in
+    # Sekunden (1 = höchstens eine E-Mail pro Sekunde, 0 = aus).
+    mail_min_interval_seconds: float = 1.0
+
     # Rate-Limits (pro Stunde) für Login/Registrierung
     rate_limit_per_email: int = 5
     rate_limit_per_ip: int = 20

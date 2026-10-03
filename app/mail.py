@@ -1,11 +1,40 @@
 import smtplib
+import threading
+import time
 from email.message import EmailMessage
 
 from .config import settings
 from .i18n import t, fmt_datetime
 
 
+class MailThrottle:
+    """Globale Drosselung: zwischen dem Start zweier Mails liegt mindestens `interval`
+    Sekunden - über alle Threads und Mailarten (Login, Einladungen, Ergebnis, ...).
+    Wer zu früh kommt, wartet; die Reihenfolge ist dadurch serialisiert."""
+
+    def __init__(self, interval: float, clock=time.monotonic, sleep=time.sleep):
+        self.interval = interval
+        self.clock = clock
+        self.sleep = sleep
+        self._lock = threading.Lock()
+        self._next_allowed = 0.0
+
+    def wait(self) -> None:
+        if self.interval <= 0:
+            return
+        with self._lock:
+            now = self.clock()
+            start = max(now, self._next_allowed)
+            if start > now:
+                self.sleep(start - now)
+            self._next_allowed = start + self.interval
+
+
+throttle = MailThrottle(settings.mail_min_interval_seconds)
+
+
 def send_mail(to: str, subject: str, body: str) -> None:
+    throttle.wait()
     msg = EmailMessage()
     msg["From"] = settings.smtp_from
     msg["To"] = to

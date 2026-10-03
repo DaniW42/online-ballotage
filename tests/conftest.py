@@ -38,11 +38,13 @@ from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app import mail as mail_module  # noqa: E402
 from app.db import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
 from app.ratelimit import limiter  # noqa: E402
 
 Mail = namedtuple("Mail", "to subject body")
+ORIGINAL_SEND_MAIL = mail_module.send_mail  # vor dem Abfangen, für Tests der Drosselung
 
 
 @pytest.fixture(scope="session", autouse=True)
