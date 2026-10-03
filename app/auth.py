@@ -1,4 +1,4 @@
-from fastapi import Request, HTTPException
+from fastapi import Request
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from .config import settings
@@ -24,10 +24,3 @@ def read_session(request: Request) -> str | None:
         return data.get("org_id")
     except (BadSignature, SignatureExpired):
         return None
-
-
-def require_org(request: Request) -> str:
-    org_id = read_session(request)
-    if not org_id:
-        raise HTTPException(status_code=303, headers={"Location": "/login"})
-    return org_id

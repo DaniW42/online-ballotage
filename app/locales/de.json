@@ -576,7 +576,8 @@
       "text": "Mit einem Klick meldest du dich an.",
       "submit": "Jetzt anmelden"
     },
-    "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein."
+    "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "invalid_name": "Bitte gib den Namen deiner Loge oder deines Vereins an (höchstens 200 Zeichen)."
   },
   "dashboard": {
     "meta_title": "Übersicht",
@@ -634,7 +635,11 @@
       "start_now": "Sofort starten",
       "start_hint": "Vorbelegt: Beginn morgen 00:00 Uhr, Ende nach 7 Tagen um 23:59 Uhr. Liegt der Beginn in der Zukunft, werden die Einladungen erst dann versendet.",
       "err_testmode": "Im Testmodus sind höchstens {n} Empfänger möglich. Lass deine Loge verifizieren, um größere Abstimmungen anzulegen.",
-      "send_rate": "Der Versand erfolgt mit höchstens einer E-Mail pro Sekunde; bei vielen Empfängern dauert er entsprechend."
+      "send_rate": "Der Versand erfolgt mit höchstens einer E-Mail pro Sekunde; bei vielen Empfängern dauert er entsprechend.",
+      "err_max_recipients": "Höchstens {n} Empfänger pro Abstimmung möglich.",
+      "err_options_limit": "Höchstens {n} Abstimmungsoptionen mit je bis zu {length} Zeichen möglich.",
+      "err_title": "Bitte gib einen Titel mit höchstens {n} Zeichen an.",
+      "err_testmode_daily": "Im Testmodus sind höchstens {n} Einladungen pro Tag möglich. Lass deine Loge verifizieren, um mehr Personen einzuladen."
     },
     "detail": {
       "period": "Zeitraum",
@@ -690,7 +695,9 @@
       "schedule_failed": "Zeitplan nicht geändert: Das Ende muss nach dem Beginn und in der Zukunft liegen. Nach der ersten Stimme kann das Ende nur noch verlängert werden.",
       "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet.",
       "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde dir noch nicht per E-Mail zugestellt. Bitte versuche es in einer Minute erneut.",
-      "testmode_limit": "Im Testmodus ist die Zahl der Empfänger begrenzt. Lass deine Loge verifizieren, um mehr Personen einzuladen."
+      "testmode_limit": "Im Testmodus ist die Zahl der Empfänger begrenzt. Lass deine Loge verifizieren, um mehr Personen einzuladen.",
+      "max_recipients": "Die Höchstzahl an Empfängern für diese Abstimmung ist erreicht.",
+      "reissue_limited": "Für diese Adresse wurden gerade schon mehrere neue Links verschickt. Bitte versuche es später erneut."
     },
     "abort": {
       "meta_title": "Abstimmung abbrechen",

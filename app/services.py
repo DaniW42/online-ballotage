@@ -1,10 +1,11 @@
 """Lebenszyklus der Abstimmungen: Abschluss, Ergebnis, Ergebnis-Mail."""
 import asyncio
 import logging
+import secrets
 
 from datetime import timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from .config import settings
@@ -15,6 +16,26 @@ from .i18n import fmt_datetime
 from .timeutil import utcnow
 
 log = logging.getLogger("kugelung")
+
+
+def scramble_row_versions(db: Session, election_id: str) -> None:
+    """Verwischt Spuren, die Postgres selbst an jeder Zeile hinterlässt.
+
+    Stimme und "hat abgestimmt"-Markierung werden in derselben Transaktion geschrieben.
+    Ohne Gegenmaßnahme tragen beide Zeilen dieselbe Transaktions-ID (Systemspalte
+    `xmin`) und liegen in derselben Reihenfolge im Speicher (`ctid`) - ein einfacher
+    SQL-Join würde Person und Stimme verbinden. Deshalb wird hier JEDE Stimme und JEDE
+    Einladung dieser Abstimmung in zufälliger Reihenfolge, einzeln, neu geschrieben:
+    Danach tragen alle Zeilen dieselbe Transaktions-ID, und ihre physische Reihenfolge
+    und Befehlsnummer (`cmin`) sind zufällig. Muss in der Transaktion der Stimmabgabe
+    laufen, bei gesperrter Abstimmungszeile (Stimmen sind dadurch serialisiert)."""
+    rows = [("votes", "choice", vid) for (vid,) in
+            db.query(Vote.id).filter(Vote.election_id == election_id)]
+    rows += [("invitations", "used", iid) for (iid,) in
+             db.query(Invitation.id).filter(Invitation.election_id == election_id)]
+    secrets.SystemRandom().shuffle(rows)
+    for table, column, row_id in rows:
+        db.execute(text(f"UPDATE {table} SET {column} = {column} WHERE id = :id"), {"id": row_id})
 
 
 def period_text(election: Election) -> str:
@@ -43,7 +64,8 @@ def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
         db.close()
 
 
-def create_invitations(db: Session, election: Election, emails: list[str]) -> list[tuple]:
+def create_invitations(db: Session, election: Election, emails: list[str],
+                       queued: bool = True) -> list[tuple]:
     """Legt Einladungen für noch nicht eingeladene Adressen an. Gibt die Daten für
     den Mailversand zurück (Roh-Token existiert nur hier und in der Mail)."""
     existing = {
@@ -54,7 +76,8 @@ def create_invitations(db: Session, election: Election, emails: list[str]) -> li
         if email in existing:
             continue
         raw, token_hash = generate_token()
-        inv = Invitation(election_id=election.id, email=email, token_hash=token_hash)
+        inv = Invitation(election_id=election.id, email=email, token_hash=token_hash,
+                         send_queued_at=utcnow() if queued else None)
         db.add(inv)
         db.flush()
         created.append((inv.id, email, f"{settings.base_url}/v/{raw}"))
@@ -77,6 +100,7 @@ def reissue_invitation(db: Session, election: Election, invitation_id: str) -> t
     inv.token_hash = token_hash
     inv.sent_at = None
     inv.send_error = None
+    inv.send_queued_at = utcnow()
     db.commit()
     return inv.id, inv.email, f"{settings.base_url}/v/{raw}"
 
@@ -137,6 +161,16 @@ def abort_election(db: Session, election_id: str) -> bool:
     db.query(Vote).filter(Vote.election_id == election.id).delete()
     db.commit()
     return True
+
+
+def invitations_last_24h(db: Session, org_id: str) -> int:
+    since = utcnow() - timedelta(hours=24)
+    return (
+        db.query(func.count(Invitation.id))
+        .join(Election, Election.id == Invitation.election_id)
+        .filter(Election.org_id == org_id, Invitation.created_at >= since)
+        .scalar()
+    )
 
 
 def is_verified(org: Organization) -> bool:
@@ -302,6 +336,36 @@ def purge_expired(db: Session) -> None:
         db.commit()
     db.query(MagicLink).filter(MagicLink.expires_at < now - timedelta(days=1)).delete()
     db.commit()
+    # Nie bestätigte Registrierungen (Login-Link nie benutzt) nach 24 h löschen
+    stale = (
+        db.query(Organization)
+        .filter(Organization.confirmed_at.is_(None),
+                Organization.created_at < now - timedelta(hours=24))
+        .all()
+    )
+    for org in stale:
+        if not db.query(Election.id).filter(Election.org_id == org.id).first():
+            db.query(MagicLink).filter(MagicLink.org_id == org.id).delete()
+            db.delete(org)
+    db.commit()
+
+
+STALLED_SEND_MINUTES = 30
+STALLED_SEND_ERROR = "Versand unterbrochen (z. B. Neustart) – bitte „Neuer Link“ verwenden"
+
+
+def mark_stalled_sends(db: Session) -> None:
+    """Einladungen, deren Versand angestoßen, aber nie abgeschlossen wurde (Prozess
+    neu gestartet), sichtbar als Fehler markieren. Der Link selbst ist verloren
+    (nur der Hash ist gespeichert), daher hilft nur ein neuer Link."""
+    cutoff = utcnow() - timedelta(minutes=STALLED_SEND_MINUTES)
+    (
+        db.query(Invitation)
+        .filter(Invitation.send_queued_at < cutoff, Invitation.sent_at.is_(None),
+                Invitation.send_error.is_(None), Invitation.used.is_(False))
+        .update({"send_error": STALLED_SEND_ERROR}, synchronize_session=False)
+    )
+    db.commit()
 
 
 def run_maintenance() -> None:
@@ -313,6 +377,7 @@ def run_maintenance() -> None:
         send_pending_result_mails(db)
         send_due_reminders(db)
         purge_expired(db)
+        mark_stalled_sends(db)
     finally:
         db.close()
 

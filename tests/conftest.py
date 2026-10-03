@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy.engine import make_url
 
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://kugelung:kugelung@localhost:5432/kugelung_test")
-os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-0123456789abcdefghijklmnop")
 os.environ.setdefault("BASE_URL", "http://testserver")
 os.environ.setdefault("SMTP_HOST", "localhost")
 os.environ.setdefault("SMTP_USER", "")

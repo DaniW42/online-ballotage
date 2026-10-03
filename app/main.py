@@ -1,9 +1,11 @@
 import asyncio
 import hashlib
 import logging
+import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, Depends, BackgroundTasks, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response
@@ -22,7 +24,7 @@ from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
-    is_verified, purge_organization,
+    is_verified, purge_organization, invitations_last_24h, scramble_row_versions,
 )
 from .timeutil import utcnow, local_input_to_utc, to_input_value
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
@@ -89,6 +91,13 @@ async def common_middleware(request: Request, call_next):
     request.state.lang = i18n.pick_language(
         request.cookies.get(i18n.LANG_COOKIE), request.headers.get("accept-language")
     )
+    if request.method == "POST":
+        if _is_cross_site(request):
+            # CSRF-Schutz, auch gegen Login-CSRF (fremdes Konto unterschieben)
+            return PlainTextResponse("Cross-site request blocked", status_code=403)
+        length = request.headers.get("content-length")
+        if length and length.isdigit() and int(length) > settings.max_request_bytes:
+            return PlainTextResponse("Request too large", status_code=413)
     response = await call_next(request)
     if request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "public, max-age=3600"
@@ -108,6 +117,19 @@ async def common_middleware(request: Request, call_next):
     return response
 
 
+def _is_cross_site(request: Request) -> bool:
+    """Formulare dürfen nur von dieser Seite selbst abgeschickt werden.
+    Sec-Fetch-Site (moderne Browser) und - falls vorhanden - Origin werden geprüft."""
+    if request.headers.get("sec-fetch-site") in ("cross-site", "same-site"):
+        return True
+    origin = request.headers.get("origin")
+    if origin and origin != "null":
+        allowed = {urlsplit(settings.base_url).netloc, request.headers.get("host", "")}
+        if urlsplit(origin).netloc not in allowed:
+            return True
+    return False
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_error(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
@@ -117,12 +139,35 @@ async def http_error(request: Request, exc: StarletteHTTPException):
 
 @app.get("/lang/{code}")
 def switch_language(code: str, next: str = "/"):
-    target = next if next.startswith("/") and not next.startswith("//") else "/"
+    # Nur lokale Pfade; "//" und "/\\" würden Browser als fremde Domain deuten.
+    safe = next.startswith("/") and not next.startswith("//") and "\\" not in next \
+        and not any(ord(c) < 32 for c in next)
+    target = next if safe else "/"
     response = RedirectResponse(target, status_code=303)
     if code in i18n.CATALOGS:
         response.set_cookie(i18n.LANG_COOKIE, code, max_age=60 * 60 * 24 * 365,
                             samesite="lax", httponly=True, secure=COOKIE_SECURE)
     return response
+
+
+def _is_uuid(value: str) -> bool:
+    try:
+        uuid.UUID(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+def _parse_local(value: str) -> datetime | None:
+    try:
+        return local_input_to_utc(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _deny(request: Request):
+    """Kein Zugriff (fremde/unbekannte Abstimmung): eingeloggt -> Übersicht, sonst Login."""
+    return RedirectResponse("/dashboard" if read_session(request) else "/login", status_code=303)
 
 
 def current_org(request: Request, db: Session) -> Organization | None:
@@ -212,16 +257,24 @@ def register_submit(
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
-    if not is_valid_email(email):
+    name = " ".join(name.split())
+    if not is_valid_email(email) or len(email) > 254:
         return render(request, "register.html", {"error": "auth.invalid_email"}, 400)
+    if not name or len(name) > 200:
+        return render(request, "register.html", {"error": "auth.invalid_name"}, 400)
     if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
         return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
     if not org:
-        org = Organization(name=" ".join(name.split()), email=email)
+        org = Organization(name=name, email=email)
         db.add(org)
         db.commit()
         db.refresh(org)
+    elif org.confirmed_at is None:
+        # Noch nie bestätigt: der echte Inhaber der Adresse darf den Namen setzen
+        # (verhindert, dass Dritte eine fremde Adresse mit eigenem Namen "reservieren").
+        org.name = name
+        db.commit()
 
     if limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
         _send_magic_link(background_tasks, db, org, request.state.lang)
@@ -291,6 +344,9 @@ def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
         return RedirectResponse("/login?error=expired", status_code=303)
 
     link.used_at = utcnow()
+    org = db.query(Organization).filter(Organization.id == link.org_id).first()
+    if org and org.confirmed_at is None:
+        org.confirmed_at = utcnow()
     db.commit()
 
     response = RedirectResponse("/dashboard", status_code=303)
@@ -383,7 +439,7 @@ def recipients_save(request: Request, emails_raw: str = Form(""), db: Session = 
     org = current_org(request, db)
     if not org:
         return RedirectResponse("/login", status_code=303)
-    org.saved_recipients = extract_emails(emails_raw)
+    org.saved_recipients = extract_emails(emails_raw)[:settings.max_recipients]
     db.commit()
     return RedirectResponse("/recipients?saved=1", status_code=303)
 
@@ -419,6 +475,9 @@ def new_election_submit(
     # Server-seitig erneut extrahieren/validieren - Client-Liste nie blind
     # übernehmen, unabhängig davon, was das Frontend vorbereitet hat.
     emails = extract_emails(emails_raw)
+    if len(emails) > settings.max_recipients:
+        return _form_error(request, org, "election.new.err_max_recipients", emails[:settings.max_recipients],
+                           n=settings.max_recipients)
     if len(emails) < settings.min_voters:
         return _form_error(request, org, "election.new.err_min_voters", emails, n=settings.min_voters)
 
@@ -432,14 +491,22 @@ def new_election_submit(
         options = [o.strip() for o in i18n.t(request.state.lang, "election.new.options_default").split(",")]
     if len(options) < 2:
         return _form_error(request, org, "election.new.err_options", emails)
+    if len(options) > settings.max_options or any(len(o) > settings.max_option_length for o in options):
+        return _form_error(request, org, "election.new.err_options_limit", emails,
+                           n=settings.max_options, length=settings.max_option_length)
 
     title = " ".join(title.split())  # Zeilenumbrüche im Titel (Mail-Betreff) vermeiden
+    if not title or len(title) > settings.max_title_length:
+        return _form_error(request, org, "election.new.err_title", emails, n=settings.max_title_length)
     if not is_verified(org) and len(emails) > settings.test_mode_max_voters:
         return _form_error(request, org, "election.new.err_testmode", emails,
                            n=settings.test_mode_max_voters)
+    if not is_verified(org) and invitations_last_24h(db, org.id) + len(emails) > settings.test_mode_daily_invitations:
+        return _form_error(request, org, "election.new.err_testmode_daily", emails,
+                           n=settings.test_mode_daily_invitations)
 
-    starts, ends, now = local_input_to_utc(starts_at), local_input_to_utc(ends_at), utcnow()
-    if ends <= starts or ends <= now:
+    starts, ends, now = _parse_local(starts_at), _parse_local(ends_at), utcnow()
+    if starts is None or ends is None or ends <= starts or ends <= now:
         return _form_error(request, org, "election.new.err_period", emails)
     # Beginn in der Zukunft: Einladungen erst zum Beginn versenden
     scheduled = starts > now + timedelta(minutes=1)
@@ -459,7 +526,7 @@ def new_election_submit(
     db.commit()
     db.refresh(election)
 
-    created = create_invitations(db, election, emails)
+    created = create_invitations(db, election, emails, queued=not scheduled)
     if save_recipients:
         org.saved_recipients = emails
     db.commit()
@@ -469,7 +536,7 @@ def new_election_submit(
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
 
-MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "delete_blocked", "testmode_limit", "added", "added_scheduled",
+MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "delete_blocked", "testmode_limit", "max_recipients", "reissue_limited", "added", "added_scheduled",
             "reissued", "reissue_failed"}
 
 
@@ -483,7 +550,7 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
         db.query(Election)
         .filter(Election.id == election_id, Election.org_id == org.id)
         .first()
-    )
+    ) if _is_uuid(election_id) else None
     if not election:
         return RedirectResponse("/dashboard")
 
@@ -534,7 +601,7 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
 
 def _own_election(db: Session, request: Request, election_id: str) -> Election | None:
     org = current_org(request, db)
-    if not org:
+    if not org or not _is_uuid(election_id):
         return None
     return (
         db.query(Election)
@@ -549,7 +616,7 @@ def election_add_voters(
     emails_raw: str = Form(""), db: Session = Depends(get_db),
 ):
     if not _own_election(db, request, election_id):
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     finalize_due(db, election_id)
     election = db.query(Election).filter(Election.id == election_id).with_for_update().first()
     if election.status != "open":
@@ -559,10 +626,17 @@ def election_add_voters(
     new_emails = extract_emails(emails_raw)
     existing = db.query(func.count(Invitation.id)).filter(Invitation.election_id == election.id).scalar()
     already = {e for (e,) in db.query(Invitation.email).filter(Invitation.election_id == election.id)}
-    if not is_verified(org) and existing + len([e for e in new_emails if e not in already]) > settings.test_mode_max_voters:
+    fresh = len([e for e in new_emails if e not in already])
+    if existing + fresh > settings.max_recipients:
+        db.rollback()
+        return RedirectResponse(f"/elections/{election_id}?msg=max_recipients", status_code=303)
+    if not is_verified(org) and (
+        existing + fresh > settings.test_mode_max_voters
+        or invitations_last_24h(db, org.id) + fresh > settings.test_mode_daily_invitations
+    ):
         db.rollback()
         return RedirectResponse(f"/elections/{election_id}?msg=testmode_limit", status_code=303)
-    created = create_invitations(db, election, new_emails)
+    created = create_invitations(db, election, new_emails, queued=election.invitations_dispatched)
     db.commit()
     if election.invitations_dispatched:
         _queue_invitations(background_tasks, election, created)
@@ -578,7 +652,11 @@ def election_reissue(
     background_tasks: BackgroundTasks, db: Session = Depends(get_db),
 ):
     if not _own_election(db, request, election_id):
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
+    if not _is_uuid(invitation_id):
+        return RedirectResponse(f"/elections/{election_id}?msg=reissue_failed", status_code=303)
+    if not limiter.allow(f"reissue:{invitation_id}", 3):  # Schutz vor Mail-Bombing einzelner Adressen
+        return RedirectResponse(f"/elections/{election_id}?msg=reissue_limited", status_code=303)
     finalize_due(db, election_id)
     election = db.query(Election).filter(Election.id == election_id).first()
     can_reissue = election.status == "open" and election.invitations_dispatched
@@ -593,7 +671,7 @@ def election_reissue(
 def election_abort_confirm(election_id: str, request: Request, db: Session = Depends(get_db)):
     election = _own_election(db, request, election_id)
     if not election:
-        return RedirectResponse("/login")
+        return _deny(request)
     if election.status != "open":
         return RedirectResponse(f"/elections/{election_id}?msg=not_open")
     return render(request, "abort_confirm.html", {"election": election})
@@ -604,7 +682,7 @@ def election_abort(
     election_id: str, request: Request, confirm: str = Form(""), db: Session = Depends(get_db)
 ):
     if not _own_election(db, request, election_id):
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     if confirm != "yes":  # Abbruch ist endgültig: nur über die Bestätigungsseite
         return RedirectResponse(f"/elections/{election_id}/abort", status_code=303)
     done = abort_election(db, election_id)
@@ -616,7 +694,7 @@ def election_abort(
 def election_delete_confirm(election_id: str, request: Request, db: Session = Depends(get_db)):
     election = _own_election(db, request, election_id)
     if not election:
-        return RedirectResponse("/login")
+        return _deny(request)
     kind = "open" if election.status == "open" else election.status  # geplant zählt als offen
     return render(request, "delete_confirm.html", {"election": election, "kind": kind})
 
@@ -626,7 +704,7 @@ def election_delete(
     election_id: str, request: Request, confirm: str = Form(""), db: Session = Depends(get_db)
 ):
     if not _own_election(db, request, election_id):
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     if confirm != "yes":
         return RedirectResponse(f"/elections/{election_id}/delete", status_code=303)
     if delete_election(db, election_id):
@@ -644,7 +722,7 @@ def election_schedule(
     Abschluss gezielt dann auszulösen, wenn nur wenige (bekannte) Teilnehmer abgestimmt
     haben, und so ein Ergebnis mit minimaler Anonymitätsmenge zu erzeugen."""
     if not _own_election(db, request, election_id):
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     finalize_due(db, election_id)  # ggf. erst abschließen; danach ist alles gesperrt
     election = (
         db.query(Election).filter(Election.id == election_id).with_for_update().first()
@@ -655,10 +733,13 @@ def election_schedule(
         return failed
     used = db.query(func.count(Invitation.id)).filter(
         Invitation.election_id == election.id, Invitation.used.is_(True)).scalar()
-    new_end = local_input_to_utc(ends_at)
+    new_end = _parse_local(ends_at)
+    if new_end is None:
+        db.rollback()
+        return failed
     if used == 0:
-        new_start = local_input_to_utc(starts_at) if starts_at else election.starts_at
-        valid = new_end > new_start and new_end > utcnow()
+        new_start = _parse_local(starts_at) if starts_at else election.starts_at
+        valid = new_start is not None and new_end > new_start and new_end > utcnow()
     else:
         new_start = election.starts_at
         valid = new_end > election.ends_at
@@ -826,7 +907,16 @@ def vote_form(token: str, request: Request, db: Session = Depends(get_db)):
 @app.post("/v/{token}")
 def vote_submit(token: str, request: Request, choice: str = Form(...), db: Session = Depends(get_db)):
     token_hash = hash_token(token)
+    found = db.query(Invitation.election_id).filter(Invitation.token_hash == token_hash).first()
+    if not found:
+        return render(request, "vote_invalid.html", {"reason": "used"}, 410)
 
+    # Sperrreihenfolge überall: erst Abstimmung, dann Einladung (keine Deadlocks).
+    # Die exklusive Sperre serialisiert Stimmen derselben Abstimmung - nötig für das
+    # Verwischen unten und gegen einen parallel laufenden Abschluss.
+    election = (
+        db.query(Election).filter(Election.id == found.election_id).with_for_update().first()
+    )
     # Pessimistisches Lock: verhindert, dass derselbe Token durch gleichzeitige
     # Requests (Doppelklick, doppelter Mail-Client-Prefetch) zweimal zählt.
     invitation = (
@@ -836,16 +926,9 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
         .first()
     )
     if not invitation or invitation.used:
+        db.rollback()
         return render(request, "vote_invalid.html", {"reason": "used"}, 410)
 
-    # Geteilte Sperre: ein parallel laufender Abschluss (FOR UPDATE) wartet,
-    # bis diese Stimme committet ist - oder wir sehen schon den Abschluss.
-    election = (
-        db.query(Election)
-        .filter(Election.id == invitation.election_id)
-        .with_for_update(read=True)
-        .first()
-    )
     _set_lang(request, election.language)
     now = utcnow()
     if election.status != "open" or now < election.starts_at or now > election.ends_at:
@@ -860,6 +943,8 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
     # in der Datenbank vollständig getrennt.
     vote = Vote(id=new_uuid(), election_id=election.id, choice=choice)
     db.add(vote)
+    db.flush()
+    scramble_row_versions(db, election.id)  # xmin/ctid-Korrelation auflösen
     db.commit()
 
     code = vote.id if election.receipts_enabled else None

@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -38,6 +39,16 @@ class Settings(BaseSettings):
     # alle Logen gelten als verifiziert (typisch für selbst betriebene Instanzen).
     admin_email: str = ""
     test_mode_max_voters: int = 3
+    # Testmodus: höchstens so viele Einladungen pro Loge und 24 Stunden (gegen Spam
+    # über viele kleine Abstimmungen)
+    test_mode_daily_invitations: int = 10
+
+    # Obergrenzen gegen Missbrauch und Überlast
+    max_recipients: int = 500          # Empfänger pro Abstimmung
+    max_title_length: int = 200
+    max_options: int = 20
+    max_option_length: int = 100
+    max_request_bytes: int = 1_000_000
 
     # Mindestanzahl Eingeladener und abgegebener Stimmen, damit ein Ergebnis
     # überhaupt sichtbar wird (sonst wäre die einzelne Stimme ableitbar).
@@ -58,6 +69,23 @@ class Settings(BaseSettings):
     rate_limit_per_email: int = 5
     rate_limit_per_ip: int = 20
 
+
+    @field_validator("secret_key")
+    @classmethod
+    def _secret_key_strong(cls, value: str) -> str:
+        # Leerer/kurzer Schlüssel = fälschbare Sitzungs-Cookies. Lieber gar nicht starten.
+        if len(value) < 32:
+            raise ValueError("SECRET_KEY muss mindestens 32 Zeichen lang sein "
+                             "(python3 -c \"import secrets;print(secrets.token_urlsafe(32))\")")
+        return value
+
+    @field_validator("base_url")
+    @classmethod
+    def _base_url_clean(cls, value: str) -> str:
+        value = value.strip().rstrip("/")
+        if not value.startswith(("http://", "https://")):
+            raise ValueError("BASE_URL muss mit http:// oder https:// beginnen")
+        return value
 
     @property
     def legal_complete(self) -> bool:

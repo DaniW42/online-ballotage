@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DB_PASSWORD: ci-password
-      SECRET_KEY: ci-secret
+      SECRET_KEY: ci-secret-key-0123456789abcdefghijklmnop
       BASE_URL: http://testserver
     steps:
       - uses: actions/checkout@v4

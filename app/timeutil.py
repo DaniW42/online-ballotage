@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 from .config import settings
 
 TZ = ZoneInfo(settings.timezone)
-DISPLAY_FORMAT = "%d.%m.%Y %H:%M"
 
 
 def utcnow() -> datetime:
@@ -20,10 +19,6 @@ def local_input_to_utc(value: str) -> datetime:
 
 def to_local(dt: datetime) -> datetime:
     return dt.replace(tzinfo=timezone.utc).astimezone(TZ)
-
-
-def fmt_local(dt: datetime, fmt: str = DISPLAY_FORMAT) -> str:
-    return to_local(dt).strftime(fmt)
 
 
 def to_input_value(dt: datetime) -> str:

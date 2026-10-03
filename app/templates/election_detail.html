@@ -9,7 +9,7 @@
 <p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
 {% if message %}
-<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed', 'delete_blocked', 'testmode_limit') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
+<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed', 'delete_blocked', 'testmode_limit', 'max_recipients', 'reissue_limited') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
 {% endif %}
 
 {% if phase(election) == "scheduled" %}

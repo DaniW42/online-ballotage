@@ -25,6 +25,8 @@ class Organization(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     verified = Column(Boolean, default=False, nullable=False)
+    # Erster erfolgreicher Login. Nie bestätigte Registrierungen werden nach 24 h gelöscht.
+    confirmed_at = Column(DateTime, nullable=True)
     # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
     # Kann jederzeit gelöscht werden (Datensparsamkeit).
     saved_recipients = Column(JSON, default=list, nullable=False)
@@ -105,6 +107,9 @@ class Invitation(Base):
     # NIE im Zuge einer Stimmabgabe - sonst wäre die Zeitkorrelation wieder da.
     sent_at = Column(DateTime, nullable=True)
     send_error = Column(String, nullable=True)
+    # Wann der Versand angestoßen wurde; bleibt eine Mail danach ohne Ergebnis
+    # (z. B. Neustart während des Versands), wird sie als Fehler markiert.
+    send_queued_at = Column(DateTime, nullable=True)
 
 
 class Vote(Base):
