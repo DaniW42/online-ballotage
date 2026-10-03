@@ -4,7 +4,7 @@
 {% block content %}
 <h1>{{ t('election.abort.title') }}</h1>
 <div class="notice error">
-  <p>{{ t('election.abort.intro', title=election.title)|md|replace('<p>', '')|replace('</p>', '')|safe }}</p>
+  <p>{{ t('election.abort.intro', title=election.title) }}</p>
   <ul>
     {% for c in tl('election.abort.consequences') %}<li>{{ c|md|replace('<p>', '')|replace('</p>', '')|safe }}</li>{% endfor %}
   </ul>

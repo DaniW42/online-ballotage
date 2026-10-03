@@ -3,6 +3,7 @@
 {% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <h1>{{ t('auth.register.title') }}</h1>
+{% if error %}<div class="notice error">{{ t(error) }}</div>{% endif %}
 <p>{{ t('auth.register.lead') }}</p>
 <form method="post" action="/register" class="card-form">
   <label for="name">{{ t('auth.register.name') }}</label>

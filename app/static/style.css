@@ -26,6 +26,8 @@
     --border: #2d3548; --error: #f0a0a0; --error-bg: #2e1c1f; --ok: #8fd0a6; --ok-bg: #18271f;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
+  /* helle Signalfarben brauchen dunkle Schrift */
+  button.danger, .badge { color: var(--bg); }
 }
 
 * { box-sizing: border-box; }

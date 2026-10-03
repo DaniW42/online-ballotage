@@ -563,7 +563,7 @@
     "sent": {
       "meta_title": "E-Mail unterwegs",
       "title": "E-Mail unterwegs",
-      "text": "Falls die Adresse **{email}** bei uns bekannt ist, finden Sie dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
+      "text": "Falls die Adresse {email} bei uns bekannt ist, finden Sie dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
       "hint": "Nichts erhalten? Schauen Sie auch im Spam-Ordner nach."
     },
     "confirm": {
@@ -571,7 +571,8 @@
       "title": "Anmeldung bestätigen",
       "text": "Mit einem Klick melden Sie sich an.",
       "submit": "Jetzt anmelden"
-    }
+    },
+    "invalid_email": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
   },
   "dashboard": {
     "meta_title": "Übersicht",
@@ -670,7 +671,7 @@
     "abort": {
       "meta_title": "Abstimmung abbrechen",
       "title": "Abstimmung wirklich abbrechen?",
-      "intro": "Sie sind dabei, die Abstimmung **{title}** abzubrechen. Das hat folgende Folgen:",
+      "intro": "Sie sind dabei, die Abstimmung „{title}“ abzubrechen. Das hat folgende Folgen:",
       "consequences": [
         "Es wird **nie** ein Ergebnis angezeigt oder versendet – auch nicht teilweise.",
         "Alle bereits abgegebenen Stimmen werden **endgültig gelöscht**.",

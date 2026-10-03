@@ -3,6 +3,7 @@
 {% block robots %}noindex,nofollow{% endblock %}
 {% block content %}
 <h1>{{ t('auth.login.title') }}</h1>
+{% if error %}<div class="notice error">{{ t(error) }}</div>{% endif %}
 {% if expired %}<div class="notice error">{{ t('auth.login.expired') }}</div>{% endif %}
 <p>{{ t('auth.login.lead') }}</p>
 <form method="post" action="/login" class="card-form">

@@ -11,7 +11,7 @@
   <meta property="og:title" content="{{ self.title() }}">
   <meta property="og:description" content="{{ self.description() }}">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ static_v }}">
 </head>
 <body>
   <a class="skip" href="#main">{{ t('nav.skip') }}</a>
@@ -21,6 +21,7 @@
         {% include "_logo.html" %}
         <span>{{ t('brand.name') }}</span>
       </a>
+      {% if not request.url.path.startswith('/v/') %}
       <nav class="main-nav" aria-label="{{ t('nav.main') }}">
         <a href="/how-it-works"{% if request.url.path == '/how-it-works' %} aria-current="page"{% endif %}>{{ t('nav.how') }}</a>
         <a href="/security"{% if request.url.path == '/security' %} aria-current="page"{% endif %}>{{ t('nav.security') }}</a>
@@ -36,6 +37,7 @@
           <a class="btn" href="/register">{{ t('nav.register') }}</a>
         {% endif %}
       </div>
+      {% endif %}
     </div>
   </header>
 
@@ -67,7 +69,7 @@
             <li><a href="/source">{{ t('footer.source') }}</a></li>
           </ul>
         </div>
-        {% if languages|length > 1 %}
+        {% if languages|length > 1 and not request.url.path.startswith('/v/') and not request.url.path.startswith('/auth/') %}
         <div class="lang-switch">
           <h2>{{ t('footer.language') }}</h2>
           <ul>

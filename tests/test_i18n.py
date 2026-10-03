@@ -125,3 +125,17 @@ def test_render_md_links_only_safe_schemes():
     assert 'href="/faq"' in ok and 'href="https://x.test"' in ok and 'href="mailto:a@b.de"' in ok
     bad = str(i18n.render_md("[x](javascript:alert(1))"))
     assert "<a " not in bad
+
+
+def test_switcher_hidden_on_token_pages(create_election, anon, second_language):
+    """Auf /v/<token> und /auth/<token> darf kein Link mit dem Token als ?next= entstehen."""
+    _, tokens = create_election()
+    assert "/lang/" not in anon.get(f"/v/{tokens['a@x.test']}").text
+    assert "/lang/xx" in anon.get("/faq").text
+
+
+def test_no_markdown_applied_to_parametrised_strings():
+    """Strings mit Platzhaltern (Nutzereingaben!) dürfen nie durch |md laufen."""
+    pattern = re.compile(r"\bt\([^)]*=[^)]*\)\s*\|\s*md")
+    for path in (APP / "templates").glob("*.html"):
+        assert not pattern.search(path.read_text(encoding="utf-8")), path.name

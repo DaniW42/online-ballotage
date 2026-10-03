@@ -1,5 +1,7 @@
 import asyncio
+import hashlib
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import timedelta
 
@@ -22,9 +24,15 @@ from .services import (
     deliver_invitation, create_invitations, reissue_invitation,
 )
 from .timeutil import utcnow, local_input_to_utc
-from .tokens import extract_emails, generate_token, hash_token
+from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 
 log = logging.getLogger("kugelung")
+
+# Cache-Busting für statische Dateien: Änderung am Inhalt = neue URL
+_static_dir = Path(__file__).parent / "static"
+STATIC_VERSION = hashlib.sha1(
+    b"".join(p.read_bytes() for p in sorted(_static_dir.rglob("*")) if p.is_file())
+).hexdigest()[:10]
 
 
 @asynccontextmanager
@@ -54,6 +62,7 @@ def _template_context(request: Request) -> dict:
         "logged_in": read_session(request) is not None,
         "cfg": settings,
         "now_year": utcnow().year,
+        "static_v": STATIC_VERSION,
         "base_url": settings.base_url,
     }
 
@@ -192,6 +201,8 @@ def register_submit(
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
+    if not is_valid_email(email):
+        return render(request, "register.html", {"error": "auth.invalid_email"}, 400)
     if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
         return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
@@ -203,7 +214,7 @@ def register_submit(
 
     if limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
         _send_magic_link(background_tasks, db, org, request.state.lang)
-    return render(request, "magic_sent.html", {"email": email})
+    return render(request, "magic_sent.html", {"email": email, "minutes": settings.magic_link_ttl_minutes})
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -219,6 +230,8 @@ def login_submit(
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
+    if not is_valid_email(email):
+        return render(request, "login.html", {"error": "auth.invalid_email"}, 400)
     if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
         return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
@@ -226,7 +239,7 @@ def login_submit(
     # Limit pro Adresse greift (keine Enumeration, kein Mail-Bombing).
     if org and limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
         _send_magic_link(background_tasks, db, org, request.state.lang)
-    return render(request, "magic_sent.html", {"email": email})
+    return render(request, "magic_sent.html", {"email": email, "minutes": settings.magic_link_ttl_minutes})
 
 
 def _send_magic_link(background_tasks: BackgroundTasks, db: Session, org: Organization, lang: str):

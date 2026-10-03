@@ -102,3 +102,14 @@ def test_abort_confirmation_page_explains_consequences(create_election, orga):
 def test_vote_pages_do_not_leak_to_search_engines(create_election, anon):
     _, tokens = create_election()
     assert "noindex" in anon.get(f"/v/{tokens['a@x.test']}").text
+
+
+def test_static_assets_are_versioned(anon):
+    html = anon.get("/").text
+    assert re.search(r'/static/style\.css\?v=[0-9a-f]{10}"', html)
+
+
+def test_vote_page_has_no_site_navigation(create_election, anon):
+    _, tokens = create_election()
+    html = anon.get(f"/v/{tokens['a@x.test']}").text
+    assert 'class="main-nav"' not in html and 'href="/register"' not in html

@@ -69,3 +69,17 @@ def test_session_cookie_flags(anon, outbox):
     cookie = anon.post(f"/auth/{token}").headers["set-cookie"].lower()
     assert "httponly" in cookie and "samesite=lax" in cookie
     assert "secure" not in cookie  # BASE_URL im Test ist http
+
+
+def test_invalid_email_rejected_and_never_rendered_as_markup(anon, outbox):
+    evil = "[Jetzt anmelden](https://evil.test)"
+    for path in ("/login", "/register"):
+        response = anon.post(path, data={"name": "x", "email": evil})
+        assert response.status_code == 400
+        assert "https://evil.test" not in response.text
+    assert not outbox
+
+
+def test_magic_sent_page_escapes_email(anon):
+    response = anon.post("/login", data={"email": "a+<b>@loge.test"})
+    assert "<b>" not in response.text
