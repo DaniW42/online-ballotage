@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
@@ -9,6 +9,16 @@ COPY app ./app
 COPY alembic.ini .
 COPY migrations ./migrations
 
+# Testimage: docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm test
+FROM base AS test
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY pytest.ini Dockerfile ./
+COPY tests ./tests
+CMD ["pytest"]
+
+# Laufzeitimage (Standard-Target, da zuletzt definiert)
+FROM base AS runtime
 RUN useradd --system --no-create-home appuser
 USER appuser
 

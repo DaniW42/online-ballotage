@@ -1,0 +1,12 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ci-password
+      SECRET_KEY: ci-secret
+      BASE_URL: http://testserver
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm --build test

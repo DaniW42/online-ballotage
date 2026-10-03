@@ -1,0 +1,18 @@
+# Tests laufen gegen eine eigene Datenbank "kugelung_test" im selben Postgres:
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm test
+services:
+  test:
+    build:
+      context: .
+      target: test
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://kugelung:${DB_PASSWORD}@db:5432/kugelung_test
+      SECRET_KEY: test-secret-key
+      BASE_URL: http://testserver
+      SMTP_HOST: localhost
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: test@example.org
