@@ -1,0 +1,34 @@
+# Eigenständiger Stack mit automatischem HTTPS (Caddy):
+#   docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build
+# Voraussetzung: SITE_ADDRESS (Domain) und BASE_URL (https://...) in der .env,
+# DNS zeigt auf den Server, Ports 80/443 sind erreichbar.
+services:
+  app:
+    # Die App ist nur noch über Caddy erreichbar
+    ports: !reset []
+    expose:
+      - "8000"
+    environment:
+      # Nur Caddy kann die App erreichen, daher darf er X-Forwarded-For setzen
+      FORWARDED_ALLOW_IPS: "*"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS (Domain) in der .env setzen}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

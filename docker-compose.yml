@@ -39,6 +39,22 @@ services:
       RATE_LIMIT_PER_IP: ${RATE_LIMIT_PER_IP:-20}
       # IP des Reverse-Proxys, dem X-Forwarded-For vertraut wird
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      # Impressum / Datenschutz
+      LEGAL_NAME: ${LEGAL_NAME:-}
+      LEGAL_STREET: ${LEGAL_STREET:-}
+      LEGAL_CITY: ${LEGAL_CITY:-}
+      LEGAL_COUNTRY: ${LEGAL_COUNTRY:-Deutschland}
+      LEGAL_EMAIL: ${LEGAL_EMAIL:-}
+      LEGAL_PHONE: ${LEGAL_PHONE:-}
+      LEGAL_VAT_ID: ${LEGAL_VAT_ID:-}
+      LEGAL_HOSTING: ${LEGAL_HOSTING:-}
+      REPO_URL: ${REPO_URL:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
     ports:
       - "8000:8000"
     # Hinter NPM: ports-Block entfernen, stattdessen NPM-Proxy-Host auf

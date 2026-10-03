@@ -1,0 +1,11 @@
+# Eigenständiger Betrieb mit automatischem HTTPS (Let's Encrypt).
+# SITE_ADDRESS kommt aus der .env, z. B. ballotage.online
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy app:8000
+
+	# Keine Zugriffsprotokolle: Links zur Stimmabgabe enthalten geheime Tokens.
+	log {
+		output discard
+	}
+}

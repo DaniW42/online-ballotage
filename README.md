@@ -1,84 +1,78 @@
-# online-ballotage
+# ballotage.online
 
-Minimalistisches, selbstgehostetes Tool für anonyme Online-Abstimmungen
-(z. B. Freimaurer-Kugelungen). Passwortloser Login (Magic Link), Freitext-
-Email-Erfassung, Token-basierte Einmal-Stimmabgabe ohne Verknüpfung
-zwischen Person und Stimme in der Datenbank.
+Selbst hostbares Tool für **anonyme Online-Abstimmungen** (z. B. Freimaurer-Kugelungen).
+Passwortloser Login per Magic Link, Einladung per E-Mail, Einmal-Links zur Stimmabgabe –
+und eine Datenstruktur, in der Stimme und Person **nicht verknüpfbar** sind.
+
+Die Webseite enthält Startseite, Erklärung, Sicherheitsseite, FAQ, Selbst-Hosting-Anleitung,
+Impressum und Datenschutzerklärung. Alle Texte stehen in Sprachdateien (derzeit Deutsch),
+siehe [docs/TRANSLATING.md](docs/TRANSLATING.md).
 
 ## Lizenz
 
-[Elastic License 2.0 (ELv2)](LICENSE) – Quellcode frei einsehbar,
-nutzbar, veränderbar und weitergebbar, auch kommerziell. Einzige
-Einschränkung: Niemand darf die Software Dritten als gehosteten/verwalteten
-Dienst anbieten, der im Wesentlichen dieselbe Funktionalität bereitstellt
-(verhindert z. B. das 1:1-Weiterbetreiben hinter einer eigenen Paywall).
-Das erfüllt nicht die Open Source Definition der OSI (die schließt jede
-Nutzungsbeschränkung aus) und ist daher korrekt als **"Source-available"**
-statt "Open Source" zu bezeichnen.
+[Elastic License 2.0 (ELv2)](LICENSE) – Quelltext frei einsehbar, nutzbar, veränderbar und
+weitergebbar, auch kommerziell. Einzige Einschränkung: Niemand darf die Software Dritten als
+gehosteten/verwalteten Dienst anbieten, der im Wesentlichen dieselbe Funktionalität bereitstellt.
+Das erfüllt nicht die Open Source Definition der OSI und ist daher als **„source-available“**
+zu bezeichnen.
 
-## Setup
+## Entwicklung
 
-1. `.env.example` nach `.env` kopieren und ausfüllen:
-   - `DB_PASSWORD`: langes Zufallspasswort
-   - `SECRET_KEY`: `python3 -c "import secrets;print(secrets.token_urlsafe(32))"`
-   - `BASE_URL`: öffentliche URL der Instanz (für Links in Emails)
-   - SMTP-Zugangsdaten eurer bestehenden Mail-Infrastruktur
+Stack: FastAPI, PostgreSQL, Jinja2, Docker Compose.
 
-2. Stack starten:
-   ```
-   docker compose -f docker-compose.yml --env-file .env up -d --build
-   ```
-   Wichtig: `-f docker-compose.yml` lädt `docker-compose.override.yml`
-   (Mailpit, nur für die Entwicklung) bewusst nicht. Lokal reicht
-   `docker compose up -d --build`; Mails erscheinen dann auf
-   http://localhost:8025.
-   Die Tabellen werden beim Start per Alembic angelegt bzw. aktualisiert.
+```
+cp .env.example .env     # DB_PASSWORD, SECRET_KEY, BASE_URL=http://localhost:8000 ausfüllen
+docker compose up -d --build
+```
 
-3. Hinter Nginx Proxy Manager: Proxy-Host auf den `app`-Container,
-   Port 8000, SSL aktivieren. Danach in `docker-compose.yml` den
-   `ports`-Block entfernen, da der Zugriff dann über NPM läuft.
+`docker compose up` lädt automatisch `docker-compose.override.yml` (Mailpit als Test-Mailserver,
+Weboberfläche auf http://localhost:8025, SMTP-Werte sind dort vorbelegt). App: http://localhost:8000.
 
-## Sicherheitsrelevantes
+Tests (eigene Datenbank `kugelung_test`, Schema aus den Alembic-Migrationen):
 
-- **Anonymität**: `votes`-Tabelle hat keine Fremdschlüssel-Beziehung zu
-  `invitations`. Diese Trennung ist absichtlich und darf bei Erweiterungen
-  nicht aufgeweicht werden (z. B. keine Logging-Korrelation von
-  Token-Verbrauch und Stimmeneingang im selben Request-Log).
-- **Zeitstempel**: Weder `votes` noch `invitations` speichern einen
-  Zeitpunkt der Stimmabgabe (`invitations.used` ist nur ein Boolean),
-  damit sich Stimme und Person nicht über Zeitnähe zuordnen lassen.
-- **Access-Logs**: Der App-Container startet mit `--no-access-log`
-  (sonst stünden Roh-Tokens samt Zeitpunkt im Log). Reverse-Proxy-Logs (NPM/Nginx) können Tokens aus der
-  URL mitschreiben. Für produktiven Einsatz Log-Format für `/v/*` und
-  `/auth/*` anpassen oder diese Pfade vom Access-Log ausnehmen.
-- **Tokens**: `secrets.token_urlsafe(32)`, serverseitig nur als SHA-256-Hash
-  gespeichert. Magic Links und Wahl-Links sind strukturell identisch,
-  nur mit unterschiedlicher Gültigkeitsdauer.
+```
+make test
+```
 
-## Funktionen im Überblick
+Schema-Änderungen laufen über Alembic (`migrations/`); der Container führt beim Start
+`alembic upgrade head` aus.
 
-Kurzfassung; die ausführliche Beschreibung steht in [docs/FAQ.md](docs/FAQ.md).
+## Produktivbetrieb
 
-- Abschluss bei Fristende oder wenn alle abgestimmt haben, Ergebnis einmalig per Mail
-- Abbruch (nie ein Ergebnis, Stimmen gelöscht), Verlängern solange offen
-- Mindestens 3 Eingeladene und 3 Stimmen, sonst kein Ergebnis
-- Teilnehmerliste, Nachladen, neuer Link, Versandstatus, Erinnerungen
-- Gespeicherte Empfängerliste pro Loge, Löschung eingeladener Adressen nach 30 Tagen
-- Optionale Prüfbarkeit (Quittungscode + Stimmenliste)
+Zwei Varianten, ausführlich unter `/self-hosting` bzw. in `app/locales/de.json`:
 
-Konfiguration über Umgebungsvariablen (siehe `.env.example` und `app/config.py`):
-`TIMEZONE`, `REQUIRE_VERIFICATION`, `MIN_VOTERS`, `RETENTION_DAYS`,
-`REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`.
-Alle sind in `docker-compose.yml` mit Standardwerten durchgereicht.
+- **Eigenständig mit automatischem HTTPS (Caddy):**
+  `docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build`
+  (`SITE_ADDRESS` in der `.env` setzen)
+- **Hinter eigenem Reverse-Proxy (z. B. Nginx Proxy Manager):**
+  `docker compose -f docker-compose.yml up -d --build`, Proxy auf Port 8000 des App-Containers.
+  `/v/` und `/auth/` vom Access-Log ausnehmen, `FORWARDED_ALLOW_IPS` auf die Proxy-IP setzen.
 
-Betrieb: genau **ein** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im
-Prozess). Schema-Änderungen laufen über Alembic (`migrations/`); der Container
-führt beim Start `alembic upgrade head` aus.
+Mailpit (Override-Datei) startet dabei **nicht**. Vor dem öffentlichen Betrieb müssen die `LEGAL_*`-Angaben (Impressum) und `ADMIN_EMAIL` gesetzt sein.
+
+Konfiguration über Umgebungsvariablen: siehe `.env.example` und `app/config.py`
+(u. a. `TIMEZONE`, `REQUIRE_VERIFICATION`, `MIN_VOTERS`, `RETENTION_DAYS`,
+`REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`, `LEGAL_*`).
+Logen freigeben (bei `REQUIRE_VERIFICATION=true`):
+`docker compose exec app python -m app.cli verify loge@example.org`.
+
+Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im Prozess).
+
+## Sicherheitsrelevantes (für Entwickler)
+
+- **Anonymität**: `votes` hat keine Fremdschlüssel-Beziehung zu `invitations` und **keine
+  Zeitspalte**; `invitations` speichert nur `used` (Boolean) statt eines Zeitstempels. Diese
+  Trennung darf nicht aufgeweicht werden (auch keine Logging-Korrelation von Token-Verbrauch
+  und Stimmeneingang). Die Tests in `tests/test_anonymity.py` sichern das ab.
+- **Access-Logs**: Der App-Container startet mit `--no-access-log`; Proxy-Logs für `/v/*` und
+  `/auth/*` müssen ebenfalls abgeschaltet sein.
+- **Tokens**: `secrets.token_urlsafe(32)`, serverseitig nur als SHA-256-Hash gespeichert.
+- **Nach Abschluss eingefroren**: kein Verlängern/Nachladen/Neu-Ausstellen mehr, sonst wäre
+  eine Stimme aus der Differenz zweier Zwischenstände ableitbar.
+- **Strikte CSP**: keine Inline-Skripte/-Styles; Skripte liegen in `app/static/js/`.
 
 ## Offene Punkte
 
-- Antragsworkflow für die Verifizierung von Logen (aktuell: `REQUIRE_VERIFICATION`
-  plus `python -m app.cli verify`)
-- Mehrere Administratoren pro Loge
-- Automatisierte Tests (bisher nur manuelle End-to-End-Läufe)
+- Antragsworkflow für die Verifizierung von Logen (aktuell `REQUIRE_VERIFICATION` + CLI)
+- Mehrere Administratoren pro Loge, Self-Service-Löschung von Konten
 - Kryptografische Entkopplung von Token und Stimme (Blind Signatures)
