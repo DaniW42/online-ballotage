@@ -12,8 +12,20 @@ class Settings(BaseSettings):
     smtp_from: str
     smtp_use_tls: bool = True
 
-    # Magic Links und Wahl-Tokens: Gültigkeitsdauer in Minuten
+    # Magic Links: Gültigkeitsdauer in Minuten
     magic_link_ttl_minutes: int = 15
+
+    # Zeitzone, in der Beginn/Ende eingegeben und angezeigt werden.
+    # Intern wird alles als naive UTC gespeichert.
+    timezone: str = "Europe/Berlin"
+
+    # Wenn true, dürfen nur verifizierte Logen Abstimmungen anlegen
+    # (Freigabe per `python -m app.cli verify <email>`).
+    require_verification: bool = False
+
+    # Rate-Limits (pro Stunde) für Login/Registrierung
+    rate_limit_per_email: int = 5
+    rate_limit_per_ip: int = 20
 
 
 settings = Settings()

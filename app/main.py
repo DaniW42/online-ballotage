@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+import asyncio
+from contextlib import asynccontextmanager
+from datetime import timedelta
 
 from fastapi import FastAPI, Request, Depends, BackgroundTasks, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -11,11 +13,21 @@ from .config import settings
 from .db import init_db, get_db, Organization, MagicLink, Election, Invitation, Vote
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 from .mail import send_magic_link, send_vote_invitation
-from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE
+from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
+from .ratelimit import limiter
+from .timeutil import utcnow, local_input_to_utc, fmt_local, to_local
 
-app = FastAPI(title="Kugelung")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Kugelung", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
+templates.env.filters["local"] = fmt_local
+templates.env.filters["local_date"] = lambda dt: fmt_local(dt, "%d.%m.%Y")
 
 
 @app.middleware("http")
@@ -25,11 +37,6 @@ async def privacy_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Cache-Control"] = "no-store"
     return response
-
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 
 def current_org(request: Request, db: Session) -> Organization | None:
@@ -63,6 +70,8 @@ def register_submit(
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
+    if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
+        return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
     if not org:
         org = Organization(name=name.strip(), email=email)
@@ -70,7 +79,8 @@ def register_submit(
         db.commit()
         db.refresh(org)
 
-    _send_magic_link(background_tasks, db, org)
+    if limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
+        _send_magic_link(background_tasks, db, org)
     return templates.TemplateResponse("magic_sent.html", {"request": request, "email": email})
 
 
@@ -87,10 +97,12 @@ def login_submit(
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
+    if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
+        return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
-    # Bewusst dieselbe Antwort, egal ob die Email existiert
-    # (keine Email-Enumeration über die Login-Maske).
-    if org:
+    # Bewusst dieselbe Antwort, egal ob die Email existiert oder das
+    # Limit pro Adresse greift (keine Enumeration, kein Mail-Bombing).
+    if org and limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
         _send_magic_link(background_tasks, db, org)
     return templates.TemplateResponse("magic_sent.html", {"request": request, "email": email})
 
@@ -100,7 +112,7 @@ def _send_magic_link(background_tasks: BackgroundTasks, db: Session, org: Organi
     link = MagicLink(
         org_id=org.id,
         token_hash=token_hash,
-        expires_at=datetime.utcnow() + timedelta(minutes=settings.magic_link_ttl_minutes),
+        expires_at=utcnow() + timedelta(minutes=settings.magic_link_ttl_minutes),
     )
     db.add(link)
     db.commit()
@@ -108,15 +120,29 @@ def _send_magic_link(background_tasks: BackgroundTasks, db: Session, org: Organi
     background_tasks.add_task(send_magic_link, org.email, url)
 
 
-@app.get("/auth/{token}")
-def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
-    token_hash = hash_token(token)
-    link = db.query(MagicLink).filter(MagicLink.token_hash == token_hash).first()
+def _valid_magic_link(db: Session, token: str) -> MagicLink | None:
+    link = db.query(MagicLink).filter(MagicLink.token_hash == hash_token(token)).first()
+    if not link or link.used_at is not None or link.expires_at < utcnow():
+        return None
+    return link
 
-    if not link or link.used_at is not None or link.expires_at < datetime.utcnow():
+
+@app.get("/auth/{token}", response_class=HTMLResponse)
+def auth_confirm(token: str, request: Request, db: Session = Depends(get_db)):
+    # Verbraucht den Link bewusst NICHT: Mail-Scanner (z. B. Outlook SafeLinks)
+    # rufen Links vorab per GET auf. Erst der Klick auf den Button (POST) zählt.
+    if not _valid_magic_link(db, token):
         return RedirectResponse("/login?error=expired")
+    return templates.TemplateResponse("auth_confirm.html", {"request": request, "token": token})
 
-    link.used_at = datetime.utcnow()
+
+@app.post("/auth/{token}")
+def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
+    link = _valid_magic_link(db, token)
+    if not link:
+        return RedirectResponse("/login?error=expired", status_code=303)
+
+    link.used_at = utcnow()
     db.commit()
 
     response = RedirectResponse("/dashboard", status_code=303)
@@ -126,16 +152,28 @@ def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=COOKIE_SECURE,
     )
     return response
 
 
-@app.get("/logout")
+@app.post("/logout")
 def logout():
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(SESSION_COOKIE)
     return response
+
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _too_many(request: Request):
+    return templates.TemplateResponse(
+        "error.html",
+        {"request": request, "message": "Zu viele Anfragen. Bitte später erneut versuchen."},
+        status_code=429,
+    )
 
 
 # ---------- Dashboard & Abstimmungen verwalten ----------
@@ -165,6 +203,12 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("new_election.html", {"request": request, "org": org})
 
 
+def _form_error(request: Request, org: Organization, message: str):
+    return templates.TemplateResponse(
+        "new_election.html", {"request": request, "org": org, "error": message}, status_code=400
+    )
+
+
 @app.post("/elections/new")
 def new_election_submit(
     background_tasks: BackgroundTasks,
@@ -185,15 +229,25 @@ def new_election_submit(
     # übernehmen, unabhängig davon, was das Frontend vorbereitet hat.
     emails = extract_emails(emails_raw)
 
-    options = [o.strip() for o in options_raw.split(",") if o.strip()] or [
-        "Ja", "Nein", "Enthaltung"
-    ]
+    # Optionen: Duplikate (case-insensitiv) entfernen, Reihenfolge behalten.
+    options, seen = [], set()
+    for o in (" ".join(o.split()) for o in options_raw.split(",")):
+        if o and o.lower() not in seen:
+            seen.add(o.lower())
+            options.append(o)
+    options = options or ["Ja", "Nein", "Enthaltung"]
+    if len(options) < 2:
+        return _form_error(request, org, "Mindestens zwei Abstimmungsoptionen angeben.")
+
+    title = " ".join(title.split())  # Zeilenumbrüche im Titel (Mail-Betreff) vermeiden
+    if settings.require_verification and not org.verified:
+        return _form_error(request, org, "Ihre Loge wurde noch nicht freigegeben.")
 
     election = Election(
         org_id=org.id,
-        title=title.strip(),
-        starts_at=datetime.fromisoformat(starts_at),
-        ends_at=datetime.fromisoformat(ends_at),
+        title=title,
+        starts_at=local_input_to_utc(starts_at),
+        ends_at=local_input_to_utc(ends_at),
         options=options,
         reminder_enabled=reminder_enabled,
     )
@@ -211,7 +265,7 @@ def new_election_submit(
             email,
             election.title,
             vote_link,
-            election.ends_at.strftime("%d.%m.%Y %H:%M"),
+            fmt_local(election.ends_at),
         )
     db.commit()
 
@@ -239,7 +293,7 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
         Invitation.election_id == election.id, Invitation.used.is_(True)
     ).scalar()
 
-    is_over = datetime.utcnow() > election.ends_at
+    is_over = utcnow() > election.ends_at
     results = None
     if is_over:
         rows = (
@@ -279,7 +333,7 @@ def vote_form(token: str, request: Request, db: Session = Depends(get_db)):
         )
 
     election = db.query(Election).filter(Election.id == invitation.election_id).first()
-    now = datetime.utcnow()
+    now = utcnow()
     if now < election.starts_at or now > election.ends_at:
         return templates.TemplateResponse(
             "vote_invalid.html",
@@ -310,7 +364,7 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
         )
 
     election = db.query(Election).filter(Election.id == invitation.election_id).first()
-    now = datetime.utcnow()
+    now = utcnow()
     if now < election.starts_at or now > election.ends_at:
         db.rollback()
         return templates.TemplateResponse(

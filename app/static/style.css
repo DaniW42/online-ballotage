@@ -80,3 +80,6 @@ td, th { text-align: left; padding: 0.4rem 0; border-bottom: 1px solid var(--bor
 
 nav { margin-bottom: 2rem; font-size: 0.9rem; }
 nav a { color: var(--accent); }
+
+form.inline { display: inline; }
+button.linkbtn { background: none; color: var(--accent); padding: 0; margin: 0; text-decoration: underline; font-size: inherit; font-family: inherit; }

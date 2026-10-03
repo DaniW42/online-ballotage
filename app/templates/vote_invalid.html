@@ -7,7 +7,7 @@
     Mit diesem Link wurde bereits abgestimmt. Jeder Link ist nur einmal gültig.
   {% elif reason == "window" %}
     Diese Abstimmung ist aktuell nicht aktiv (Zeitraum: 
-    {{ election.starts_at.strftime('%d.%m.%Y %H:%M') }} – {{ election.ends_at.strftime('%d.%m.%Y %H:%M') }}).
+    {{ election.starts_at|local }} – {{ election.ends_at|local }}).
   {% elif reason == "bad_choice" %}
     Ungültige Auswahl.
   {% else %}

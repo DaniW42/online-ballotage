@@ -4,7 +4,7 @@
 <nav><a href="/dashboard">&larr; Zurück zur Übersicht</a></nav>
 
 <h1>{{ election.title }}</h1>
-<p>Zeitraum: {{ election.starts_at.strftime('%d.%m.%Y %H:%M') }} – {{ election.ends_at.strftime('%d.%m.%Y %H:%M') }}</p>
+<p>Zeitraum: {{ election.starts_at|local }} – {{ election.ends_at|local }}</p>
 
 <h2>Beteiligung</h2>
 <p>{{ used }} von {{ total }} haben bereits abgestimmt.</p>

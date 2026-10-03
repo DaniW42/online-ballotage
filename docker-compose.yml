@@ -30,6 +30,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      TIMEZONE: ${TIMEZONE:-Europe/Berlin}
+      REQUIRE_VERIFICATION: ${REQUIRE_VERIFICATION:-false}
+      # IP des Reverse-Proxys, dem X-Forwarded-For vertraut wird
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
     ports:
       - "8000:8000"
     # Hinter NPM: ports-Block entfernen, stattdessen NPM-Proxy-Host auf

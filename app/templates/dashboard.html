@@ -4,7 +4,7 @@
 <nav>
   {{ org.name }}
   {% if org.verified %}<span class="badge">Verifiziert</span>{% endif %}
-  &middot; <a href="/logout">Abmelden</a>
+  &middot; <form method="post" action="/logout" class="inline"><button type="submit" class="linkbtn">Abmelden</button></form>
 </nav>
 
 <h1>Ihre Abstimmungen</h1>
@@ -16,7 +16,7 @@
   {% for e in elections %}
   <tr>
     <td>{{ e.title }}</td>
-    <td>{{ e.starts_at.strftime('%d.%m.%Y') }} – {{ e.ends_at.strftime('%d.%m.%Y') }}</td>
+    <td>{{ e.starts_at|local_date }} – {{ e.ends_at|local_date }}</td>
     <td><a href="/elections/{{ e.id }}">Details</a></td>
   </tr>
   {% endfor %}

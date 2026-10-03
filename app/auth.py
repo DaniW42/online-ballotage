@@ -5,6 +5,7 @@ from .config import settings
 
 SESSION_COOKIE = "session"
 SESSION_MAX_AGE = 60 * 60 * 24 * 30  # 30 Tage
+COOKIE_SECURE = settings.base_url.startswith("https")  # lokal über http sonst nicht setzbar
 
 serializer = URLSafeTimedSerializer(settings.secret_key, salt="session")
 

@@ -8,7 +8,8 @@ def send_mail(to: str, subject: str, body: str) -> None:
     msg = EmailMessage()
     msg["From"] = settings.smtp_from
     msg["To"] = to
-    msg["Subject"] = subject
+    # Zeilenumbrüche im Betreff wären Header-Injection / werfen im Hintergrundtask.
+    msg["Subject"] = " ".join(subject.split())
     msg.set_content(body)
 
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:

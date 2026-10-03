@@ -4,6 +4,7 @@
 <nav><a href="/dashboard">&larr; Zurück zur Übersicht</a></nav>
 
 <h1>Neue Abstimmung</h1>
+{% if error %}<div class="notice error">{{ error }}</div>{% endif %}
 
 <form method="post" action="/elections/new" id="election-form" onsubmit="return prepareSubmit()">
 
