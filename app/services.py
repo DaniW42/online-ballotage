@@ -7,10 +7,70 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .db import SessionLocal, Election, Invitation, Vote, Organization
-from .mail import send_result_mail
+from .mail import send_result_mail, send_vote_invitation
+from .tokens import generate_token
 from .timeutil import utcnow, fmt_local
 
 log = logging.getLogger("kugelung")
+
+
+def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
+                       ends_at_str: str, reissued: bool = False) -> None:
+    """Versendet eine Einladung (läuft im Hintergrund, daher eigene DB-Session)
+    und hält das Ergebnis am Einladungseintrag fest, damit Fehler sichtbar sind."""
+    error = None
+    try:
+        send_vote_invitation(to, title, link, ends_at_str, reissued=reissued)
+    except Exception as exc:
+        log.exception("Einladungsmail an %s fehlgeschlagen", to)
+        error = str(exc)[:200] or exc.__class__.__name__
+    db = SessionLocal()
+    try:
+        inv = db.query(Invitation).filter(Invitation.id == invitation_id).first()
+        if inv:
+            inv.sent_at = None if error else utcnow()
+            inv.send_error = error
+            db.commit()
+    finally:
+        db.close()
+
+
+def create_invitations(db: Session, election: Election, emails: list[str]) -> list[tuple]:
+    """Legt Einladungen für noch nicht eingeladene Adressen an. Gibt die Daten für
+    den Mailversand zurück (Roh-Token existiert nur hier und in der Mail)."""
+    existing = {
+        e for (e,) in db.query(Invitation.email).filter(Invitation.election_id == election.id)
+    }
+    created = []
+    for email in emails:
+        if email in existing:
+            continue
+        raw, token_hash = generate_token()
+        inv = Invitation(election_id=election.id, email=email, token_hash=token_hash)
+        db.add(inv)
+        db.flush()
+        created.append((inv.id, email, f"{settings.base_url}/v/{raw}"))
+    return created
+
+
+def reissue_invitation(db: Session, election: Election, invitation_id: str) -> tuple | None:
+    """Neuer Link für eine noch nicht genutzte Einladung; der alte wird ungültig.
+    Gesperrt, damit es nicht mit einer gleichzeitigen Stimmabgabe kollidiert."""
+    inv = (
+        db.query(Invitation)
+        .filter(Invitation.id == invitation_id, Invitation.election_id == election.id)
+        .with_for_update()
+        .first()
+    )
+    if not inv or inv.used:
+        db.rollback()
+        return None
+    raw, token_hash = generate_token()
+    inv.token_hash = token_hash
+    inv.sent_at = None
+    inv.send_error = None
+    db.commit()
+    return inv.id, inv.email, f"{settings.base_url}/v/{raw}"
 
 
 def finalize_due(db: Session, election_id: str) -> None:

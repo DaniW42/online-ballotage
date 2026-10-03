@@ -34,12 +34,22 @@ def send_magic_link(to: str, link: str) -> None:
     )
 
 
-def send_vote_invitation(to: str, election_title: str, link: str, ends_at_str: str) -> None:
+def send_vote_invitation(to: str, election_title: str, link: str, ends_at_str: str,
+                         reissued: bool = False) -> None:
+    if reissued:
+        subject = f"Abstimmung (neuer Link): {election_title}"
+        intro = (
+            f'Für die Abstimmung "{election_title}" wurde Ihnen ein neuer Link ausgestellt.\n'
+            "Ein früher zugesandter Link ist damit ungültig.\n\n"
+        )
+    else:
+        subject = f"Abstimmung: {election_title}"
+        intro = f'Sie sind zur Abstimmung "{election_title}" eingeladen.\n\n'
     send_mail(
         to=to,
-        subject=f"Abstimmung: {election_title}",
+        subject=subject,
         body=(
-            f'Sie sind zur Abstimmung "{election_title}" eingeladen.\n\n'
+            f"{intro}"
             f"Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\n"
             f"Die Abstimmung endet am {ends_at_str}.\n\n"
             "Ihre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an."

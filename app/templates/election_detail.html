@@ -9,6 +9,9 @@
 {% if message == "aborted" %}<div class="notice ok">Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.</div>{% endif %}
 {% if message == "extended" %}<div class="notice ok">Die Frist wurde verlängert.</div>{% endif %}
 {% if message == "extend_failed" %}<div class="notice error">Verlängern nicht möglich: Die Abstimmung ist nicht mehr offen oder das neue Ende liegt nicht nach dem bisherigen.</div>{% endif %}
+{% if message == "added" %}<div class="notice ok">{{ added }} neue Einladung(en) versendet. Bereits eingeladene Adressen wurden übersprungen.</div>{% endif %}
+{% if message == "reissued" %}<div class="notice ok">Neuer Link versendet; der alte ist ungültig.</div>{% endif %}
+{% if message == "reissue_failed" %}<div class="notice error">Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen).</div>{% endif %}
 {% if message == "not_open" %}<div class="notice error">Die Abstimmung ist nicht mehr offen.</div>{% endif %}
 
 <h2>Beteiligung</h2>
@@ -18,8 +21,34 @@
   nicht einsehbar, auch nicht für Sie als Organisator.
 </div>
 
+{% if invitations %}
+<table>
+  <tr><th>Adresse</th><th>Stimme</th><th>Mail</th>{% if election.status == "open" %}<th></th>{% endif %}</tr>
+  {% for inv in invitations %}
+  <tr>
+    <td>{{ inv.email }}</td>
+    <td>{% if inv.used %}abgegeben{% else %}ausstehend{% endif %}</td>
+    <td>{% if inv.send_error %}<span style="color:var(--error)" title="{{ inv.send_error }}">Fehler</span>{% elif inv.sent_at %}gesendet{% else %}wird gesendet…{% endif %}</td>
+    {% if election.status == "open" %}
+    <td>{% if not inv.used %}
+      <form method="post" action="/elections/{{ election.id }}/invitations/{{ inv.id }}/reissue" class="inline">
+        <button type="submit" class="linkbtn">Neuer Link</button>
+      </form>{% endif %}</td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 {% if election.status == "open" %}
 <p class="hint">Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird Ihnen dann einmalig per E-Mail geschickt.</p>
+
+<h2>Weitere Wähler einladen</h2>
+<form method="post" action="/elections/{{ election.id }}/voters">
+  <textarea name="emails_raw" placeholder="Email-Adressen, beliebig formatiert"></textarea>
+  <div class="hint">Bereits eingeladene Adressen werden übersprungen – jede Adresse kann nur einmal abstimmen.</div>
+  <button type="submit" class="secondary">Einladen</button>
+</form>
 
 <h2>Verlängern</h2>
 <form method="post" action="/elections/{{ election.id }}/extend">

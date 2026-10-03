@@ -12,9 +12,12 @@ from sqlalchemy import func
 from .config import settings
 from .db import init_db, get_db, Organization, MagicLink, Election, Invitation, Vote
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
-from .mail import send_magic_link, send_vote_invitation
+from .mail import send_magic_link
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
-from .services import finalize_due, abort_election, get_results, maintenance_loop
+from .services import (
+    finalize_due, abort_election, get_results, maintenance_loop,
+    deliver_invitation, create_invitations, reissue_invitation,
+)
 from .ratelimit import limiter
 from .timeutil import utcnow, local_input_to_utc, fmt_local, to_local
 
@@ -206,6 +209,15 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("new_election.html", {"request": request, "org": org})
 
 
+def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
+                       reissued: bool = False):
+    ends = fmt_local(election.ends_at)
+    for inv_id, email, link in created:
+        background_tasks.add_task(
+            deliver_invitation, inv_id, email, election.title, link, ends, reissued
+        )
+
+
 def _form_error(request: Request, org: Organization, message: str):
     return templates.TemplateResponse(
         "new_election.html", {"request": request, "org": org, "error": message}, status_code=400
@@ -264,19 +276,9 @@ def new_election_submit(
     db.commit()
     db.refresh(election)
 
-    for email in emails:
-        raw_token, token_hash = generate_token()
-        invitation = Invitation(election_id=election.id, email=email, token_hash=token_hash)
-        db.add(invitation)
-        vote_link = f"{settings.base_url}/v/{raw_token}"
-        background_tasks.add_task(
-            send_vote_invitation,
-            email,
-            election.title,
-            vote_link,
-            fmt_local(election.ends_at),
-        )
+    created = create_invitations(db, election, emails)
     db.commit()
+    _queue_invitations(background_tasks, election, created)
 
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
@@ -318,7 +320,12 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
             "used": used,
             "results": get_results(db, election),
             "min_voters": settings.min_voters,
+            "invitations": db.query(Invitation)
+            .filter(Invitation.election_id == election.id)
+            .order_by(Invitation.email)  # alphabetisch, nicht nach Einfügereihenfolge
+            .all(),
             "message": request.query_params.get("msg"),
+            "added": request.query_params.get("n"),
         },
     )
 
@@ -332,6 +339,40 @@ def _own_election(db: Session, request: Request, election_id: str) -> Election |
         .filter(Election.id == election_id, Election.org_id == org.id)
         .first()
     )
+
+
+@app.post("/elections/{election_id}/voters")
+def election_add_voters(
+    election_id: str, request: Request, background_tasks: BackgroundTasks,
+    emails_raw: str = Form(""), db: Session = Depends(get_db),
+):
+    if not _own_election(db, request, election_id):
+        return RedirectResponse("/login", status_code=303)
+    finalize_due(db, election_id)
+    election = db.query(Election).filter(Election.id == election_id).with_for_update().first()
+    if election.status != "open":
+        db.rollback()
+        return RedirectResponse(f"/elections/{election_id}?msg=not_open", status_code=303)
+    created = create_invitations(db, election, extract_emails(emails_raw))
+    db.commit()
+    _queue_invitations(background_tasks, election, created)
+    return RedirectResponse(f"/elections/{election_id}?msg=added&n={len(created)}", status_code=303)
+
+
+@app.post("/elections/{election_id}/invitations/{invitation_id}/reissue")
+def election_reissue(
+    election_id: str, invitation_id: str, request: Request,
+    background_tasks: BackgroundTasks, db: Session = Depends(get_db),
+):
+    if not _own_election(db, request, election_id):
+        return RedirectResponse("/login", status_code=303)
+    finalize_due(db, election_id)
+    election = db.query(Election).filter(Election.id == election_id).first()
+    result = reissue_invitation(db, election, invitation_id) if election.status == "open" else None
+    if not result:
+        return RedirectResponse(f"/elections/{election_id}?msg=reissue_failed", status_code=303)
+    _queue_invitations(background_tasks, election, [result], reissued=True)
+    return RedirectResponse(f"/elections/{election_id}?msg=reissued", status_code=303)
 
 
 @app.post("/elections/{election_id}/abort")

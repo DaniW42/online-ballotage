@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, String, Boolean, DateTime, ForeignKey, Integer, JSON, create_engine
+    Column, String, Boolean, DateTime, ForeignKey, Integer, JSON, UniqueConstraint, create_engine
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -69,6 +69,8 @@ class Election(Base):
 class Invitation(Base):
     """Nur zur Berechtigungs- und Einmaligkeitsprüfung. KEINE Referenz auf votes."""
     __tablename__ = "invitations"
+    # Dieselbe Adresse darf pro Abstimmung nur einmal eingeladen werden.
+    __table_args__ = (UniqueConstraint("election_id", "email", name="uq_invitation_election_email"),)
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=new_uuid)
     election_id = Column(UUID(as_uuid=False), ForeignKey("elections.id"), nullable=False)
@@ -78,6 +80,10 @@ class Invitation(Base):
     # mit der Stimme korrelierbar und würde die Anonymität aushebeln.
     used = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Versandstatus der Einladungsmail. Wird nur beim (Neu-)Versand beschrieben,
+    # NIE im Zuge einer Stimmabgabe - sonst wäre die Zeitkorrelation wieder da.
+    sent_at = Column(DateTime, nullable=True)
+    send_error = Column(String, nullable=True)
 
 
 class Vote(Base):
