@@ -42,25 +42,22 @@
   },
   "errors": {
     "not_found": "Diese Seite gibt es nicht.",
-    "too_many": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+    "too_many": "Zu viele Anfragen. Bitte versuche es später erneut.",
     "heading": "Hinweis",
     "home": "Zur Startseite"
   },
   "home": {
     "meta_title": "Anonyme Online-Kugelung für Logen und Vereine",
     "meta_description": "ballotage.online: geheime Abstimmungen und Kugelungen per E-Mail-Link – ohne Passwort, technisch anonym, selbst hostbar und mit einsehbarem Quelltext.",
-    "eyebrow": "Digitale Kugelung",
     "title": "Geheime Abstimmungen. Digital – und wirklich anonym.",
     "lead": "ballotage.online ist das Werkzeug für Kugelungen und andere geheime Abstimmungen in Logen und Vereinen. Einladung per E-Mail, Stimme per Klick – und so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat. Auch der Organisator nicht.",
     "cta_register": "Loge registrieren",
-    "cta_login": "Anmelden",
     "cta_dashboard": "Zum Dashboard",
     "cta_how": "So funktioniert’s",
     "chips": [
       "Kein Passwort nötig",
       "Strukturell anonym",
-      "Quelltext einsehbar",
-      "Selbst hostbar"
+      "Quelltext einsehbar"
     ],
     "steps_title": "In drei Schritten zum Ergebnis",
     "steps": [
@@ -74,7 +71,7 @@
       },
       {
         "t": "Ergebnis erhalten",
-        "d": "Nach Fristende oder sobald alle abgestimmt haben, erhalten Sie das Ergebnis einmalig per E-Mail – mit der genauen Zahl je Option."
+        "d": "Nach Fristende oder sobald alle abgestimmt haben, erhältst du das Ergebnis einmalig per E-Mail – mit der genauen Zahl je Option."
       }
     ],
     "anon_title": "Anonymität ist gebaut, nicht versprochen",
@@ -97,24 +94,16 @@
     "features_lead": "Die Funktionen orientieren sich an dem, was Logen tatsächlich brauchen – nicht an dem, was Umfrage-Tools bieten.",
     "features": [
       {
-        "t": "Genaue Zählung",
-        "d": "Anzahl je Option, damit Ihre Loge nach ihrem eigenen Ritual und ihren eigenen Schwellenwerten bewerten kann."
-      },
-      {
-        "t": "Fristen im Griff",
-        "d": "Automatischer Abschluss bei Fristende oder wenn alle abgestimmt haben. Verlängern, solange die Abstimmung läuft."
-      },
-      {
         "t": "Sauberer Abbruch",
         "d": "Wird abgebrochen, gibt es nie ein Ergebnis und die Stimmen werden gelöscht – kein Spähen auf Zwischenstände."
       },
       {
         "t": "Wer fehlt noch?",
-        "d": "Sehen Sie, wer schon abgestimmt hat – nicht, wie. Erinnerungen und neue Links gehen gezielt an die Offenen."
+        "d": "Sieh, wer schon abgestimmt hat – nicht, wie. Erinnerungen und neue Links gehen gezielt an die Offenen."
       },
       {
         "t": "Empfängerliste merken",
-        "d": "Die zuletzt genutzte Liste wird vorbefüllt, wenn Sie die nächste Kugelung anlegen. Jederzeit löschbar."
+        "d": "Die zuletzt genutzte Liste wird vorbefüllt, wenn du die nächste Kugelung anlegst. Jederzeit löschbar."
       },
       {
         "t": "Optional nachprüfbar",
@@ -122,11 +111,11 @@
       }
     ],
     "open_title": "Offen einsehbar, selbst betreibbar",
-    "open_text": "Der Quelltext ist öffentlich einsehbar. Wer der Software nicht vertrauen will, muss es nicht: Sie läuft als Docker-Stack auch auf Ihrem eigenen Server.",
+    "open_text": "Der Quelltext ist öffentlich einsehbar. Wer der Software nicht vertrauen will, muss es nicht: Sie läuft als Docker-Stack auch auf deinem eigenen Server.",
     "open_link_source": "Quelltext & Lizenz",
     "open_link_self": "Selbst hosten",
     "cta_title": "Die nächste Kugelung digital?",
-    "cta_text": "Registrieren Sie Ihre Loge in einer Minute – ohne Passwort, ohne Kreditkarte."
+    "cta_text": "Registriere deine Loge in einer Minute – ohne Passwort, ohne Kreditkarte."
   },
   "how": {
     "meta_title": "So funktioniert’s",
@@ -137,7 +126,7 @@
     "org_steps": [
       {
         "t": "Registrieren und anmelden",
-        "d": "Name der Loge und eine E-Mail-Adresse genügen. Sie melden sich künftig per Link an, der an diese Adresse geht – ohne Passwort."
+        "d": "Name der Loge und eine E-Mail-Adresse genügen. Du meldest dich künftig per Link an, der an diese Adresse geht – ohne Passwort."
       },
       {
         "t": "Abstimmung anlegen",
@@ -145,30 +134,30 @@
       },
       {
         "t": "Empfänger einfügen",
-        "d": "Adressen beliebig formatiert einfügen. Mindestens drei sind nötig. Die Liste wird für die nächste Kugelung vorbefüllt, wenn Sie das möchten."
+        "d": "Adressen beliebig formatiert einfügen. Mindestens drei sind nötig. Die Liste wird für die nächste Kugelung vorbefüllt, wenn du das möchtest."
       },
       {
         "t": "Verlauf beobachten",
-        "d": "Sie sehen, wer bereits abgestimmt hat, und können nachträglich weitere Personen einladen oder einen verlorenen Link ersetzen."
+        "d": "Du siehst, wer bereits abgestimmt hat, und kannst nachträglich weitere Personen einladen oder einen verlorenen Link ersetzen."
       },
       {
         "t": "Ergebnis erhalten",
-        "d": "Mit Fristende oder sobald alle abgestimmt haben, erhalten Sie das Ergebnis einmalig per E-Mail. Es bleibt außerdem auf der Detailseite einsehbar."
+        "d": "Mit Fristende oder sobald alle abgestimmt haben, erhältst du das Ergebnis einmalig per E-Mail. Es bleibt außerdem auf der Detailseite einsehbar."
       }
     ],
     "voter_title": "Für Stimmberechtigte",
     "voter_steps": [
       {
         "t": "E-Mail öffnen",
-        "d": "Sie erhalten einen persönlichen Link. Er ist nur für Sie bestimmt und nur einmal gültig."
+        "d": "Du erhältst einen persönlichen Link. Er ist nur für dich bestimmt und nur einmal gültig."
       },
       {
         "t": "Auswahl treffen",
-        "d": "Sie wählen Ihre Option und senden ab. Es ist kein Konto und keine Installation nötig."
+        "d": "Du wählst deine Option und sendest ab. Es ist kein Konto und keine Installation nötig."
       },
       {
         "t": "Fertig",
-        "d": "Ihre Stimme wird anonym erfasst. Der Link ist danach verbraucht, das Ergebnis sehen Sie dort nicht."
+        "d": "Deine Stimme wird anonym erfasst. Der Link ist danach verbraucht, das Ergebnis siehst du dort nicht."
       }
     ],
     "rules_title": "Die Spielregeln",
@@ -228,8 +217,8 @@
       ],
       [
         "Empfängerliste",
-        "zuletzt verwendete Adressen Ihrer Loge",
-        "bis Sie sie löschen"
+        "zuletzt verwendete Adressen deiner Loge",
+        "bis du sie löschst"
       ],
       [
         "Login-Links",
@@ -280,9 +269,9 @@
       }
     ],
     "limits_title": "Die Grenzen – ehrlich benannt",
-    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank oder ein Backup liest, einschließlich Organisator und Administratoren mit reinem Datenbankzugriff.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Betreiben Sie eine Instanz deshalb in der Hand einer Stelle, der Ihre Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.",
+    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank oder ein Backup liest, einschließlich Organisator und Administratoren mit reinem Datenbankzugriff.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Betreibe eine Instanz deshalb in der Hand einer Stelle, der deine Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.",
     "report_title": "Schwachstelle gefunden?",
-    "report": "Bitte melden Sie sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
+    "report": "Bitte melde sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
     "source_title": "Nachprüfen statt glauben",
     "source": "Der gesamte Quelltext ist einsehbar, die Tests ebenfalls. Siehe [Quelltext & Lizenz](/source)."
   },
@@ -290,7 +279,7 @@
     "meta_title": "Häufige Fragen",
     "meta_description": "Antworten zu Anonymität, Ablauf, Datenschutz und Betrieb von ballotage.online.",
     "title": "Häufige Fragen",
-    "lead": "Hier steht, wie sich ballotage.online tatsächlich verhält. Weitere Details finden Sie unter [Sicherheit](/security).",
+    "lead": "Hier steht, wie sich ballotage.online tatsächlich verhält. Weitere Details findest du unter [Sicherheit](/security).",
     "groups": [
       {
         "t": "Grundlagen",
@@ -305,11 +294,11 @@
           },
           {
             "q": "Unter welcher Lizenz steht es?",
-            "a": "Der Quelltext steht unter der Elastic License 2.0. Sie dürfen die Software einsehen, nutzen, verändern und weitergeben, auch kommerziell. Nicht erlaubt ist, sie Dritten als gehosteten oder verwalteten Dienst mit im Wesentlichen gleicher Funktionalität anzubieten. Das ist „source-available“, aber nicht „Open Source“ im Sinne der OSI. Mehr dazu unter [Quelltext & Lizenz](/source)."
+            "a": "Der Quelltext steht unter der Elastic License 2.0. Du darfst die Software einsehen, nutzen, verändern und weitergeben, auch kommerziell. Nicht erlaubt ist, sie Dritten als gehosteten oder verwalteten Dienst mit im Wesentlichen gleicher Funktionalität anzubieten. Das ist „source-available“, aber nicht „Open Source“ im Sinne der OSI. Mehr dazu unter [Quelltext & Lizenz](/source)."
           },
           {
             "q": "Was ist der Testmodus, und warum muss ich meine Loge verifizieren?",
-            "a": "Damit niemand den Dienst missbraucht, um fremde Adressen mit E-Mails zu überhäufen, sind neue Logen zunächst im **Testmodus**: Abstimmungen mit bis zu drei Empfängern sind sofort möglich, so lässt sich alles ausprobieren. Für größere Abstimmungen ist einmalig eine Verifizierung nötig. Dazu geben Sie im Menü „Konto“ bzw. über den Hinweis im Dashboard den Namen einer verantwortlichen Person, deren E-Mail-Adresse und die Webseite Ihrer Loge, Ihres Vereins oder Clubs **oder** eine Telefonnummer an. Der Betreiber prüft den Antrag und schaltet Ihre Loge frei oder lehnt ab; Sie werden per E-Mail informiert. Bei einer Ablehnung werden Ihr Konto und alle Daten gelöscht."
+            "a": "Damit niemand den Dienst missbraucht, um fremde Adressen mit E-Mails zu überhäufen, sind neue Logen zunächst im **Testmodus**: Abstimmungen mit bis zu drei Empfängern sind sofort möglich, so lässt sich alles ausprobieren. Für größere Abstimmungen ist einmalig eine Verifizierung nötig. Dazu gibst du im Menü „Konto“ bzw. über den Hinweis im Dashboard den Namen einer verantwortlichen Person, deren E-Mail-Adresse und die Webseite deiner Loge, deines Vereins oder Clubs **oder** eine Telefonnummer an. Der Betreiber prüft den Antrag und schaltet deine Loge frei oder lehnt ab; du wirst per E-Mail informiert. Bei einer Ablehnung werden dein Konto und alle Daten gelöscht."
           }
         ]
       },
@@ -367,7 +356,7 @@
           },
           {
             "q": "Kann ich Abstimmungen und mein Konto löschen?",
-            "a": "Ja. Jede Abstimmung lässt sich nach einer Bestätigung löschen; laufende werden dabei abgebrochen (kein Ergebnis, Stimmen gelöscht). Das Konto selbst löschen Sie unter „Konto“. Das geht erst, wenn keine Abstimmung mehr vorhanden ist; die Seite listet die verbleibenden mit Lösch-Links auf. Dabei werden Name, E-Mail-Adresse und gespeicherte Empfängerliste entfernt."
+            "a": "Ja. Jede Abstimmung lässt sich nach einer Bestätigung löschen; laufende werden dabei abgebrochen (kein Ergebnis, Stimmen gelöscht). Das Konto selbst löschst du unter „Konto“. Das geht erst, wenn keine Abstimmung mehr vorhanden ist; die Seite listet die verbleibenden mit Lösch-Links auf. Dabei werden Name, E-Mail-Adresse und gespeicherte Empfängerliste entfernt."
           },
           {
             "q": "Kann ich Beginn und Ende nachträglich ändern?",
@@ -379,7 +368,7 @@
           },
           {
             "q": "Was ist, wenn eine Einladung nicht ankommt?",
-            "a": "In der Teilnehmerliste sehen Sie pro Adresse, ob der Versand geklappt hat oder fehlgeschlagen ist. Mit „Neuer Link“ versenden Sie die Einladung erneut."
+            "a": "In der Teilnehmerliste siehst du pro Adresse, ob der Versand geklappt hat oder fehlgeschlagen ist. Mit „Neuer Link“ versendest du die Einladung erneut."
           },
           {
             "q": "Gibt es Erinnerungen?",
@@ -387,7 +376,7 @@
           },
           {
             "q": "Kann ich die Empfängerliste wiederverwenden?",
-            "a": "Ja. Die zuletzt verwendete Liste wird gespeichert und bei der nächsten Abstimmung vorbefüllt. Beim Anlegen können Sie das abwählen. Unter „Empfängerliste“ im Dashboard sehen, ändern und löschen Sie die Liste jederzeit."
+            "a": "Ja. Die zuletzt verwendete Liste wird gespeichert und bei der nächsten Abstimmung vorbefüllt. Beim Anlegen kannst du das abwählen. Unter „Empfängerliste“ im Dashboard siehst, änderst und löschst du die Liste jederzeit."
           }
         ]
       },
@@ -405,7 +394,7 @@
         "items": [
           {
             "q": "Welche Daten werden gespeichert, und wie lange?",
-            "a": "- **Organisation:** Name der Loge und E-Mail-Adresse für den Login.\n- **Einladungen:** E-Mail-Adresse, Versandstatus und „hat abgestimmt“ je Wähler. Sie werden **30 Tage nach Abschluss oder Abbruch gelöscht**. Die Anzahl Eingeladener und Beteiligter bleibt als Zahl erhalten.\n- **Stimmen:** Auswahl und Zufalls-ID, ohne Zeitstempel, ohne Personenbezug. Sie bleiben für das Ergebnis erhalten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen unter drei Stimmen werden sofort gelöscht.\n- **Gespeicherte Empfängerliste:** bis Sie sie löschen oder ändern.\n- **Konto und Abstimmungen:** bis Sie sie selbst löschen.\n- **Login-Links:** werden nach Ablauf aufgeräumt.\n\nDetails stehen in der [Datenschutzerklärung](/datenschutz)."
+            "a": "- **Organisation:** Name der Loge und E-Mail-Adresse für den Login.\n- **Einladungen:** E-Mail-Adresse, Versandstatus und „hat abgestimmt“ je Wähler. Sie werden **30 Tage nach Abschluss oder Abbruch gelöscht**. Die Anzahl Eingeladener und Beteiligter bleibt als Zahl erhalten.\n- **Stimmen:** Auswahl und Zufalls-ID, ohne Zeitstempel, ohne Personenbezug. Sie bleiben für das Ergebnis erhalten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen unter drei Stimmen werden sofort gelöscht.\n- **Gespeicherte Empfängerliste:** bis du sie löschst oder änderst.\n- **Konto und Abstimmungen:** bis du sie selbst löschst.\n- **Login-Links:** werden nach Ablauf aufgeräumt.\n\nDetails stehen in der [Datenschutzerklärung](/datenschutz)."
           },
           {
             "q": "Werden Daten an Dritte übertragen?",
@@ -418,7 +407,7 @@
         "items": [
           {
             "q": "Kann ich es selbst betreiben?",
-            "a": "Ja, als Docker-Stack. Siehe [Selbst hosten](/self-hosting). Sie benötigen einen SMTP-Zugang und am besten einen Reverse-Proxy oder die mitgelieferte Caddy-Variante mit automatischem HTTPS."
+            "a": "Ja, als Docker-Stack. Siehe [Selbst hosten](/self-hosting). Du benötigst einen SMTP-Zugang und am besten einen Reverse-Proxy oder die mitgelieferte Caddy-Variante mit automatischem HTTPS."
           },
           {
             "q": "Kann sich jeder als Loge registrieren?",
@@ -444,22 +433,22 @@
       },
       {
         "t": "Konfiguration",
-        "p": "Kopieren Sie `.env.example` nach `.env` und tragen Sie Datenbankpasswort, geheimen Schlüssel, öffentliche URL und SMTP-Zugang ein. Impressum und Datenschutz werden über die `LEGAL_*`-Variablen befüllt.",
+        "p": "Kopiere `.env.example` nach `.env` und trage Datenbankpasswort, geheimen Schlüssel, öffentliche URL und SMTP-Zugang ein. Impressum und Datenschutz werden über die `LEGAL_*`-Variablen befüllt.",
         "code": "cp .env.example .env\npython3 -c \"import secrets;print(secrets.token_urlsafe(32))\""
       },
       {
         "t": "Variante A: Eigenständig mit automatischem HTTPS",
-        "p": "Die mitgelieferte Caddy-Konfiguration besorgt und erneuert Zertifikate selbst und schreibt keine Zugriffsprotokolle. Tragen Sie `SITE_ADDRESS` (Ihre Domain) in der `.env` ein und starten Sie:",
+        "p": "Die mitgelieferte Caddy-Konfiguration besorgt und erneuert Zertifikate selbst und schreibt keine Zugriffsprotokolle. Trage `SITE_ADDRESS` (deine Domain) in der `.env` ein und starte:",
         "code": "docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build"
       },
       {
         "t": "Variante B: Hinter einem eigenen Reverse-Proxy",
-        "p": "Starten Sie nur die Anwendung und lassen Sie Ihren Proxy (z. B. Nginx Proxy Manager) auf Port 8000 des App-Containers zeigen. Wichtig:\n\n- Aktivieren Sie HTTPS.\n- Schließen Sie die Pfade `/v/` und `/auth/` vom Access-Log aus.\n- Setzen Sie `FORWARDED_ALLOW_IPS` auf die IP des Proxys, damit Rate-Limits die echte Client-IP sehen.",
+        "p": "Starte nur die Anwendung und lass deinen Proxy (z. B. Nginx Proxy Manager) auf Port 8000 des App-Containers zeigen. Wichtig:\n\n- Aktiviere HTTPS.\n- Schließe die Pfade `/v/` und `/auth/` vom Access-Log aus.\n- Setze `FORWARDED_ALLOW_IPS` auf die IP des Proxys, damit Rate-Limits die echte Client-IP sehen.",
         "code": "docker compose -f docker-compose.yml up -d --build"
       },
       {
         "t": "Hinweise zum Betrieb",
-        "p": "- Betreiben Sie genau **einen** App-Prozess; Wartungslauf und Rate-Limits liegen im Prozess.\n- Sichern Sie das Datenbank-Volume. Stimmen enthalten keine Personenbezüge, Einladungen schon.\n- Der Container führt beim Start die Datenbank-Migrationen aus.\n- Eine Gesundheitsprüfung steht unter `/healthz` bereit."
+        "p": "- Betreibe genau **einen** App-Prozess; Wartungslauf und Rate-Limits liegen im Prozess.\n- Sichere das Datenbank-Volume. Stimmen enthalten keine Personenbezüge, Einladungen schon.\n- Der Container führt beim Start die Datenbank-Migrationen aus.\n- Eine Gesundheitsprüfung steht unter `/healthz` bereit."
       }
     ]
   },
@@ -470,8 +459,8 @@
     "lead": "Der Quelltext von ballotage.online ist öffentlich einsehbar. Vertrauen in eine geheime Abstimmung sollte sich prüfen lassen.",
     "repo": "Quelltext ansehen",
     "license_title": "Elastic License 2.0 (ELv2)",
-    "license": "Sie dürfen die Software einsehen, nutzen, verändern und weitergeben – auch kommerziell, etwa für Ihre Loge oder Ihren Verein.\n\nEinzige wesentliche Einschränkung: Niemand darf die Software Dritten als gehosteten oder verwalteten Dienst anbieten, der im Wesentlichen dieselbe Funktionalität bereitstellt. Außerdem dürfen Lizenzhinweise nicht entfernt werden.\n\nDas erfüllt nicht die Open-Source-Definition der OSI, weil sie jede Nutzungsbeschränkung ausschließt. Die korrekte Bezeichnung ist deshalb **source-available**.",
-    "verify_title": "Was Sie prüfen können",
+    "license": "Du darfst die Software einsehen, nutzen, verändern und weitergeben – auch kommerziell, etwa für deine Loge oder deinen Verein.\n\nEinzige wesentliche Einschränkung: Niemand darf die Software Dritten als gehosteten oder verwalteten Dienst anbieten, der im Wesentlichen dieselbe Funktionalität bereitstellt. Außerdem dürfen Lizenzhinweise nicht entfernt werden.\n\nDas erfüllt nicht die Open-Source-Definition der OSI, weil sie jede Nutzungsbeschränkung ausschließt. Die korrekte Bezeichnung ist deshalb **source-available**.",
+    "verify_title": "Was du prüfen kannst",
     "verify": "- Das Datenmodell: Die Tabelle der Stimmen hat weder Fremdschlüssel zu Einladungen noch Zeitstempel.\n- Den Ablauf der Stimmabgabe: eine Transaktion, keine Protokollierung von Tokens.\n- Die Tests, die diese Eigenschaften bei jeder Änderung absichern."
   },
   "impressum": {
@@ -555,43 +544,43 @@
     "login": {
       "meta_title": "Anmelden",
       "title": "Anmelden",
-      "lead": "Geben Sie Ihre E-Mail-Adresse ein. Sie erhalten einen Link zum Anmelden – ein Passwort brauchen Sie nicht.",
+      "lead": "Gib deine E-Mail-Adresse ein. Du erhältst einen Link zum Anmelden – ein Passwort brauchst du nicht.",
       "email": "E-Mail-Adresse",
       "submit": "Login-Link senden",
       "no_account": "Noch keine Loge angelegt?",
       "register_link": "Hier registrieren",
-      "expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordern Sie einen neuen an."
+      "expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere einen neuen an."
     },
     "register": {
       "meta_title": "Registrieren",
       "title": "Neue Loge anlegen",
-      "lead": "Kein Passwort nötig. Sie melden sich künftig per Link an, den Sie per E-Mail erhalten.",
+      "lead": "Kein Passwort nötig. Du meldest dich künftig per Link an, den du per E-Mail erhältst.",
       "name": "Name der Loge oder des Vereins",
       "email": "E-Mail-Adresse (für den Login)",
-      "email_hint": "An diese Adresse senden wir Ihre Login-Links und die Ergebnisse Ihrer Abstimmungen.",
+      "email_hint": "An diese Adresse senden wir deine Login-Links und die Ergebnisse deiner Abstimmungen.",
       "submit": "Loge anlegen",
       "have_account": "Schon registriert?",
       "login_link": "Hier anmelden",
-      "privacy_note": "Mit der Registrierung nehmen Sie die [Datenschutzerklärung](/datenschutz) zur Kenntnis."
+      "privacy_note": "Mit der Registrierung nimmst du die [Datenschutzerklärung](/datenschutz) zur Kenntnis."
     },
     "sent": {
       "meta_title": "E-Mail unterwegs",
       "title": "E-Mail unterwegs",
-      "text": "Falls die Adresse {email} bei uns bekannt ist, finden Sie dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
-      "hint": "Nichts erhalten? Schauen Sie auch im Spam-Ordner nach.",
-      "text_register": "Wir haben eine E-Mail an {email} gesendet. Darin finden Sie den Link zum Anmelden. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
+      "text": "Falls die Adresse {email} bei uns bekannt ist, findest du dort in Kürze einen Anmelde-Link. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden.",
+      "hint": "Nichts erhalten? Schau auch im Spam-Ordner nach.",
+      "text_register": "Wir haben eine E-Mail an {email} gesendet. Darin findest du den Link zum Anmelden. Er ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
     },
     "confirm": {
       "meta_title": "Anmelden",
       "title": "Anmeldung bestätigen",
-      "text": "Mit einem Klick melden Sie sich an.",
+      "text": "Mit einem Klick meldest du dich an.",
       "submit": "Jetzt anmelden"
     },
-    "invalid_email": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+    "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein."
   },
   "dashboard": {
     "meta_title": "Übersicht",
-    "title": "Ihre Abstimmungen",
+    "title": "Deine Abstimmungen",
     "verified": "Verifiziert",
     "new": "+ Neue Abstimmung",
     "empty": "Noch keine Abstimmung angelegt.",
@@ -644,14 +633,14 @@
       "err_period": "Das Ende muss nach dem Beginn und in der Zukunft liegen.",
       "start_now": "Sofort starten",
       "start_hint": "Vorbelegt: Beginn morgen 00:00 Uhr, Ende nach 7 Tagen um 23:59 Uhr. Liegt der Beginn in der Zukunft, werden die Einladungen erst dann versendet.",
-      "err_testmode": "Im Testmodus sind höchstens {n} Empfänger möglich. Lassen Sie Ihre Loge verifizieren, um größere Abstimmungen anzulegen.",
+      "err_testmode": "Im Testmodus sind höchstens {n} Empfänger möglich. Lass deine Loge verifizieren, um größere Abstimmungen anzulegen.",
       "send_rate": "Der Versand erfolgt mit höchstens einer E-Mail pro Sekunde; bei vielen Empfängern dauert er entsprechend."
     },
     "detail": {
       "period": "Zeitraum",
       "participation": "Beteiligung",
       "voted_of": "{used} von {total} haben abgestimmt.",
-      "participation_hint": "Wer bereits abgestimmt hat, sehen Sie – was gestimmt wurde, ist technisch nicht einsehbar, auch nicht für Sie als Organisator.",
+      "participation_hint": "Wer bereits abgestimmt hat, siehst du – was gestimmt wurde, ist technisch nicht einsehbar, auch nicht für dich als Organisator.",
       "col_email": "Adresse",
       "col_vote": "Stimme",
       "col_mail": "Mail",
@@ -662,7 +651,7 @@
       "mail_sending": "wird gesendet…",
       "reissue": "Neuer Link",
       "purged": "Die Einladungsdaten (E-Mail-Adressen) wurden nach Ablauf der Aufbewahrungsfrist gelöscht.",
-      "open_hint": "Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird Ihnen dann einmalig per E-Mail geschickt.",
+      "open_hint": "Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird dir dann einmalig per E-Mail geschickt.",
       "add_title": "Weitere Wähler einladen",
       "add_ph": "E-Mail-Adressen, beliebig formatiert",
       "add_hint": "Bereits eingeladene Adressen werden übersprungen – jede Adresse kann nur einmal abstimmen.",
@@ -700,18 +689,18 @@
       "schedule_updated": "Der Zeitplan wurde gespeichert.",
       "schedule_failed": "Zeitplan nicht geändert: Das Ende muss nach dem Beginn und in der Zukunft liegen. Nach der ersten Stimme kann das Ende nur noch verlängert werden.",
       "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet.",
-      "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde Ihnen noch nicht per E-Mail zugestellt. Bitte in einer Minute erneut versuchen.",
-      "testmode_limit": "Im Testmodus ist die Zahl der Empfänger begrenzt. Lassen Sie Ihre Loge verifizieren, um mehr Personen einzuladen."
+      "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde dir noch nicht per E-Mail zugestellt. Bitte versuche es in einer Minute erneut.",
+      "testmode_limit": "Im Testmodus ist die Zahl der Empfänger begrenzt. Lass deine Loge verifizieren, um mehr Personen einzuladen."
     },
     "abort": {
       "meta_title": "Abstimmung abbrechen",
       "title": "Abstimmung wirklich abbrechen?",
-      "intro": "Sie sind dabei, die Abstimmung „{title}“ abzubrechen. Das hat folgende Folgen:",
+      "intro": "Du bist dabei, die Abstimmung „{title}“ abzubrechen. Das hat folgende Folgen:",
       "consequences": [
         "Es wird **nie** ein Ergebnis angezeigt oder versendet – auch nicht teilweise.",
         "Alle bereits abgegebenen Stimmen werden **endgültig gelöscht**.",
         "Die Links der Eingeladenen werden ungültig; es kann nicht mehr abgestimmt werden.",
-        "Das lässt sich **nicht rückgängig** machen. Für einen neuen Anlauf legen Sie eine neue Abstimmung an."
+        "Das lässt sich **nicht rückgängig** machen. Für einen neuen Anlauf legst du eine neue Abstimmung an."
       ],
       "submit": "Ja, endgültig abbrechen",
       "back": "Nein, zurück"
@@ -719,14 +708,14 @@
     "delete": {
       "meta_title": "Abstimmung löschen",
       "title": "Abstimmung löschen?",
-      "intro": "Sie sind dabei, die Abstimmung „{title}“ zu löschen.",
+      "intro": "Du bist dabei, die Abstimmung „{title}“ zu löschen.",
       "open": [
         "Die Abstimmung läuft oder ist geplant und wird dabei **abgebrochen**: Es gibt **kein** Ergebnis, und alle Stimmen werden gelöscht.",
         "Die Links der Eingeladenen werden ungültig."
       ],
       "finished": [
         "Ergebnis, Stimmen und Teilnehmerliste werden **endgültig gelöscht**.",
-        "Die Ergebnis-Mail an Sie bleibt davon unberührt."
+        "Die Ergebnis-Mail an dich bleibt davon unberührt."
       ],
       "aborted": [
         "Die Teilnehmerliste wird **endgültig gelöscht**."
@@ -738,14 +727,14 @@
   },
   "vote": {
     "meta_title": "Abstimmen",
-    "intro": "Ihre Stimme wird anonym erfasst. Nach dem Absenden ist dieser Link nicht mehr nutzbar.",
+    "intro": "Deine Stimme wird anonym erfasst. Nach dem Absenden ist dieser Link nicht mehr nutzbar.",
     "submit": "Stimme abgeben",
-    "choose": "Ihre Auswahl",
+    "choose": "Deine Auswahl",
     "done_meta": "Stimme abgegeben",
     "done_title": "Vielen Dank",
-    "done_text": "Ihre Stimme zu „{title}“ wurde erfasst. Das Ergebnis wird hier nicht angezeigt.",
+    "done_text": "Deine Stimme zu „{title}“ wurde erfasst. Das Ergebnis wird hier nicht angezeigt.",
     "receipt": "Quittungscode",
-    "receipt_hint": "Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person zugeordnet; wer ihn kennt, kann Ihre Stimme erkennen – bewahren Sie ihn nur auf, wenn Sie prüfen möchten.",
+    "receipt_hint": "Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person zugeordnet; wer ihn kennt, kann deine Stimme erkennen – bewahre ihn nur auf, wenn du prüfen möchtest.",
     "invalid_meta": "Link ungültig",
     "invalid_title": "Link nicht gültig",
     "used": "Mit diesem Link wurde bereits abgestimmt. Jeder Link ist nur einmal gültig.",
@@ -755,22 +744,22 @@
   },
   "mail": {
     "magic": {
-      "subject": "Ihr Login-Link",
-      "body": "Klicken Sie auf den folgenden Link, um sich anzumelden:\n\n{link}\n\nDer Link ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
+      "subject": "Dein Login-Link",
+      "body": "Klicke auf den folgenden Link, um dich anzumelden:\n\n{link}\n\nDer Link ist {minutes} Minuten gültig und kann nur einmal verwendet werden."
     },
     "invite": {
       "subject": "Abstimmung: {title}",
-      "intro": "Sie sind zur Abstimmung \"{title}\" eingeladen.\n\n"
+      "intro": "Du bist zur Abstimmung \"{title}\" eingeladen.\n\n"
     },
     "reissue": {
       "subject": "Abstimmung (neuer Link): {title}",
-      "intro": "Für die Abstimmung \"{title}\" wurde Ihnen ein neuer Link ausgestellt.\nWichtig: Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwenden Sie nur diesen.\n\n"
+      "intro": "Für die Abstimmung \"{title}\" wurde dir ein neuer Link ausgestellt.\nWichtig: Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwende nur diesen.\n\n"
     },
     "reminder": {
       "subject": "Erinnerung: {title}",
-      "intro": "Erinnerung: Sie haben bei der Abstimmung \"{title}\" noch nicht abgestimmt.\nWichtig: Diese E-Mail enthält einen neuen Link. Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwenden Sie nur den Link unten.\n\n"
+      "intro": "Erinnerung: Du hast bei der Abstimmung \"{title}\" noch nicht abgestimmt.\nWichtig: Diese E-Mail enthält einen neuen Link. Der Link aus der ersten E-Mail ist damit ungültig. Bitte verwende nur den Link unten.\n\n"
     },
-    "vote_body": "Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\nZeitraum der Abstimmung: {period}\n\nIhre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an.",
+    "vote_body": "Abstimmen unter folgendem Link (nur einmal gültig):\n{link}\n\nZeitraum der Abstimmung: {period}\n\nDeine Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an.",
     "result": {
       "subject": "Ergebnis: {title}",
       "reason_deadline": "Die Frist ist abgelaufen.",
@@ -784,18 +773,18 @@
       "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen, freischalten oder ablehnen:\n{link}\n\nDer Link ist geheim und nur bis zur Entscheidung gültig."
     },
     "verify_approved": {
-      "subject": "Ihre Loge wurde verifiziert",
-      "body": "Gute Nachrichten: Die Loge \"{org}\" wurde verifiziert. Sie können jetzt Abstimmungen mit beliebig vielen Empfängern anlegen."
+      "subject": "Deine Loge wurde verifiziert",
+      "body": "Gute Nachrichten: Die Loge \"{org}\" wurde verifiziert. Du kannst jetzt Abstimmungen mit beliebig vielen Empfängern anlegen."
     },
     "verify_rejected": {
       "subject": "Verifizierung nicht möglich",
-      "body": "Leider konnten wir die Loge \"{org}\" nicht verifizieren. Das Konto und alle zugehörigen Daten wurden gelöscht. Bei Rückfragen antworten Sie bitte auf diese E-Mail oder nutzen Sie die Kontaktdaten im Impressum."
+      "body": "Leider konnten wir die Loge \"{org}\" nicht verifizieren. Das Konto und alle zugehörigen Daten wurden gelöscht. Bei Rückfragen antworte bitte auf diese E-Mail oder nutze die Kontaktdaten im Impressum."
     }
   },
   "recipients": {
     "meta_title": "Empfängerliste",
     "title": "Gespeicherte Empfängerliste",
-    "lead": "Diese Adressen werden beim Anlegen einer neuen Abstimmung vorbefüllt. Sie können sie hier einsehen, ändern und löschen.",
+    "lead": "Diese Adressen werden beim Anlegen einer neuen Abstimmung vorbefüllt. Du kannst sie hier einsehen, ändern und löschen.",
     "count": "{n} Adressen gespeichert.",
     "label": "E-Mail-Adressen",
     "hint": "Beliebig formatiert, die Adressen werden automatisch erkannt. Der Inhalt ersetzt die gespeicherte Liste.",
@@ -807,12 +796,12 @@
   },
   "account": {
     "meta_title": "Konto",
-    "title": "Ihr Konto",
+    "title": "Dein Konto",
     "name": "Name",
     "email": "E-Mail-Adresse",
     "delete_title": "Konto löschen",
-    "delete_warning": "Das Löschen Ihres Kontos ist **endgültig**. Name, E-Mail-Adresse und gespeicherte Empfängerliste werden entfernt, und Sie können sich nicht mehr anmelden.",
-    "blocked": "Ihr Konto kann erst gelöscht werden, wenn alle Abstimmungen gelöscht sind. Laufende Abstimmungen werden dabei abgebrochen (kein Ergebnis, Stimmen gelöscht). Löschen Sie die folgenden Abstimmungen einzeln:",
+    "delete_warning": "Das Löschen deines Kontos ist **endgültig**. Name, E-Mail-Adresse und gespeicherte Empfängerliste werden entfernt, und du kannst dich nicht mehr anmelden.",
+    "blocked": "Dein Konto kann erst gelöscht werden, wenn alle Abstimmungen gelöscht sind. Laufende Abstimmungen werden dabei abgebrochen (kein Ergebnis, Stimmen gelöscht). Lösche die folgenden Abstimmungen einzeln:",
     "col_title": "Titel",
     "delete_election": "Löschen",
     "confirm_label": "Zur Bestätigung E-Mail-Adresse eingeben",
@@ -820,23 +809,23 @@
     "err_blocked": "Das Konto kann nicht gelöscht werden, solange noch Abstimmungen vorhanden sind.",
     "err_email": "Die eingegebene E-Mail-Adresse stimmt nicht überein.",
     "deleted_meta": "Konto gelöscht",
-    "deleted_title": "Ihr Konto wurde gelöscht",
-    "deleted_text": "Ihre Daten wurden entfernt. Vielen Dank, dass Sie ballotage.online genutzt haben.",
+    "deleted_title": "Dein Konto wurde gelöscht",
+    "deleted_text": "Deine Daten wurden entfernt. Vielen Dank, dass du ballotage.online genutzt hast.",
     "deleted_home": "Zur Startseite"
   },
   "testmode": {
     "badge": "TESTMODUS",
-    "banner": "Ihre Loge ist noch nicht verifiziert. Im Testmodus sind Abstimmungen auf {n} Empfänger begrenzt. Für größere Abstimmungen ist einmalig eine Verifizierung Ihrer Loge, Ihres Vereins oder Clubs nötig.",
-    "pending": "Ihr Antrag auf Verifizierung wird geprüft.",
+    "banner": "Deine Loge ist noch nicht verifiziert. Im Testmodus sind Abstimmungen auf {n} Empfänger begrenzt. Für größere Abstimmungen ist einmalig eine Verifizierung deiner Loge, deines Vereins oder Clubs nötig.",
+    "pending": "Dein Antrag auf Verifizierung wird geprüft.",
     "cta": "Jetzt verifizieren lassen"
   },
   "verification": {
     "meta_title": "Verifizierung",
     "title": "Loge verifizieren",
     "disabled": "Auf dieser Instanz ist keine Verifizierung nötig.",
-    "verified": "Ihre Loge ist verifiziert. Sie können Abstimmungen mit beliebig vielen Empfängern anlegen.",
-    "lead": "Damit Sie Abstimmungen mit mehr als {n} Empfängern anlegen können, prüfen wir einmalig, dass hinter Ihrer Loge, Ihrem Verein oder Club eine echte Organisation steht. Das schützt alle vor Missbrauch. Bis dahin arbeiten Sie im Testmodus.",
-    "pending": "Ihr Antrag ist eingegangen und wird geprüft. Sie erhalten eine E-Mail, sobald wir entschieden haben. Einen erneuten Antrag mit geänderten Angaben können Sie unten stellen.",
+    "verified": "Deine Loge ist verifiziert. Du kannst Abstimmungen mit beliebig vielen Empfängern anlegen.",
+    "lead": "Damit du Abstimmungen mit mehr als {n} Empfängern anlegen kannst, prüfen wir einmalig, dass hinter deiner Loge, deinem Verein oder Club eine echte Organisation steht. Das schützt alle vor Missbrauch. Bis dahin arbeitest du im Testmodus.",
+    "pending": "Dein Antrag ist eingegangen und wird geprüft. Du erhältst eine E-Mail, sobald wir entschieden haben. Einen erneuten Antrag mit geänderten Angaben kannst du unten stellen.",
     "sent": "Antrag gesendet. Wir melden uns per E-Mail.",
     "f_name": "Name einer verantwortlichen Person",
     "f_email": "E-Mail-Adresse der verantwortlichen Person",
@@ -846,9 +835,9 @@
     "privacy": "Die Angaben gehen nur an die Betreiber dieser Instanz und dienen ausschließlich der Prüfung.",
     "submit": "Verifizierung beantragen",
     "resubmit": "Antrag erneut senden",
-    "err_name": "Bitte geben Sie den Namen einer verantwortlichen Person an.",
-    "err_email": "Bitte geben Sie eine gültige E-Mail-Adresse an.",
-    "err_contact": "Bitte geben Sie eine Webseite oder eine Telefonnummer an.",
+    "err_name": "Bitte gib den Namen einer verantwortlichen Person an.",
+    "err_email": "Bitte gib eine gültige E-Mail-Adresse an.",
+    "err_contact": "Bitte gib eine Webseite oder eine Telefonnummer an.",
     "review": {
       "meta_title": "Verifizierung prüfen",
       "title": "Verifizierungsantrag",

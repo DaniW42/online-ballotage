@@ -139,3 +139,37 @@ def test_no_markdown_applied_to_parametrised_strings():
     pattern = re.compile(r"\bt\([^)]*=[^)]*\)\s*\|\s*md")
     for path in (APP / "templates").glob("*.html"):
         assert not pattern.search(path.read_text(encoding="utf-8")), path.name
+
+
+# Sätze, in denen "Sie" ein Pronomen für Sachen ist ("sie läuft", "sie werden gelöscht"), keine Anrede
+SIE_AS_PRONOUN = {"home.open_text", "selfhost.lead", "dashboard.recipients_none", "faq.groups.4.items.0.a"}
+LEGAL_SECTIONS = ("impressum.", "privacy.")
+
+
+def _strings(value, path=""):
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            yield from _strings(item, f"{path}.{i}" if path else str(i))
+
+
+def test_german_uses_informal_address_except_legal_texts():
+    """Seite und Mails sind in der Du-Form; nur Impressum und Datenschutz bleiben bei 'Sie'."""
+    catalog = i18n.CATALOGS["de"]
+    offenders = []
+    for key, value in catalog.items():
+        if key.startswith(LEGAL_SECTIONS):
+            continue
+        for path, text in _strings(value, key):
+            formal = re.search(r"\b(Ihr\w*|Ihnen)\b", text)
+            sie = re.search(r"\bSie\b", text) and not path.startswith(tuple(SIE_AS_PRONOUN))
+            if formal or sie:
+                offenders.append(path)
+    assert offenders == []
+
+
+def test_legal_texts_keep_formal_address():
+    catalog = i18n.CATALOGS["de"]
+    legal = " ".join(t for k, v in catalog.items() if k.startswith(LEGAL_SECTIONS) for _, t in _strings(v, k))
+    assert re.search(r"\bSie\b", legal) and "du " not in legal.lower()

@@ -4,7 +4,6 @@
 {% block main %}
 <section class="hero">
   <div class="wrap">
-    <p class="eyebrow">{{ t('home.eyebrow') }}</p>
     <h1>{{ t('home.title') }}</h1>
     <p class="lead">{{ t('home.lead') }}</p>
     <div class="actions">
@@ -12,7 +11,6 @@
         <a class="btn large" href="/dashboard">{{ t('home.cta_dashboard') }}</a>
       {% else %}
         <a class="btn large" href="/register">{{ t('home.cta_register') }}</a>
-        <a class="btn large secondary" href="/login">{{ t('home.cta_login') }}</a>
       {% endif %}
       <a class="btn large secondary" href="/how-it-works">{{ t('home.cta_how') }}</a>
     </div>

@@ -132,3 +132,13 @@ def test_scheduled_election_is_not_shown_as_running(create_election, orga):
 def test_dark_mode_sets_native_color_scheme(anon):
     css = anon.get("/static/style.css").text
     assert "color-scheme: dark" in css
+
+
+def test_home_hero_and_feature_cards(anon):
+    html = anon.get("/").text
+    hero = html.split('<section class="hero">')[1].split("</section>")[0]
+    assert "Digitale Kugelung" not in hero and "Selbst hostbar" not in hero
+    assert 'href="/login"' not in hero and 'href="/register"' in hero       # Login nur oben rechts
+    features = html.split("Gemacht für Kugelungen")[1].split("</section>")[0]
+    assert features.count('class="card"') == 4
+    assert "Genaue Zählung" not in features and "Fristen im Griff" not in features
