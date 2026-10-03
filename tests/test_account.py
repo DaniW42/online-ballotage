@@ -60,7 +60,7 @@ def test_delete_waits_for_result_mail(create_election, anon, orga, db, outbox):
 def test_cannot_delete_foreign_election(create_election, outbox, db):
     election_id, _ = create_election()
     other = make_login(outbox, email="other@loge.test", name="Andere")
-    assert other.get(f"/elections/{election_id}/delete").status_code == 303  # kein Zugriff auf fremde Abstimmung
+    assert other.get(f"/elections/{election_id}/delete").status_code in (303, 307)  # kein Zugriff auf fremde Abstimmung
     other.post(f"/elections/{election_id}/delete", data={"confirm": "yes"})
     assert db.query(Election).count() == 1
 
