@@ -1,5 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Übersicht{% endblock %}
+{% block title %}Übersicht{% if org.saved_recipients %}
+<h2>Gespeicherte Empfängerliste</h2>
+<p class="hint">{{ org.saved_recipients|length }} Adressen werden bei neuen Abstimmungen vorbefüllt.</p>
+<form method="post" action="/recipients/clear" onsubmit="return confirm('Gespeicherte Empfängerliste löschen?')">
+  <button type="submit" class="secondary">Liste löschen</button>
+</form>
+{% endif %}
+{% endblock %}
 {% block content %}
 <nav>
   {{ org.name }}
@@ -23,5 +30,12 @@
 </table>
 {% else %}
 <p>Noch keine Abstimmung angelegt.</p>
+{% endif %}
+{% if org.saved_recipients %}
+<h2>Gespeicherte Empfängerliste</h2>
+<p class="hint">{{ org.saved_recipients|length }} Adressen werden bei neuen Abstimmungen vorbefüllt.</p>
+<form method="post" action="/recipients/clear" onsubmit="return confirm('Gespeicherte Empfängerliste löschen?')">
+  <button type="submit" class="secondary">Liste löschen</button>
+</form>
 {% endif %}
 {% endblock %}

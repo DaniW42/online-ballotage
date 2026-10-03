@@ -206,7 +206,10 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
     org = current_org(request, db)
     if not org:
         return RedirectResponse("/login")
-    return templates.TemplateResponse("new_election.html", {"request": request, "org": org})
+    return templates.TemplateResponse(
+        "new_election.html",
+        {"request": request, "org": org, "saved": org.saved_recipients or [], "save_checked": True},
+    )
 
 
 def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
@@ -218,10 +221,24 @@ def _queue_invitations(background_tasks: BackgroundTasks, election: Election, cr
         )
 
 
-def _form_error(request: Request, org: Organization, message: str):
+def _form_error(request: Request, org: Organization, message: str, emails: list[str] | None = None):
     return templates.TemplateResponse(
-        "new_election.html", {"request": request, "org": org, "error": message}, status_code=400
+        "new_election.html",
+        {"request": request, "org": org, "error": message,
+         "saved": emails if emails is not None else (org.saved_recipients or []),
+         "save_checked": True},
+        status_code=400,
     )
+
+
+@app.post("/recipients/clear")
+def clear_recipients(request: Request, db: Session = Depends(get_db)):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login", status_code=303)
+    org.saved_recipients = []
+    db.commit()
+    return RedirectResponse("/dashboard", status_code=303)
 
 
 @app.post("/elections/new")
@@ -234,6 +251,7 @@ def new_election_submit(
     emails_raw: str = Form(""),
     options_raw: str = Form(""),
     reminder_enabled: bool = Form(False),
+    save_recipients: bool = Form(False),
     db: Session = Depends(get_db),
 ):
     org = current_org(request, db)
@@ -249,6 +267,7 @@ def new_election_submit(
         return _form_error(
             request, org,
             f"Mindestens {settings.min_voters} Email-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
+            emails,
         )
 
     options, seen = [], set()
@@ -258,11 +277,11 @@ def new_election_submit(
             options.append(o)
     options = options or ["Ja", "Nein", "Enthaltung"]
     if len(options) < 2:
-        return _form_error(request, org, "Mindestens zwei Abstimmungsoptionen angeben.")
+        return _form_error(request, org, "Mindestens zwei Abstimmungsoptionen angeben.", emails)
 
     title = " ".join(title.split())  # Zeilenumbrüche im Titel (Mail-Betreff) vermeiden
     if settings.require_verification and not org.verified:
-        return _form_error(request, org, "Ihre Loge wurde noch nicht freigegeben.")
+        return _form_error(request, org, "Ihre Loge wurde noch nicht freigegeben.", emails)
 
     election = Election(
         org_id=org.id,
@@ -277,6 +296,8 @@ def new_election_submit(
     db.refresh(election)
 
     created = create_invitations(db, election, emails)
+    if save_recipients:
+        org.saved_recipients = emails
     db.commit()
     _queue_invitations(background_tasks, election, created)
 

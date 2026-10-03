@@ -28,6 +28,12 @@
   <ul class="email-list" id="email-list"></ul>
   <button type="button" class="secondary" onclick="addEmptyRow()">+ Email hinzufügen</button>
 
+  {% if saved %}<div class="hint">Die zuletzt verwendete Empfängerliste ist vorbefüllt.</div>{% endif %}
+  <label style="font-weight:normal">
+    <input type="checkbox" name="save_recipients" value="true" {% if save_checked %}checked{% endif %} style="width:auto;display:inline">
+    Diese Liste für die nächste Kugelung merken
+  </label>
+
   <input type="hidden" name="emails_raw" id="emails_raw">
 
   <details>
@@ -47,7 +53,7 @@
 </form>
 
 <script>
-let emails = [];
+let emails = {{ saved|tojson }};
 
 function emailPattern() {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

@@ -25,6 +25,9 @@ class Organization(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     verified = Column(Boolean, default=False, nullable=False)
+    # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
+    # Kann jederzeit gelöscht werden (Datensparsamkeit).
+    saved_recipients = Column(JSON, default=list, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
