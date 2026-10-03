@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t('vote.receipts_meta') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<h1>{{ election.title }}</h1>
+<p>{{ t('vote.receipts_lead') }}</p>
+<h2>{{ t('vote.receipts_results') }}</h2>
+<table>
+  {% for choice, count in results.items() %}<tr><td>{{ choice }}</td><td>{{ count }}</td></tr>{% endfor %}
+</table>
+<h2>{{ t('vote.receipts_list', n=ballots|length) }}</h2>
+<p class="hint">{{ t('vote.receipts_hint', days=retention_days) }}</p>
+<table>
+  {% for code, choice in ballots %}<tr><td><code>{{ code }}</code></td><td>{{ choice }}</td></tr>{% endfor %}
+</table>
+{% endblock %}

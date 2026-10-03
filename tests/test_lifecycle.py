@@ -205,9 +205,28 @@ def test_result_mail_is_retried_after_failure(create_election, anon, outbox, db)
     services.run_maintenance()
     assert not _results_mails(outbox) and db.query(Election).one().result_mail_sent is False
     outbox.fail_for = set()
+    services.run_maintenance()
+    assert not _results_mails(outbox)  # wartet erst ab (exponentiell)
+    sql(db, "update elections set finished_at = finished_at - interval '1 minute'")
     services.run_maintenance(); services.run_maintenance()
     db.expire_all()
     assert len(_results_mails(outbox)) == 1 and db.query(Election).one().result_mail_sent is True
+
+
+def test_result_mail_gives_up_and_does_not_block_purge_or_delete(create_election, anon, orga, outbox, db):
+    election_id, tokens = create_election()
+    _vote(anon, tokens, {"a@x.test": "Ja", "b@x.test": "Ja", "c@x.test": "Nein"})
+    outbox.fail_for = {"orga@loge.test"}
+    services.run_maintenance()
+    sql(db, "update elections set result_mail_attempts = 11, finished_at = finished_at - interval '40 days'")
+    services.run_maintenance()   # letzter Versuch scheitert -> aufgegeben, Löschfrist greift trotzdem
+    db.expire_all()
+    election = db.query(Election).one()
+    assert election.result_mail_failed and not election.result_mail_sent
+    services.run_maintenance()
+    assert db.query(Invitation).count() == 0
+    assert "nicht zugestellt" in orga.get(f"/elections/{election_id}").text
+    assert orga.post(f"/elections/{election_id}/delete", data={"confirm": "yes"}).headers["location"].endswith("deleted")
 
 
 def test_reminder_goes_to_pending_voters_with_new_link_once(create_election, anon, outbox, db):

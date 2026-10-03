@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .db import SessionLocal, Election, Invitation, Vote, Organization, MagicLink
-from .mail import send_result_mail, send_vote_invitation
+from .mail import send_result_mail, send_vote_invitation, mail_queue, PRIORITY_BULK
 from .tokens import generate_token
 from .i18n import fmt_datetime
 from .timeutil import utcnow
@@ -51,7 +51,7 @@ def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
     try:
         send_vote_invitation(to, title, link, period, kind=kind, lang=lang)
     except Exception as exc:
-        log.exception("Einladungsmail an %s fehlgeschlagen", to)
+        log.exception("Einladungsmail fehlgeschlagen (Einladung %s)", invitation_id)
         error = str(exc)[:200] or exc.__class__.__name__
     db = SessionLocal()
     try:
@@ -181,6 +181,8 @@ def is_verified(org: Organization) -> bool:
 def purge_organization(db: Session, org: Organization) -> None:
     """Löscht eine Loge samt allen Abstimmungen, Stimmen und Einladungen (Ablehnung)."""
     for (election_id,) in db.query(Election.id).filter(Election.org_id == org.id).all():
+        # Sperrreihenfolge wie bei der Stimmabgabe: erst Abstimmung, dann Einladungen
+        db.query(Election).filter(Election.id == election_id).with_for_update().first()
         db.query(Vote).filter(Vote.election_id == election_id).delete()
         db.query(Invitation).filter(Invitation.election_id == election_id).delete()
     db.query(Election).filter(Election.org_id == org.id).delete()
@@ -199,7 +201,7 @@ def delete_election(db: Session, election_id: str) -> str | None:
     if election.status == "open":
         abort_election(db, election_id)
         db.refresh(election)
-    if election.status == "finished" and not election.result_mail_sent:
+    if election.status == "finished" and not result_mail_settled(election):
         return "mail_pending"  # das Ergebnis wurde dem Organisator noch nicht zugestellt
     db.query(Vote).filter(Vote.election_id == election.id).delete()
     db.query(Invitation).filter(Invitation.election_id == election.id).delete()
@@ -229,13 +231,26 @@ def get_results(db: Session, election: Election) -> dict[str, int] | None:
     return {option: counts.get(option, 0) for option in election.options}
 
 
+RESULT_MAIL_MAX_ATTEMPTS = 12   # 30 s, 1 min, 2 min, ... -> gibt nach gut einem Tag auf
+
+
+def result_mail_settled(election: Election) -> bool:
+    return election.result_mail_sent or election.result_mail_failed
+
+
 def send_pending_result_mails(db: Session) -> None:
+    now = utcnow()
     pending = (
         db.query(Election)
-        .filter(Election.status == "finished", Election.result_mail_sent.is_(False))
+        .filter(Election.status == "finished", Election.result_mail_sent.is_(False),
+                Election.result_mail_failed.is_(False))
         .all()
     )
     for election in pending:
+        attempts = election.result_mail_attempts or 0
+        next_try = election.finished_at + timedelta(seconds=30 * (2 ** attempts - 1))
+        if now < next_try:
+            continue
         org = db.query(Organization).filter(Organization.id == election.org_id).first()
         try:
             send_result_mail(
@@ -251,7 +266,10 @@ def send_pending_result_mails(db: Session) -> None:
                 lang=election.language,
             )
         except Exception:
-            log.exception("Ergebnis-Mail für %s fehlgeschlagen, nächster Versuch folgt", election.id)
+            election.result_mail_attempts = attempts + 1
+            election.result_mail_failed = election.result_mail_attempts >= RESULT_MAIL_MAX_ATTEMPTS
+            db.commit()
+            log.exception("Ergebnis-Mail für %s fehlgeschlagen (Versuch %s)", election.id, attempts + 1)
             continue
         election.result_mail_sent = True
         db.commit()
@@ -287,8 +305,8 @@ def send_due_reminders(db: Session) -> None:
             result = reissue_invitation(db, election, invitation_id)
             if result:
                 inv_id, email, link = result
-                deliver_invitation(inv_id, email, election.title, link,
-                                   period_text(election), kind="reminder", lang=election.language)
+                mail_queue.submit(PRIORITY_BULK, deliver_invitation, inv_id, email, election.title,
+                                  link, period_text(election), "reminder", election.language)
 
 
 def dispatch_due_invitations(db: Session) -> None:
@@ -302,19 +320,25 @@ def dispatch_due_invitations(db: Session) -> None:
         .all()
     )
     for election in due:
-        election.invitations_dispatched = True  # zuerst: nie doppelt versenden
-        db.commit()
+        # Unter Sperre Flag setzen und Empfänger einsammeln: Ein gleichzeitiges Nachladen
+        # (sperrt ebenfalls die Abstimmung) landet so entweder hier oder verschickt selbst.
+        locked = db.query(Election).filter(Election.id == election.id).with_for_update().first()
+        if locked.invitations_dispatched:
+            db.rollback()
+            continue
+        locked.invitations_dispatched = True  # nie doppelt versenden
         pending = [
             i for (i,) in db.query(Invitation.id)
             .filter(Invitation.election_id == election.id, Invitation.used.is_(False))
             .order_by(Invitation.email)
         ]
+        db.commit()
         for invitation_id in pending:
             result = reissue_invitation(db, election, invitation_id)
             if result:
                 inv_id, email, link = result
-                deliver_invitation(inv_id, email, election.title, link, period_text(election),
-                                   kind="invite", lang=election.language)
+                mail_queue.submit(PRIORITY_BULK, deliver_invitation, inv_id, email, election.title,
+                                  link, period_text(election), "invite", election.language)
 
 
 def purge_expired(db: Session) -> None:
@@ -329,8 +353,8 @@ def purge_expired(db: Session) -> None:
         .all()
     )
     for election in old:
-        if election.status == "finished" and not election.result_mail_sent:
-            continue  # Ergebnis-Mail zuerst loswerden
+        if election.status == "finished" and not result_mail_settled(election):
+            continue  # Ergebnis-Mail zuerst loswerden (oder aufgeben)
         db.query(Invitation).filter(Invitation.election_id == election.id).delete()
         election.purged = True
         db.commit()
@@ -350,7 +374,7 @@ def purge_expired(db: Session) -> None:
     db.commit()
 
 
-STALLED_SEND_MINUTES = 30
+STALLED_SEND_MINUTES = 120
 STALLED_SEND_ERROR = "Versand unterbrochen (z. B. Neustart) – bitte „Neuer Link“ verwenden"
 
 
@@ -359,13 +383,18 @@ def mark_stalled_sends(db: Session) -> None:
     neu gestartet), sichtbar als Fehler markieren. Der Link selbst ist verloren
     (nur der Hash ist gespeichert), daher hilft nur ein neuer Link."""
     cutoff = utcnow() - timedelta(minutes=STALLED_SEND_MINUTES)
-    (
-        db.query(Invitation)
-        .filter(Invitation.send_queued_at < cutoff, Invitation.sent_at.is_(None),
-                Invitation.send_error.is_(None), Invitation.used.is_(False))
-        .update({"send_error": STALLED_SEND_ERROR}, synchronize_session=False)
-    )
-    db.commit()
+    stalled = (Invitation.send_queued_at < cutoff, Invitation.sent_at.is_(None),
+               Invitation.send_error.is_(None), Invitation.used.is_(False))
+    election_ids = {e for (e,) in db.query(Invitation.election_id).filter(*stalled).distinct()}
+    for election_id in election_ids:
+        # pro Abstimmung, Abstimmung zuerst sperren (gleiche Reihenfolge wie Stimmabgabe)
+        db.query(Election).filter(Election.id == election_id).with_for_update().first()
+        (
+            db.query(Invitation)
+            .filter(Invitation.election_id == election_id, *stalled)
+            .update({"send_error": STALLED_SEND_ERROR}, synchronize_session=False)
+        )
+        db.commit()
 
 
 def _finalize_all_due(db: Session) -> None:

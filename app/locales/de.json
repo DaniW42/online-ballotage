@@ -192,7 +192,7 @@
     "title": "Sicherheit und Aufbau",
     "lead": "Eine geheime Abstimmung steht und fällt mit dem Vertrauen in die Technik. Deshalb beschreiben wir hier offen, wie das System aufgebaut ist, was es schützt – und was nicht.",
     "principle_title": "Das Grundprinzip: Trennung durch Aufbau",
-    "principle": "Zwei Dinge dürfen nie zusammenkommen: **wer** abstimmen darf und **was** abgestimmt wurde. Beides liegt in getrennten Tabellen ohne jede Verbindung.\n\nDie Einladung weiß nur, dass eine Adresse bereits abgestimmt hat (ja oder nein). Die Stimme kennt nur die Auswahl und eine Zufalls-ID. Es gibt keinen Fremdschlüssel, keine gemeinsame ID und keinen Zeitstempel, über den sich beide wieder zusammenführen ließen. Auch der Organisator und der Administrator mit reinem Datenbankzugriff können Stimmen daher keiner Person zuordnen.",
+    "principle": "Zwei Dinge dürfen nie zusammenkommen: **wer** abstimmen darf und **was** abgestimmt wurde. Beides liegt in getrennten Tabellen ohne jede Verbindung.\n\nDie Einladung weiß nur, dass eine Adresse bereits abgestimmt hat (ja oder nein). Die Stimme kennt nur die Auswahl und eine Zufalls-ID. Es gibt keinen Fremdschlüssel, keine gemeinsame ID und keinen Zeitstempel, über den sich beide wieder zusammenführen ließen. Auch der Organisator und Administratoren mit Datenbankzugriff (Abfragen, Datenbank-Export) können Stimmen daher keiner Person zuordnen.",
     "data_title": "Was gespeichert wird",
     "data_head": [
       "Daten",
@@ -204,6 +204,11 @@
         "Organisation",
         "Name der Loge, E-Mail-Adresse für den Login",
         "bis zur Löschung der Organisation"
+      ],
+      [
+        "Abstimmung",
+        "Titel, Zeitraum, Optionen, Anzahl je Option, Beteiligung",
+        "bis du sie löschst"
       ],
       [
         "Einladung",
@@ -269,7 +274,7 @@
       },
       {
         "t": "Optional: Nachprüfbarkeit",
-        "p": "Auf Wunsch der Loge erhalten Wähler einen Quittungscode. Nach Abschluss erscheint eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So kann jeder prüfen, dass die eigene Stimme enthalten ist. Standardmäßig ist das aus."
+        "p": "Auf Wunsch der Loge erhalten Wähler einen Quittungscode. Nach Abschluss sehen alle Eingeladenen über ihren persönlichen Link eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So kann jede Person selbst prüfen, dass die eigene Stimme enthalten ist – ohne den Code jemandem zeigen zu müssen. Standardmäßig ist das aus."
       },
       {
         "t": "Schutz vor Missbrauch",
@@ -277,7 +282,7 @@
       }
     ],
     "limits_title": "Die Grenzen – ehrlich benannt",
-    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank oder ein Backup liest, einschließlich Organisator und Administratoren mit reinem Datenbankzugriff.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Dasselbe gilt für jemanden mit Zugriff auf die rohen Datenbankdateien oder das Transaktionsprotokoll (WAL), bevor die Datenbank alte Zeilenversionen aufgeräumt hat. Betreibe eine Instanz deshalb in der Hand einer Stelle, der deine Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.",
+    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank abfragt oder einen Datenbank-Export (z. B. `pg_dump`) liest, einschließlich Organisator und Administratoren.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Dasselbe gilt für jemanden mit Zugriff auf die rohen Datenbankdateien, Festplatten-Snapshots oder das Transaktionsprotokoll (WAL): Dort können alte Zeilenversionen noch eine Weile lesbar sein. Betreibe eine Instanz deshalb in der Hand einer Stelle, der deine Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.\n\n**Der Organisator bestimmt die Empfänger.** Wer eine Abstimmung anlegt, sieht, wer bereits abgestimmt hat, und kann eigene Adressen einladen. Damit lässt sich die Mindestzahl von drei Stimmen mit eigenen Stimmen auffüllen und so die Stimme einer einzelnen Person erkennen. Technisch verhindern lässt sich das nicht; die Software schützt die Anonymität gegenüber der Datenbank, nicht gegenüber einem Organisator, der die Empfängerliste manipuliert. Die Loge sollte deshalb Empfängerliste und Beteiligung transparent machen.",
     "report_title": "Schwachstelle gefunden?",
     "report": "Bitte melde sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
     "source_title": "Nachprüfen statt glauben",
@@ -319,7 +324,7 @@
           },
           {
             "q": "Kann der Organisator sehen, wer wie abgestimmt hat?",
-            "a": "Nein. Er sieht, wer **schon abgestimmt hat** und wer noch nicht, aber nicht, wie. Das Ergebnis erscheint erst nach Abschluss."
+            "a": "Nein. Er sieht, wer **schon abgestimmt hat** und wer noch nicht, aber nicht, wie. Das Ergebnis erscheint erst nach Abschluss. Eine Grenze gibt es: Der Organisator bestimmt die Empfänger. Lädt er eigene Adressen ein, kann er die Mindestzahl von drei Stimmen selbst auffüllen und so in einer sehr kleinen Abstimmung auf einzelne Stimmen schließen. Macht die Empfängerliste deshalb in der Loge transparent."
           },
           {
             "q": "Gegen wen schützt das, und gegen wen nicht?",
@@ -380,7 +385,7 @@
           },
           {
             "q": "Gibt es Erinnerungen?",
-            "a": "Ja, standardmäßig aktiv (abwählbar unter „Erweiterte Einstellungen“). **24 Stunden vor Fristende** erhalten alle, die noch nicht abgestimmt haben, eine Erinnerung; der Zeitpunkt steht auf der Detailseite. Die Prüfung läuft im Hintergrund alle 30 Sekunden. Die Erinnerung enthält einen **neuen** Link; der früher zugesandte Link wird damit ungültig, und die Mail weist darauf hin. Bei Abstimmungen, die kürzer als 25 Stunden laufen, wird keine Erinnerung versendet. Wird das Ende verlängert, wird die Erinnerung neu geplant."
+            "a": "Ja, standardmäßig aktiv (abwählbar unter „Erweiterte Einstellungen“). **24 Stunden vor Fristende** erhalten alle, die noch nicht abgestimmt haben, eine Erinnerung; der Zeitpunkt steht auf der Detailseite. Die Prüfung läuft im Hintergrund alle 30 Sekunden. Die Erinnerung enthält einen **neuen** Link; der früher zugesandte Link wird damit ungültig, und die Mail weist darauf hin. Bei Abstimmungen, die höchstens 25 Stunden laufen, wird keine Erinnerung versendet. Wird das Ende verlängert, wird die Erinnerung neu geplant."
           },
           {
             "q": "Kann ich die Empfängerliste wiederverwenden?",
@@ -393,7 +398,7 @@
         "items": [
           {
             "q": "Kann ich als Wähler prüfen, dass meine Stimme gezählt wurde?",
-            "a": "Optional, vom Organisator einzuschalten (Erweiterte Einstellungen, „Stimmen nachprüfbar machen“). Dann erhalten Wähler nach der Stimmabgabe einen Quittungscode. Nach dem Ende erscheint eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So kann jeder prüfen, dass die eigene Stimme enthalten und korrekt erfasst ist. Der Code ist keiner Person zugeordnet. Wer ihn weitergibt, kann allerdings seine Stimme belegen. Ohne Aktivierung gibt es weder Code noch Liste; die Standardeinstellung ist aus."
+            "a": "Optional, vom Organisator einzuschalten (Erweiterte Einstellungen, „Stimmen nachprüfbar machen“). Dann erhältst du nach der Stimmabgabe einen Quittungscode. Nach dem Ende öffnest du einfach wieder deinen Abstimmungslink aus der E-Mail: Dort steht das Ergebnis und eine Liste aller Codes mit der gezählten Auswahl, in zufälliger Reihenfolge. So prüfst du selbst, dass deine Stimme enthalten und korrekt erfasst ist, ohne den Code jemandem zeigen zu müssen. Der Code ist keiner Person zugeordnet. Wer ihn weitergibt, kann allerdings seine Stimme belegen. Ohne Aktivierung gibt es weder Code noch Liste; die Standardeinstellung ist aus."
           }
         ]
       },
@@ -437,7 +442,7 @@
     "sections": [
       {
         "t": "Voraussetzungen",
-        "p": "- Ein Server mit Docker und Docker Compose\n- Eine Domain, die auf den Server zeigt\n- Ein SMTP-Zugang für den Mailversand"
+        "p": "- Ein Server mit Docker und Docker Compose (ab Version 2.24)\n- Eine Domain, die auf den Server zeigt\n- Ein SMTP-Zugang für den Mailversand; der Mailserver braucht ein gültiges TLS-Zertifikat, weil die Verbindung geprüft wird"
       },
       {
         "t": "Konfiguration",
@@ -520,7 +525,7 @@
       },
       {
         "t": "5. Durchführung von Abstimmungen",
-        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden 30 Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als drei Stimmen werden sofort gelöscht. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
+        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden 30 Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als drei Stimmen werden sofort gelöscht. Titel, Zeitraum, Optionen und das Ergebnis (Anzahl je Option) einer Abstimmung bleiben gespeichert, bis die Organisatoren die Abstimmung löschen. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
       },
       {
         "t": "6. E-Mail-Versand",
@@ -632,9 +637,9 @@
       "options": "Abstimmungsoptionen",
       "options_hint": "Komma-getrennt, mindestens zwei. Standard ist die klassische Kugelung.",
       "reminder": "Erinnerung vor Fristende an alle, die noch nicht abgestimmt haben",
-      "reminder_hint": "Wird {h} Stunden vor Fristende versendet (entfällt bei Abstimmungen, die kürzer als {h} Stunden laufen). Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
+      "reminder_hint": "Wird {h} Stunden vor Fristende versendet (entfällt bei Abstimmungen, die höchstens {h1} Stunden laufen). Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
       "receipts": "Stimmen nachprüfbar machen",
-      "receipts_hint": "Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss wird eine Liste aller Stimmen (Code und Auswahl) angezeigt, damit jede Person prüfen kann, dass die eigene Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.",
+      "receipts_hint": "Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss sehen alle Eingeladenen über ihren Abstimmungslink eine Liste aller Stimmen (Code und Auswahl) – und damit auch das Ergebnis. So kann jede Person selbst prüfen, dass die eigene Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.",
       "submit": "Abstimmung erstellen und einladen",
       "err_min_voters": "Mindestens {n} E-Mail-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
       "err_options": "Mindestens zwei Abstimmungsoptionen angeben.",
@@ -691,7 +696,8 @@
       "reminder_planned": "Erinnerung an alle, die noch nicht abgestimmt haben: {when}.",
       "delete_title": "Löschen",
       "delete_hint": "Entfernt die Abstimmung samt Daten endgültig. Laufende Abstimmungen werden dabei abgebrochen.",
-      "delete_link": "Abstimmung löschen…"
+      "delete_link": "Abstimmung löschen…",
+      "result_mail_failed": "Die Ergebnis-Mail konnte trotz mehrerer Versuche nicht zugestellt werden. Das Ergebnis steht hier."
     },
     "msg": {
       "aborted": "Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.",
@@ -749,13 +755,18 @@
     "done_title": "Vielen Dank",
     "done_text": "Deine Stimme zu „{title}“ wurde erfasst. Das Ergebnis wird hier nicht angezeigt.",
     "receipt": "Quittungscode",
-    "receipt_hint": "Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person zugeordnet; wer ihn kennt, kann deine Stimme erkennen – bewahre ihn nur auf, wenn du prüfen möchtest.",
+    "receipt_hint": "Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung findest du über deinen Abstimmungslink aus der E-Mail eine Liste aller Codes mit der gezählten Auswahl. Der Code ist keiner Person zugeordnet; wer ihn kennt, kann deine Stimme erkennen – bewahre ihn nur auf, wenn du prüfen möchtest.",
     "invalid_meta": "Link ungültig",
     "invalid_title": "Link nicht gültig",
     "used": "Mit diesem Link wurde bereits abgestimmt. Jeder Link ist nur einmal gültig.",
     "window": "Diese Abstimmung ist aktuell nicht aktiv (Zeitraum: {start} – {end}).",
     "bad_choice": "Ungültige Auswahl.",
-    "unknown": "Dieser Link ist unbekannt oder fehlerhaft."
+    "unknown": "Dieser Link ist ungültig. Vielleicht wurde dir inzwischen ein neuer Link geschickt, etwa mit einer Erinnerung – nutze dann bitte den Link aus der neuesten E-Mail.",
+    "receipts_meta": "Nachprüfung",
+    "receipts_lead": "Die Abstimmung ist beendet. Hier kannst du prüfen, ob dein Quittungscode mit der richtigen Auswahl gezählt wurde.",
+    "receipts_results": "Ergebnis",
+    "receipts_list": "Alle Stimmen ({n})",
+    "receipts_hint": "Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge. Diese Seite ist bis {days} Tage nach Abschluss über deinen Link erreichbar."
   },
   "mail": {
     "magic": {

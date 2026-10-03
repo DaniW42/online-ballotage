@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
 
-from fastapi import FastAPI, Request, Depends, BackgroundTasks, Form
+from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -19,7 +19,10 @@ from . import i18n
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
 from .config import settings
 from .db import get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
-from .mail import send_magic_link, send_verification_request, send_verification_result
+from .mail import (
+    send_magic_link, send_verification_request, send_verification_result,
+    mail_queue, PRIORITY_LOGIN, PRIORITY_BULK,
+)
 from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
@@ -250,7 +253,6 @@ def register_form(request: Request):
 
 @app.post("/register")
 def register_submit(
-    background_tasks: BackgroundTasks,
     request: Request,
     name: str = Form(...),
     email: str = Form(...),
@@ -276,8 +278,8 @@ def register_submit(
         org.name = name
         db.commit()
 
-    if limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
-        _send_magic_link(background_tasks, db, org, request.state.lang)
+    if _mail_allowed(request, email):
+        _send_magic_link(db, org, request.state.lang)
     # Gleiche Antwort für neue und bestehende Adressen (keine Enumeration)
     return render(request, "magic_sent.html",
                   {"email": email, "minutes": settings.magic_link_ttl_minutes, "registered": True})
@@ -290,7 +292,6 @@ def login_form(request: Request, error: str | None = None):
 
 @app.post("/login")
 def login_submit(
-    background_tasks: BackgroundTasks,
     request: Request,
     email: str = Form(...),
     db: Session = Depends(get_db),
@@ -303,12 +304,12 @@ def login_submit(
     org = db.query(Organization).filter(Organization.email == email).first()
     # Bewusst dieselbe Antwort, egal ob die Email existiert oder das
     # Limit pro Adresse greift (keine Enumeration, kein Mail-Bombing).
-    if org and limiter.allow(f"mail:{email}", settings.rate_limit_per_email):
-        _send_magic_link(background_tasks, db, org, request.state.lang)
+    if org and _mail_allowed(request, email):
+        _send_magic_link(db, org, request.state.lang)
     return render(request, "magic_sent.html", {"email": email, "minutes": settings.magic_link_ttl_minutes})
 
 
-def _send_magic_link(background_tasks: BackgroundTasks, db: Session, org: Organization, lang: str):
+def _send_magic_link(db: Session, org: Organization, lang: str):
     raw, token_hash = generate_token()
     link = MagicLink(
         org_id=org.id,
@@ -318,11 +319,12 @@ def _send_magic_link(background_tasks: BackgroundTasks, db: Session, org: Organi
     db.add(link)
     db.commit()
     url = f"{settings.base_url}/auth/{raw}"
-    background_tasks.add_task(send_magic_link, org.email, url, lang)
+    mail_queue.submit(PRIORITY_LOGIN, send_magic_link, org.email, url, lang)
 
 
-def _valid_magic_link(db: Session, token: str) -> MagicLink | None:
-    link = db.query(MagicLink).filter(MagicLink.token_hash == hash_token(token)).first()
+def _valid_magic_link(db: Session, token: str, lock: bool = False) -> MagicLink | None:
+    query = db.query(MagicLink).filter(MagicLink.token_hash == hash_token(token))
+    link = query.with_for_update().first() if lock else query.first()
     if not link or link.used_at is not None or link.expires_at < utcnow():
         return None
     return link
@@ -339,7 +341,7 @@ def auth_confirm(token: str, request: Request, db: Session = Depends(get_db)):
 
 @app.post("/auth/{token}")
 def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
-    link = _valid_magic_link(db, token)
+    link = _valid_magic_link(db, token, lock=True)  # gesperrt: wirklich nur einmal einlösbar
     if not link:
         return RedirectResponse("/login?error=expired", status_code=303)
 
@@ -366,6 +368,13 @@ def logout():
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(SESSION_COOKIE)
     return response
+
+
+def _mail_allowed(request: Request, email: str) -> bool:
+    """Login-Mails pro Adresse begrenzen, ohne dass Dritte jemanden aussperren können:
+    das enge Limit gilt pro Adresse UND IP, ein großzügigeres global pro Adresse."""
+    per_pair = limiter.allow(f"mail:{email}:{_client_ip(request)}", settings.rate_limit_per_email)
+    return per_pair and limiter.allow(f"mail:{email}", settings.rate_limit_per_email * 4)
 
 
 def _client_ip(request: Request) -> str:
@@ -405,12 +414,13 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
                    "testmode": not is_verified(org)})
 
 
-def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
+def _queue_invitations(election: Election, created: list[tuple],
                        kind: str = "invite"):
     period = period_text(election)
     for inv_id, email, link in created:
-        background_tasks.add_task(
-            deliver_invitation, inv_id, email, election.title, link, period, kind, election.language
+        mail_queue.submit(
+            PRIORITY_BULK, deliver_invitation, inv_id, email, election.title, link, period, kind,
+            election.language,
         )
 
 
@@ -456,7 +466,6 @@ def clear_recipients(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/elections/new")
 def new_election_submit(
-    background_tasks: BackgroundTasks,
     request: Request,
     title: str = Form(...),
     starts_at: str = Form(...),
@@ -531,7 +540,7 @@ def new_election_submit(
         org.saved_recipients = emails
     db.commit()
     if not scheduled:
-        _queue_invitations(background_tasks, election, created)
+        _queue_invitations(election, created)
 
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
@@ -595,7 +604,7 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
         .order_by(Invitation.email)  # alphabetisch, nicht nach Einfügereihenfolge
         .all(),
         "message": message if message in MESSAGES else None,
-        "added": request.query_params.get("n", ""),
+        "added": request.query_params.get("n", "") if request.query_params.get("n", "").isdigit() else "",
     })
 
 
@@ -612,7 +621,7 @@ def _own_election(db: Session, request: Request, election_id: str) -> Election |
 
 @app.post("/elections/{election_id}/voters")
 def election_add_voters(
-    election_id: str, request: Request, background_tasks: BackgroundTasks,
+    election_id: str, request: Request,
     emails_raw: str = Form(""), db: Session = Depends(get_db),
 ):
     if not _own_election(db, request, election_id):
@@ -639,7 +648,7 @@ def election_add_voters(
     created = create_invitations(db, election, new_emails, queued=election.invitations_dispatched)
     db.commit()
     if election.invitations_dispatched:
-        _queue_invitations(background_tasks, election, created)
+        _queue_invitations(election, created)
         msg = "added"
     else:
         msg = "added_scheduled"  # Mails folgen zum Beginn
@@ -649,7 +658,7 @@ def election_add_voters(
 @app.post("/elections/{election_id}/invitations/{invitation_id}/reissue")
 def election_reissue(
     election_id: str, invitation_id: str, request: Request,
-    background_tasks: BackgroundTasks, db: Session = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     if not _own_election(db, request, election_id):
         return _deny(request)
@@ -663,7 +672,7 @@ def election_reissue(
     result = reissue_invitation(db, election, invitation_id) if can_reissue else None
     if not result:
         return RedirectResponse(f"/elections/{election_id}?msg=reissue_failed", status_code=303)
-    _queue_invitations(background_tasks, election, [result], kind="reissue")
+    _queue_invitations(election, [result], kind="reissue")
     return RedirectResponse(f"/elections/{election_id}?msg=reissued", status_code=303)
 
 
@@ -774,7 +783,7 @@ def verification_form(request: Request, sent: str | None = None, db: Session = D
 
 @app.post("/verification")
 def verification_submit(
-    request: Request, background_tasks: BackgroundTasks,
+    request: Request,
     contact_name: str = Form(""), contact_email: str = Form(""),
     contact_website: str = Form(""), contact_phone: str = Form(""),
     db: Session = Depends(get_db),
@@ -809,8 +818,8 @@ def verification_submit(
     org.verification_requested_at = utcnow()
     org.verification_token_hash = token_hash
     db.commit()
-    background_tasks.add_task(
-        send_verification_request, settings.admin_email, org.name, org.email,
+    mail_queue.submit(
+        PRIORITY_LOGIN, send_verification_request, settings.admin_email, org.name, org.email,
         values["contact_name"], values["contact_email"], values["contact_website"],
         values["contact_phone"], f"{settings.base_url}/auth/verify/{raw}", i18n.DEFAULT_LANG,
     )
@@ -836,7 +845,7 @@ def verify_review(token: str, request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/auth/verify/{token}/{decision}")
-def verify_decide(token: str, decision: str, request: Request, background_tasks: BackgroundTasks,
+def verify_decide(token: str, decision: str, request: Request,
                   db: Session = Depends(get_db)):
     request.state.lang = i18n.DEFAULT_LANG
     org = _org_for_review(db, token)
@@ -849,7 +858,8 @@ def verify_decide(token: str, decision: str, request: Request, background_tasks:
         db.commit()
     else:
         purge_organization(db, org)  # Loge samt aller Daten löschen
-    background_tasks.add_task(send_verification_result, email, name, decision == "approve", i18n.DEFAULT_LANG)
+    mail_queue.submit(PRIORITY_LOGIN, send_verification_result, email, name, decision == "approve",
+                      i18n.DEFAULT_LANG)
     return render(request, "verify_done.html", {"approved": decision == "approve", "org_name": name})
 
 
@@ -898,6 +908,15 @@ def vote_form(token: str, request: Request, db: Session = Depends(get_db)):
         return render(request, "vote_invalid.html", {}, 404)
     election = db.query(Election).filter(Election.id == invitation.election_id).first()
     _set_lang(request, election.language)  # Wähler sehen die Sprache der Abstimmung
+    if election.receipts_enabled and results_available(election):
+        # Nachprüfbarkeit: Nach Abschluss sehen alle Eingeladenen über ihren Link die
+        # Liste aller Quittungscodes - ohne den eigenen Code jemandem zeigen zu müssen.
+        ballots = (db.query(Vote.id, Vote.choice).filter(Vote.election_id == election.id)
+                   .order_by(Vote.id).all())
+        return render(request, "vote_receipts.html", {
+            "election": election, "ballots": ballots, "results": get_results(db, election),
+            "retention_days": settings.retention_days,
+        })
     if invitation.used:
         return render(request, "vote_invalid.html", {"reason": "used"}, 410)
 
@@ -913,7 +932,8 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
     token_hash = hash_token(token)
     found = db.query(Invitation.election_id).filter(Invitation.token_hash == token_hash).first()
     if not found:
-        return render(request, "vote_invalid.html", {"reason": "used"}, 410)
+        # Unbekannt oder durch einen neueren Link ersetzt - NICHT "bereits abgestimmt" melden
+        return render(request, "vote_invalid.html", {}, 404)
 
     # Sperrreihenfolge überall: erst Abstimmung, dann Einladung (keine Deadlocks).
     # Die exklusive Sperre serialisiert Stimmen derselben Abstimmung - nötig für das

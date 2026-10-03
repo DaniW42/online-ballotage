@@ -66,8 +66,12 @@ der Admin erhält eine Mail mit geheimem Link, über den er die Loge freischalte
 löscht. Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
 `docker compose exec app python -m app.cli verify loge@example.org`.
 
-**Mailversand:** global höchstens eine E-Mail pro Sekunde (`MAIL_MIN_INTERVAL_SECONDS`); große
-Einladungsrunden dauern entsprechend.
+**Mailversand:** Ein eigener Sender-Thread verschickt alle Mails, global höchstens eine pro Sekunde
+(`MAIL_MIN_INTERVAL_SECONDS`); Login-Links überholen wartende Einladungen. Die Verbindung zum
+Mailserver nutzt STARTTLS (`SMTP_USE_TLS`) oder implizites TLS (`SMTP_SSL`) **mit Zertifikatsprüfung**
+– der Mailserver braucht also ein gültiges Zertifikat für `SMTP_HOST`. Geht der Prozess während
+eines Versands neu an, werden die betroffenen Einladungen nach 2 Stunden als Fehler markiert
+(„Neuer Link“ hilft).
 
 Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im Prozess).
 

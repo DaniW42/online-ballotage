@@ -48,7 +48,7 @@
       <input type="checkbox" name="reminder_enabled" value="true" checked>
       <span>{{ t('election.new.reminder') }}</span>
     </label>
-    <div class="hint">{{ t('election.new.reminder_hint', h=reminder_hours) }}</div>
+    <div class="hint">{{ t('election.new.reminder_hint', h=reminder_hours, h1=reminder_hours + 1) }}</div>
 
     <label class="check">
       <input type="checkbox" name="receipts_enabled" value="true">

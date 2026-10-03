@@ -75,6 +75,7 @@
 {% else %}
 <h2>{{ t('election.detail.result_title') }}</h2>
 <p class="hint">{{ t('election.detail.reason_' ~ election.finish_reason) }}</p>
+{% if election.result_mail_failed %}<div class="notice error">{{ t('election.detail.result_mail_failed') }}</div>{% endif %}
 {% if results %}
 <table>
   {% for choice, count in results.items() %}

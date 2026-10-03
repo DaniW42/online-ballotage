@@ -25,7 +25,10 @@ def test_second_vote_with_same_token_rejected(create_election, anon, db):
 
 def test_unknown_token(anon):
     assert anon.get("/v/gibtsnicht").status_code == 404
-    assert anon.post("/v/gibtsnicht", data={"choice": "Ja"}).status_code == 410
+    response = anon.post("/v/gibtsnicht", data={"choice": "Ja"})
+    # unbekannter/ersetzter Link darf nicht als "bereits abgestimmt" erscheinen
+    assert response.status_code == 404 and "bereits abgestimmt" not in response.text
+    assert "neuen Link" in response.text or "neuesten E-Mail" in response.text
 
 
 def test_invalid_choice_rejected_and_token_stays_valid(create_election, anon, db):

@@ -1,10 +1,16 @@
+import itertools
+import logging
+import queue
 import smtplib
+import ssl
 import threading
 import time
 from email.message import EmailMessage
 
 from .config import settings
 from .i18n import t, fmt_datetime
+
+log = logging.getLogger("kugelung")
 
 
 class MailThrottle:
@@ -42,14 +48,62 @@ def send_mail(to: str, subject: str, body: str) -> None:
     msg["Subject"] = " ".join(subject.split())
     msg.set_content(body)
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:
-        if settings.smtp_use_tls:
-            smtp.starttls()
+    # Zertifikat und Hostname des Mailservers werden geprüft: Die Mails enthalten
+    # Login- und Abstimmungslinks, ein Mitleser könnte sonst in fremdem Namen abstimmen.
+    context = ssl.create_default_context()
+    timeout = settings.smtp_timeout_seconds
+    if settings.smtp_ssl:
+        smtp = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=timeout, context=context)
+    else:
+        smtp = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=timeout)
+    with smtp:
+        if settings.smtp_use_tls and not settings.smtp_ssl:
+            smtp.starttls(context=context)
         # Lokale Testumgebungen (z. B. Mailpit) laufen ohne Auth -
         # Zugangsdaten nur mitschicken, wenn welche gesetzt sind.
         if settings.smtp_user:
             smtp.login(settings.smtp_user, settings.smtp_password)
         smtp.send_message(msg)
+
+
+PRIORITY_LOGIN = 0      # Login-Links und Verifizierung: nie hinter einer großen Einladungsrunde
+PRIORITY_BULK = 1       # Einladungen, Erinnerungen
+
+
+class MailQueue:
+    """Ein einziger Hintergrund-Thread verschickt alle Mails (mit Drosselung).
+    So blockieren große Einladungsrunden weder Web-Requests noch den Wartungslauf,
+    und Login-Links überholen wartende Einladungen."""
+
+    def __init__(self):
+        self.queue = queue.PriorityQueue()
+        self.synchronous = False  # Tests: sofort ausführen
+        self._seq = itertools.count()
+        self._thread = None
+        self._lock = threading.Lock()
+
+    def submit(self, priority: int, func, *args) -> None:
+        if self.synchronous:
+            func(*args)
+            return
+        with self._lock:
+            if self._thread is None or not self._thread.is_alive():
+                self._thread = threading.Thread(target=self._run, name="mail-sender", daemon=True)
+                self._thread.start()
+        self.queue.put((priority, next(self._seq), func, args))
+
+    def _run(self) -> None:
+        while True:
+            _, _, func, args = self.queue.get()
+            try:
+                func(*args)
+            except Exception:
+                log.exception("Mailversand fehlgeschlagen")
+            finally:
+                self.queue.task_done()
+
+
+mail_queue = MailQueue()
 
 
 def send_magic_link(to: str, link: str, lang: str) -> None:

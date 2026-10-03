@@ -84,6 +84,7 @@ def outbox(monkeypatch):
         box.append(Mail(to, subject, body))
 
     monkeypatch.setattr("app.mail.send_mail", fake_send)
+    monkeypatch.setattr(mail_module.mail_queue, "synchronous", True)  # Mails sofort, statt im Sender-Thread
     return box
 
 

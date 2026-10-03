@@ -79,6 +79,10 @@ class Election(Base):
     total_invited = Column(Integer, nullable=True)
     total_voted = Column(Integer, nullable=True)
     result_mail_sent = Column(Boolean, default=False, nullable=False)
+    # Fehlversuche der Ergebnis-Mail (exponentielles Warten); nach zu vielen Versuchen
+    # aufgegeben - das Ergebnis bleibt im Dashboard sichtbar, Löschfristen laufen weiter.
+    result_mail_attempts = Column(Integer, default=0, nullable=False, server_default="0")
+    result_mail_failed = Column(Boolean, default=False, nullable=False, server_default="false")
     reminder_sent = Column(Boolean, default=False, nullable=False)
     # False bei geplanter Abstimmung: Einladungsmails gehen erst zum Beginn raus
     # (die Roh-Tokens existieren vorher nicht; sie werden beim Versand erzeugt).
