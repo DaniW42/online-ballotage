@@ -47,13 +47,20 @@ Zwei Varianten, ausführlich unter `/self-hosting` bzw. in `app/locales/de.json`
 - **Hinter eigenem Reverse-Proxy (z. B. Nginx Proxy Manager):**
   `docker compose -f docker-compose.yml up -d --build`, Proxy auf Port 8000 des App-Containers.
   `/v/` und `/auth/` vom Access-Log ausnehmen, `FORWARDED_ALLOW_IPS` auf die Proxy-IP setzen.
+  Port 8000 ist standardmäßig nur auf `127.0.0.1` veröffentlicht. Läuft NPM selbst als Container,
+  am besten beide Stacks in ein gemeinsames Docker-Netz hängen und NPM auf `app:8000` zeigen
+  lassen; alternativ `APP_BIND=0.0.0.0` und Port 8000 per Firewall auf den Proxy beschränken.
 
 Mailpit (Override-Datei) startet dabei **nicht**. Vor dem öffentlichen Betrieb müssen die `LEGAL_*`-Angaben (Impressum) und `ADMIN_EMAIL` gesetzt sein.
 
 Konfiguration über Umgebungsvariablen: siehe `.env.example` und `app/config.py`
-(u. a. `TIMEZONE`, `ADMIN_EMAIL`, `TEST_MODE_MAX_VOTERS`, `MAIL_MIN_INTERVAL_SECONDS`, `MIN_VOTERS`, `RETENTION_DAYS`,
+(u. a. `TIMEZONE`, `ADMIN_EMAIL`, `TEST_MODE_MAX_VOTERS`, `TEST_MODE_DAILY_INVITATIONS`, `MAX_RECIPIENTS`,
+`MAIL_MIN_INTERVAL_SECONDS`, `MIN_VOTERS`, `RETENTION_DAYS`, `APP_BIND`,
 `REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`, `LEGAL_*`).
-**Verifizierung:** Ist `ADMIN_EMAIL` gesetzt, laufen neue Logen im Testmodus (höchstens 3 Empfänger).
+`SECRET_KEY` muss mindestens 32 Zeichen lang sein, sonst startet die App nicht.
+
+**Verifizierung:** Ist `ADMIN_EMAIL` gesetzt, laufen neue Logen im Testmodus (höchstens 3 Empfänger
+je Abstimmung und 10 Einladungen pro Tag).
 Im Konto können sie die Verifizierung beantragen (verantwortliche Person, E-Mail, Webseite oder Telefon);
 der Admin erhält eine Mail mit geheimem Link, über den er die Loge freischaltet oder ablehnt und
 löscht. Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
@@ -70,6 +77,13 @@ Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen 
   Zeitspalte**; `invitations` speichert nur `used` (Boolean) statt eines Zeitstempels. Diese
   Trennung darf nicht aufgeweicht werden (auch keine Logging-Korrelation von Token-Verbrauch
   und Stimmeneingang). Die Tests in `tests/test_anonymity.py` sichern das ab.
+- **Postgres-Systemspalten**: Stimme und „hat abgestimmt“ entstehen in einer Transaktion und
+  hätten sonst dieselbe `xmin` und benachbarte `ctid`. `scramble_row_versions()` schreibt bei
+  jeder Stimmabgabe alle Zeilen der Abstimmung in zufälliger Reihenfolge neu. Jede neue
+  Schreiboperation auf `votes`/`invitations` im Stimm-Kontext muss das berücksichtigen
+  (`tests/test_security.py`). Nicht abgedeckt: WAL, physische Datenbankdateien vor dem VACUUM.
+- **Sperrreihenfolge**: immer erst `elections`-Zeile, dann `invitations` – sonst Deadlocks.
+- **CSRF**: POSTs mit `Sec-Fetch-Site: cross-site/same-site` oder fremdem `Origin` werden abgelehnt.
 - **Access-Logs**: Der App-Container startet mit `--no-access-log`; Proxy-Logs für `/v/*` und
   `/auth/*` müssen ebenfalls abgeschaltet sein.
 - **Tokens**: `secrets.token_urlsafe(32)`, serverseitig nur als SHA-256-Hash gespeichert.
@@ -79,6 +93,6 @@ Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen 
 
 ## Offene Punkte
 
-- Antragsworkflow für die Verifizierung von Logen (aktuell `REQUIRE_VERIFICATION` + CLI)
-- Mehrere Administratoren pro Loge, Self-Service-Löschung von Konten
-- Kryptografische Entkopplung von Token und Stimme (Blind Signatures)
+- Mehrere Administratoren pro Loge
+- Kryptografische Entkopplung von Token und Stimme (Blind Signatures), damit auch der
+  laufende Server Stimme und Person nicht verknüpfen kann
