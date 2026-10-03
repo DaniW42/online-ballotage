@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ t('verification.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="app-nav"><a href="/dashboard">{{ t('common.back') }}</a></div>
+<h1>{{ t('verification.title') }}</h1>
+{% if not enabled %}
+  <div class="notice ok">{{ t('verification.disabled') }}</div>
+{% elif verified %}
+  <div class="notice ok">{{ t('verification.verified') }}</div>
+{% else %}
+  {% if sent %}<div class="notice ok">{{ t('verification.sent') }}</div>{% endif %}
+  <p>{{ t('verification.lead', n=max_voters) }}</p>
+  {% if pending %}<div class="notice ok">{{ t('verification.pending') }}</div>{% endif %}
+  {% if error %}<div class="notice error">{{ t('verification.err_' ~ error) }}</div>{% endif %}
+  <form method="post" action="/verification" class="card-form">
+    <label for="contact_name">{{ t('verification.f_name') }}</label>
+    <input type="text" id="contact_name" name="contact_name" required maxlength="200" value="{{ values.get('contact_name', org.contact_name or '') }}">
+    <label for="contact_email">{{ t('verification.f_email') }}</label>
+    <input type="email" id="contact_email" name="contact_email" required maxlength="200" value="{{ values.get('contact_email', org.contact_email or '') }}">
+    <label for="contact_website">{{ t('verification.f_website') }}</label>
+    <input type="text" id="contact_website" name="contact_website" maxlength="200" placeholder="https://" value="{{ values.get('contact_website', org.contact_website or '') }}">
+    <label for="contact_phone">{{ t('verification.f_phone') }}</label>
+    <input type="text" id="contact_phone" name="contact_phone" maxlength="60" value="{{ values.get('contact_phone', org.contact_phone or '') }}">
+    <div class="hint">{{ t('verification.f_hint') }}</div>
+    <div class="actions"><button type="submit">{% if pending %}{{ t('verification.resubmit') }}{% else %}{{ t('verification.submit') }}{% endif %}</button></div>
+    <div class="hint">{{ t('verification.privacy') }}</div>
+  </form>
+{% endif %}
+{% endblock %}

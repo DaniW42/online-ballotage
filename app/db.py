@@ -28,6 +28,14 @@ class Organization(Base):
     # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
     # Kann jederzeit gelöscht werden (Datensparsamkeit).
     saved_recipients = Column(JSON, default=list, nullable=False)
+    # Antrag auf Verifizierung (Angaben der Loge für den Admin)
+    contact_name = Column(String, nullable=True)
+    contact_email = Column(String, nullable=True)
+    contact_website = Column(String, nullable=True)
+    contact_phone = Column(String, nullable=True)
+    verification_requested_at = Column(DateTime, nullable=True)
+    # Hash des Freigabe-Links aus der Admin-Mail; nach der Entscheidung gelöscht
+    verification_token_hash = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=utcnow)
 
 

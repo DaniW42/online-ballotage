@@ -89,3 +89,24 @@ def send_result_mail(to: str, title: str, reason: str, period: str, total: int, 
             period=period, voted=voted, total=total, block=result_block, link=link,
         ),
     )
+
+
+def send_verification_request(to: str, org_name: str, org_email: str, contact_name: str,
+                              contact_email: str, website: str, phone: str, link: str,
+                              lang: str = "de") -> None:
+    send_mail(
+        to=to,
+        subject=t(lang, "mail.verify_request.subject", org=org_name),
+        body=t(lang, "mail.verify_request.body", org=org_name, org_email=org_email,
+               contact_name=contact_name, contact_email=contact_email,
+               website=website or "-", phone=phone or "-", link=link),
+    )
+
+
+def send_verification_result(to: str, org_name: str, approved: bool, lang: str = "de") -> None:
+    key = "approved" if approved else "rejected"
+    send_mail(
+        to=to,
+        subject=t(lang, f"mail.verify_{key}.subject"),
+        body=t(lang, f"mail.verify_{key}.body", org=org_name),
+    )

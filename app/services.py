@@ -139,6 +139,22 @@ def abort_election(db: Session, election_id: str) -> bool:
     return True
 
 
+def is_verified(org: Organization) -> bool:
+    """Ohne ADMIN_EMAIL ist die Verifizierung ausgeschaltet: alle gelten als verifiziert."""
+    return (not settings.admin_email) or org.verified
+
+
+def purge_organization(db: Session, org: Organization) -> None:
+    """Löscht eine Loge samt allen Abstimmungen, Stimmen und Einladungen (Ablehnung)."""
+    for (election_id,) in db.query(Election.id).filter(Election.org_id == org.id).all():
+        db.query(Vote).filter(Vote.election_id == election_id).delete()
+        db.query(Invitation).filter(Invitation.election_id == election_id).delete()
+    db.query(Election).filter(Election.org_id == org.id).delete()
+    db.query(MagicLink).filter(MagicLink.org_id == org.id).delete()
+    db.delete(org)
+    db.commit()
+
+
 def delete_election(db: Session, election_id: str) -> str | None:
     """Löscht eine Abstimmung samt Stimmen und Einladungen. Läuft sie noch, wird sie vorher
     abgebrochen (kein Ergebnis). Gibt einen Fehlerschlüssel zurück, wenn es (noch) nicht geht."""

@@ -21,7 +21,8 @@
     "dashboard": "Dashboard",
     "logout": "Abmelden",
     "main": "Hauptnavigation",
-    "account": "Konto"
+    "account": "Konto",
+    "verification": "Verifizierung"
   },
   "footer": {
     "blurb": "Geheime Abstimmungen für Logen und Vereine – technisch so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat.",
@@ -305,6 +306,10 @@
           {
             "q": "Unter welcher Lizenz steht es?",
             "a": "Der Quelltext steht unter der Elastic License 2.0. Sie dürfen die Software einsehen, nutzen, verändern und weitergeben, auch kommerziell. Nicht erlaubt ist, sie Dritten als gehosteten oder verwalteten Dienst mit im Wesentlichen gleicher Funktionalität anzubieten. Das ist „source-available“, aber nicht „Open Source“ im Sinne der OSI. Mehr dazu unter [Quelltext & Lizenz](/source)."
+          },
+          {
+            "q": "Was ist der Testmodus, und warum muss ich meine Loge verifizieren?",
+            "a": "Damit niemand den Dienst missbraucht, um fremde Adressen mit E-Mails zu überhäufen, sind neue Logen zunächst im **Testmodus**: Abstimmungen mit bis zu drei Empfängern sind sofort möglich, so lässt sich alles ausprobieren. Für größere Abstimmungen ist einmalig eine Verifizierung nötig. Dazu geben Sie im Menü „Konto“ bzw. über den Hinweis im Dashboard den Namen einer verantwortlichen Person, deren E-Mail-Adresse und die Webseite Ihrer Loge, Ihres Vereins oder Clubs **oder** eine Telefonnummer an. Der Betreiber prüft den Antrag und schaltet Ihre Loge frei oder lehnt ab; Sie werden per E-Mail informiert. Bei einer Ablehnung werden Ihr Konto und alle Daten gelöscht."
           }
         ]
       },
@@ -338,7 +343,7 @@
         "items": [
           {
             "q": "Wie lege ich eine Abstimmung an?",
-            "a": "Titel, Beginn und Ende angeben, E-Mail-Adressen einfügen (beliebig formatiert, etwa aus Outlook oder Excel; das Tool zieht die Adressen selbst heraus) und abschicken. Vorbelegt sind Beginn morgen 00:00 Uhr und Ende nach sieben Tagen um 23:59 Uhr; mit „Sofort starten“ beginnt die Abstimmung gleich. Zeiten gelten in der Zeitzone des Servers (Standard: Europe/Berlin)."
+            "a": "Titel, Beginn und Ende angeben, E-Mail-Adressen einfügen (beliebig formatiert, etwa aus Outlook oder Excel; das Tool zieht die Adressen selbst heraus) und abschicken. Vorbelegt sind Beginn morgen 00:00 Uhr und Ende nach sieben Tagen um 23:59 Uhr; mit „Sofort starten“ beginnt die Abstimmung gleich. Zeiten gelten in der Zeitzone des Servers (Standard: Europe/Berlin). Der Versand der Einladungen erfolgt mit höchstens einer E-Mail pro Sekunde; bei vielen Empfängern dauert er entsprechend."
           },
           {
             "q": "Was passiert, wenn der Beginn in der Zukunft liegt?",
@@ -417,7 +422,7 @@
           },
           {
             "q": "Kann sich jeder als Loge registrieren?",
-            "a": "Auf ballotage.online ja; der Login-Link beweist den Zugriff auf die E-Mail-Adresse. Selbst betriebene Instanzen können die Anlage von Abstimmungen auf freigegebene Logen beschränken. Login und Registrierung sind pro Adresse und IP begrenzt."
+            "a": "Ja, die Registrierung ist offen; der Login-Link beweist den Zugriff auf die E-Mail-Adresse. Neue Logen arbeiten zunächst im **Testmodus** (siehe oben). Selbst betriebene Instanzen können die Verifizierung mit `ADMIN_EMAIL` ein- oder ausschalten. Login und Registrierung sind pro Adresse und IP begrenzt, und der Server versendet global höchstens eine E-Mail pro Sekunde."
           },
           {
             "q": "Gibt es weitere Sprachen?",
@@ -514,7 +519,7 @@
       },
       {
         "t": "4. Registrierung und Login von Organisatoren",
-        "p": "Bei der Registrierung speichern wir den Namen der Loge bzw. des Vereins und eine E-Mail-Adresse. An diese Adresse senden wir Login-Links. Rechtsgrundlage ist die Durchführung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO). Login-Links werden nur als Hash gespeichert und nach Ablauf gelöscht. Zur Anmeldung setzen wir ein Sitzungs-Cookie (siehe Abschnitt 8). Die Daten bleiben gespeichert, solange das Konto besteht. Sie können Ihr Konto jederzeit selbst löschen (Menü „Konto“); dabei werden Name, E-Mail-Adresse und gespeicherte Empfängerliste entfernt. Voraussetzung ist, dass vorher alle Ihre Abstimmungen gelöscht wurden."
+        "p": "Bei der Registrierung speichern wir den Namen der Loge bzw. des Vereins und eine E-Mail-Adresse. An diese Adresse senden wir Login-Links. Rechtsgrundlage ist die Durchführung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO). Login-Links werden nur als Hash gespeichert und nach Ablauf gelöscht. Zur Anmeldung setzen wir ein Sitzungs-Cookie (siehe Abschnitt 8). Die Daten bleiben gespeichert, solange das Konto besteht. Sie können Ihr Konto jederzeit selbst löschen (Menü „Konto“); dabei werden Name, E-Mail-Adresse und gespeicherte Empfängerliste entfernt. Voraussetzung ist, dass vorher alle Ihre Abstimmungen gelöscht wurden.\n\nWenn Sie die Verifizierung Ihrer Loge beantragen, speichern wir zusätzlich den Namen einer verantwortlichen Person, deren E-Mail-Adresse sowie eine Webseite oder Telefonnummer der Organisation und leiten diese Angaben per E-Mail an den Betreiber zur Prüfung weiter (Art. 6 Abs. 1 lit. f DSGVO: Schutz vor Missbrauch). Bei einer Ablehnung werden Konto und Daten gelöscht."
       },
       {
         "t": "5. Durchführung von Abstimmungen",
@@ -635,11 +640,12 @@
       "submit": "Abstimmung erstellen und einladen",
       "err_min_voters": "Mindestens {n} E-Mail-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
       "err_options": "Mindestens zwei Abstimmungsoptionen angeben.",
-      "err_unverified": "Ihre Loge wurde noch nicht freigegeben.",
       "options_default": "Weiß, Schwarz, Enthaltung",
       "err_period": "Das Ende muss nach dem Beginn und in der Zukunft liegen.",
       "start_now": "Sofort starten",
-      "start_hint": "Vorbelegt: Beginn morgen 00:00 Uhr, Ende nach 7 Tagen um 23:59 Uhr. Liegt der Beginn in der Zukunft, werden die Einladungen erst dann versendet."
+      "start_hint": "Vorbelegt: Beginn morgen 00:00 Uhr, Ende nach 7 Tagen um 23:59 Uhr. Liegt der Beginn in der Zukunft, werden die Einladungen erst dann versendet.",
+      "err_testmode": "Im Testmodus sind höchstens {n} Empfänger möglich. Lassen Sie Ihre Loge verifizieren, um größere Abstimmungen anzulegen.",
+      "send_rate": "Der Versand erfolgt mit höchstens einer E-Mail pro Sekunde; bei vielen Empfängern dauert er entsprechend."
     },
     "detail": {
       "period": "Zeitraum",
@@ -694,7 +700,8 @@
       "schedule_updated": "Der Zeitplan wurde gespeichert.",
       "schedule_failed": "Zeitplan nicht geändert: Das Ende muss nach dem Beginn und in der Zukunft liegen. Nach der ersten Stimme kann das Ende nur noch verlängert werden.",
       "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet.",
-      "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde Ihnen noch nicht per E-Mail zugestellt. Bitte in einer Minute erneut versuchen."
+      "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde Ihnen noch nicht per E-Mail zugestellt. Bitte in einer Minute erneut versuchen.",
+      "testmode_limit": "Im Testmodus ist die Zahl der Empfänger begrenzt. Lassen Sie Ihre Loge verifizieren, um mehr Personen einzuladen."
     },
     "abort": {
       "meta_title": "Abstimmung abbrechen",
@@ -771,6 +778,18 @@
       "results": "Ergebnis:\n{lines}",
       "suppressed": "Es wurden weniger als {min} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt und die Stimmen wurden gelöscht.",
       "body": "Die Abstimmung \"{title}\" ist beendet. {reason}\n\nZeitraum: {period}\nBeteiligung: {voted} von {total}\n\n{block}\n\nDie Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.\nDiese E-Mail wird nur einmal versendet. Details: {link}"
+    },
+    "verify_request": {
+      "subject": "Verifizierungsantrag: {org}",
+      "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen, freischalten oder ablehnen:\n{link}\n\nDer Link ist geheim und nur bis zur Entscheidung gültig."
+    },
+    "verify_approved": {
+      "subject": "Ihre Loge wurde verifiziert",
+      "body": "Gute Nachrichten: Die Loge \"{org}\" wurde verifiziert. Sie können jetzt Abstimmungen mit beliebig vielen Empfängern anlegen."
+    },
+    "verify_rejected": {
+      "subject": "Verifizierung nicht möglich",
+      "body": "Leider konnten wir die Loge \"{org}\" nicht verifizieren. Das Konto und alle zugehörigen Daten wurden gelöscht. Bei Rückfragen antworten Sie bitte auf diese E-Mail oder nutzen Sie die Kontaktdaten im Impressum."
     }
   },
   "recipients": {
@@ -804,5 +823,55 @@
     "deleted_title": "Ihr Konto wurde gelöscht",
     "deleted_text": "Ihre Daten wurden entfernt. Vielen Dank, dass Sie ballotage.online genutzt haben.",
     "deleted_home": "Zur Startseite"
+  },
+  "testmode": {
+    "badge": "TESTMODUS",
+    "banner": "Ihre Loge ist noch nicht verifiziert. Im Testmodus sind Abstimmungen auf {n} Empfänger begrenzt. Für größere Abstimmungen ist einmalig eine Verifizierung Ihrer Loge, Ihres Vereins oder Clubs nötig.",
+    "pending": "Ihr Antrag auf Verifizierung wird geprüft.",
+    "cta": "Jetzt verifizieren lassen"
+  },
+  "verification": {
+    "meta_title": "Verifizierung",
+    "title": "Loge verifizieren",
+    "disabled": "Auf dieser Instanz ist keine Verifizierung nötig.",
+    "verified": "Ihre Loge ist verifiziert. Sie können Abstimmungen mit beliebig vielen Empfängern anlegen.",
+    "lead": "Damit Sie Abstimmungen mit mehr als {n} Empfängern anlegen können, prüfen wir einmalig, dass hinter Ihrer Loge, Ihrem Verein oder Club eine echte Organisation steht. Das schützt alle vor Missbrauch. Bis dahin arbeiten Sie im Testmodus.",
+    "pending": "Ihr Antrag ist eingegangen und wird geprüft. Sie erhalten eine E-Mail, sobald wir entschieden haben. Einen erneuten Antrag mit geänderten Angaben können Sie unten stellen.",
+    "sent": "Antrag gesendet. Wir melden uns per E-Mail.",
+    "f_name": "Name einer verantwortlichen Person",
+    "f_email": "E-Mail-Adresse der verantwortlichen Person",
+    "f_website": "Webseite der Loge / des Vereins",
+    "f_phone": "oder Telefonnummer",
+    "f_hint": "Mindestens eines von beiden: Webseite oder Telefonnummer.",
+    "privacy": "Die Angaben gehen nur an die Betreiber dieser Instanz und dienen ausschließlich der Prüfung.",
+    "submit": "Verifizierung beantragen",
+    "resubmit": "Antrag erneut senden",
+    "err_name": "Bitte geben Sie den Namen einer verantwortlichen Person an.",
+    "err_email": "Bitte geben Sie eine gültige E-Mail-Adresse an.",
+    "err_contact": "Bitte geben Sie eine Webseite oder eine Telefonnummer an.",
+    "review": {
+      "meta_title": "Verifizierung prüfen",
+      "title": "Verifizierungsantrag",
+      "lead": "Eine Loge bittet um Freischaltung.",
+      "org": "Loge / Verein",
+      "login_email": "Login-E-Mail",
+      "contact_name": "Verantwortliche Person",
+      "contact_email": "Kontakt-E-Mail",
+      "website": "Webseite",
+      "phone": "Telefon",
+      "requested": "Beantragt am",
+      "elections": "Bisher angelegte Abstimmungen (Testmodus)",
+      "website_note": "Die Webseite ist absichtlich nicht verlinkt; bitte manuell prüfen.",
+      "approve": "Freischalten",
+      "reject": "Ablehnen und löschen",
+      "reject_hint": "Beim Ablehnen werden die Loge und alle ihre Daten (Abstimmungen, Einladungen, Stimmen) endgültig gelöscht. Die Loge wird per E-Mail informiert.",
+      "reject_confirm": "Loge wirklich ablehnen und alle Daten löschen?",
+      "invalid": "Dieser Freigabe-Link ist ungültig oder wurde bereits verwendet."
+    },
+    "done": {
+      "meta_title": "Entscheidung gespeichert",
+      "approved": "{org} wurde freigeschaltet. Die Loge wird per E-Mail informiert.",
+      "rejected": "{org} wurde abgelehnt und gelöscht. Die Loge wird per E-Mail informiert."
+    }
   }
 }

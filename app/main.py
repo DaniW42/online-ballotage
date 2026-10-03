@@ -17,11 +17,12 @@ from . import i18n
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
 from .config import settings
 from .db import get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
-from .mail import send_magic_link
+from .mail import send_magic_link, send_verification_request, send_verification_result
 from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
+    is_verified, purge_organization,
 )
 from .timeutil import utcnow, local_input_to_utc, to_input_value
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
@@ -334,6 +335,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         .all()
     )
     return render(request, "dashboard.html", {"org": org, "elections": elections,
+                                              "testmode": not is_verified(org),
                                               "deleted": request.query_params.get("msg") == "deleted"})
 
 
@@ -343,7 +345,8 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
     if not org:
         return RedirectResponse("/login")
     return render(request, "new_election.html",
-                  {"org": org, "saved": org.saved_recipients or [], "save_checked": True})
+                  {"org": org, "saved": org.saved_recipients or [], "save_checked": True,
+                   "testmode": not is_verified(org)})
 
 
 def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
@@ -361,7 +364,7 @@ def _form_error(request: Request, org: Organization, message_key: str,
         request, "new_election.html",
         {"org": org, "error": i18n.t(request.state.lang, message_key, **params),
          "saved": emails if emails is not None else (org.saved_recipients or []),
-         "save_checked": True},
+         "save_checked": True, "testmode": not is_verified(org)},
         status_code=400,
     )
 
@@ -431,8 +434,9 @@ def new_election_submit(
         return _form_error(request, org, "election.new.err_options", emails)
 
     title = " ".join(title.split())  # Zeilenumbrüche im Titel (Mail-Betreff) vermeiden
-    if settings.require_verification and not org.verified:
-        return _form_error(request, org, "election.new.err_unverified", emails)
+    if not is_verified(org) and len(emails) > settings.test_mode_max_voters:
+        return _form_error(request, org, "election.new.err_testmode", emails,
+                           n=settings.test_mode_max_voters)
 
     starts, ends, now = local_input_to_utc(starts_at), local_input_to_utc(ends_at), utcnow()
     if ends <= starts or ends <= now:
@@ -465,7 +469,7 @@ def new_election_submit(
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
 
-MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "delete_blocked", "added", "added_scheduled",
+MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "delete_blocked", "testmode_limit", "added", "added_scheduled",
             "reissued", "reissue_failed"}
 
 
@@ -516,6 +520,7 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
             if election.receipts_enabled and results_available(election) else []
         ),
         "min_voters": settings.min_voters,
+        "testmode": not is_verified(org),
         "reminder_at": reminder_at,
         "can_move_start": election.status == "open" and used == 0,
         "invitations": db.query(Invitation)
@@ -550,7 +555,14 @@ def election_add_voters(
     if election.status != "open":
         db.rollback()
         return RedirectResponse(f"/elections/{election_id}?msg=not_open", status_code=303)
-    created = create_invitations(db, election, extract_emails(emails_raw))
+    org = current_org(request, db)
+    new_emails = extract_emails(emails_raw)
+    existing = db.query(func.count(Invitation.id)).filter(Invitation.election_id == election.id).scalar()
+    already = {e for (e,) in db.query(Invitation.email).filter(Invitation.election_id == election.id)}
+    if not is_verified(org) and existing + len([e for e in new_emails if e not in already]) > settings.test_mode_max_voters:
+        db.rollback()
+        return RedirectResponse(f"/elections/{election_id}?msg=testmode_limit", status_code=303)
+    created = create_invitations(db, election, new_emails)
     db.commit()
     if election.invitations_dispatched:
         _queue_invitations(background_tasks, election, created)
@@ -658,6 +670,106 @@ def election_schedule(
     election.starts_at, election.ends_at = new_start, new_end
     db.commit()
     return RedirectResponse(f"/elections/{election_id}?msg=schedule_updated", status_code=303)
+
+
+# ---------- Verifizierung ----------
+
+VERIFY_ERRORS = {"name", "email", "contact"}
+
+
+def _verification_context(org: Organization, **extra) -> dict:
+    pending = bool(org.verification_token_hash and org.verification_requested_at)
+    return {"org": org, "enabled": bool(settings.admin_email), "verified": is_verified(org),
+            "pending": pending, "max_voters": settings.test_mode_max_voters, **extra}
+
+
+@app.get("/verification", response_class=HTMLResponse)
+def verification_form(request: Request, sent: str | None = None, db: Session = Depends(get_db)):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login")
+    return render(request, "verification.html", _verification_context(org, sent=sent == "1", values={}))
+
+
+@app.post("/verification")
+def verification_submit(
+    request: Request, background_tasks: BackgroundTasks,
+    contact_name: str = Form(""), contact_email: str = Form(""),
+    contact_website: str = Form(""), contact_phone: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login", status_code=303)
+    if not settings.admin_email or org.verified:
+        return RedirectResponse("/verification", status_code=303)
+    values = {
+        "contact_name": " ".join(contact_name.split())[:200],
+        "contact_email": contact_email.strip().lower()[:200],
+        "contact_website": " ".join(contact_website.split())[:200],
+        "contact_phone": " ".join(contact_phone.split())[:60],
+    }
+    error = None
+    if not values["contact_name"]:
+        error = "name"
+    elif not is_valid_email(values["contact_email"]):
+        error = "email"
+    elif not (values["contact_website"] or values["contact_phone"]):
+        error = "contact"
+    if error:
+        return render(request, "verification.html",
+                      _verification_context(org, error=error, values=values, sent=False), 400)
+    if not limiter.allow(f"verify:{org.id}", 3):
+        return _too_many(request)
+
+    raw, token_hash = generate_token()  # ein erneuter Antrag macht den alten Link ungültig
+    org.contact_name, org.contact_email = values["contact_name"], values["contact_email"]
+    org.contact_website, org.contact_phone = values["contact_website"] or None, values["contact_phone"] or None
+    org.verification_requested_at = utcnow()
+    org.verification_token_hash = token_hash
+    db.commit()
+    background_tasks.add_task(
+        send_verification_request, settings.admin_email, org.name, org.email,
+        values["contact_name"], values["contact_email"], values["contact_website"],
+        values["contact_phone"], f"{settings.base_url}/auth/verify/{raw}", i18n.DEFAULT_LANG,
+    )
+    return RedirectResponse("/verification?sent=1", status_code=303)
+
+
+def _org_for_review(db: Session, token: str) -> Organization | None:
+    if not settings.admin_email:
+        return None
+    return db.query(Organization).filter(
+        Organization.verification_token_hash == hash_token(token)).first()
+
+
+@app.get("/auth/verify/{token}", response_class=HTMLResponse)
+def verify_review(token: str, request: Request, db: Session = Depends(get_db)):
+    """Freigabeseite für den Admin. Der geheime Link ist die Berechtigung (kein Login)."""
+    request.state.lang = i18n.DEFAULT_LANG
+    org = _org_for_review(db, token)
+    if not org:
+        return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
+    elections = db.query(func.count(Election.id)).filter(Election.org_id == org.id).scalar()
+    return render(request, "verify_review.html", {"org": org, "token": token, "elections": elections})
+
+
+@app.post("/auth/verify/{token}/{decision}")
+def verify_decide(token: str, decision: str, request: Request, background_tasks: BackgroundTasks,
+                  db: Session = Depends(get_db)):
+    request.state.lang = i18n.DEFAULT_LANG
+    org = _org_for_review(db, token)
+    if not org or decision not in ("approve", "reject"):
+        return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
+    name, email = org.name, org.email
+    if decision == "approve":
+        org.verified = True
+        org.verification_token_hash = None
+        db.commit()
+    else:
+        purge_organization(db, org)  # Loge samt aller Daten löschen
+    background_tasks.add_task(send_verification_result, email, name, decision == "approve", i18n.DEFAULT_LANG)
+    return render(request, "verify_done.html", {"approved": decision == "approve", "org_name": name})
 
 
 # ---------- Konto ----------

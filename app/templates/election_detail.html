@@ -4,11 +4,12 @@
 {% block content %}
 <div class="app-nav"><a href="/dashboard">{{ t('common.back') }}</a></div>
 
-<h1>{{ election.title }} <span class="status {{ phase(election) }}">{{ t('dashboard.status.' ~ phase(election)) }}</span></h1>
+{% if testmode %}{% include "_testmode.html" %}{% endif %}
+<h1>{{ election.title }} {% if testmode %}<span class="badge testmode">{{ t('testmode.badge') }}</span>{% endif %}<span class="status {{ phase(election) }}">{{ t('dashboard.status.' ~ phase(election)) }}</span></h1>
 <p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
 {% if message %}
-<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed', 'delete_blocked') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
+<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed', 'delete_blocked', 'testmode_limit') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
 {% endif %}
 
 {% if phase(election) == "scheduled" %}

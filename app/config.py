@@ -32,9 +32,12 @@ class Settings(BaseSettings):
     # Intern wird alles als naive UTC gespeichert.
     timezone: str = "Europe/Berlin"
 
-    # Wenn true, dürfen nur verifizierte Logen Abstimmungen anlegen
-    # (Freigabe per `python -m app.cli verify <email>`).
-    require_verification: bool = False
+    # Verifizierung von Logen: Ist ADMIN_EMAIL gesetzt, laufen unverifizierte Logen im
+    # TESTMODUS (höchstens test_mode_max_voters Empfänger) und können die Verifizierung
+    # beantragen; der Admin erhält eine Mail mit Freigabe-Link. Leer = Verifizierung aus,
+    # alle Logen gelten als verifiziert (typisch für selbst betriebene Instanzen).
+    admin_email: str = ""
+    test_mode_max_voters: int = 3
 
     # Mindestanzahl Eingeladener und abgegebener Stimmen, damit ein Ergebnis
     # überhaupt sichtbar wird (sonst wäre die einzelne Stimme ableitbar).

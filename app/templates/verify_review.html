@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ t('verification.review.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<h1>{{ t('verification.review.title') }}</h1>
+<p>{{ t('verification.review.lead') }}</p>
+<dl class="facts">
+  <dt>{{ t('verification.review.org') }}</dt><dd>{{ org.name }}</dd>
+  <dt>{{ t('verification.review.login_email') }}</dt><dd>{{ org.email }}</dd>
+  <dt>{{ t('verification.review.contact_name') }}</dt><dd>{{ org.contact_name }}</dd>
+  <dt>{{ t('verification.review.contact_email') }}</dt><dd>{{ org.contact_email }}</dd>
+  <dt>{{ t('verification.review.website') }}</dt><dd>{{ org.contact_website or '–' }}</dd>
+  <dt>{{ t('verification.review.phone') }}</dt><dd>{{ org.contact_phone or '–' }}</dd>
+  <dt>{{ t('verification.review.requested') }}</dt><dd>{{ fmt_dt(org.verification_requested_at) }}</dd>
+  <dt>{{ t('verification.review.elections') }}</dt><dd>{{ elections }}</dd>
+</dl>
+<p class="hint">{{ t('verification.review.website_note') }}</p>
+<div class="actions">
+  <form method="post" action="/auth/verify/{{ token }}/approve" class="inline"><button type="submit">{{ t('verification.review.approve') }}</button></form>
+  <form method="post" action="/auth/verify/{{ token }}/reject" class="inline" data-confirm="{{ t('verification.review.reject_confirm') }}"><button type="submit" class="danger">{{ t('verification.review.reject') }}</button></form>
+</div>
+<p class="hint">{{ t('verification.review.reject_hint') }}</p>
+<script src="/static/js/confirm.js?v={{ static_v }}"></script>
+{% endblock %}

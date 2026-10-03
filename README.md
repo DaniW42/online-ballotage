@@ -51,10 +51,16 @@ Zwei Varianten, ausführlich unter `/self-hosting` bzw. in `app/locales/de.json`
 Mailpit (Override-Datei) startet dabei **nicht**. Vor dem öffentlichen Betrieb müssen die `LEGAL_*`-Angaben (Impressum) und `ADMIN_EMAIL` gesetzt sein.
 
 Konfiguration über Umgebungsvariablen: siehe `.env.example` und `app/config.py`
-(u. a. `TIMEZONE`, `REQUIRE_VERIFICATION`, `MIN_VOTERS`, `RETENTION_DAYS`,
+(u. a. `TIMEZONE`, `ADMIN_EMAIL`, `TEST_MODE_MAX_VOTERS`, `MAIL_MIN_INTERVAL_SECONDS`, `MIN_VOTERS`, `RETENTION_DAYS`,
 `REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`, `LEGAL_*`).
-Logen freigeben (bei `REQUIRE_VERIFICATION=true`):
+**Verifizierung:** Ist `ADMIN_EMAIL` gesetzt, laufen neue Logen im Testmodus (höchstens 3 Empfänger).
+Im Konto können sie die Verifizierung beantragen (verantwortliche Person, E-Mail, Webseite oder Telefon);
+der Admin erhält eine Mail mit geheimem Link, über den er die Loge freischaltet oder ablehnt und
+löscht. Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
 `docker compose exec app python -m app.cli verify loge@example.org`.
+
+**Mailversand:** global höchstens eine E-Mail pro Sekunde (`MAIL_MIN_INTERVAL_SECONDS`); große
+Einladungsrunden dauern entsprechend.
 
 Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im Prozess).
 

@@ -63,15 +63,6 @@ def test_other_orga_cannot_see_election(create_election, outbox):
     assert other.post(f"/elections/{election_id}/abort").status_code in (303, 302)
 
 
-def test_verification_gate(orga, db, monkeypatch):
-    monkeypatch.setattr("app.main.settings.require_verification", True)
-    ok = ["a@x.test", "b@x.test", "c@x.test"]
-    assert orga.post("/elections/new", data=_form(ok)).status_code == 400
-    from app.db import Organization
-    db.query(Organization).update({"verified": True}); db.commit()
-    assert orga.post("/elections/new", data=_form(ok)).status_code == 303
-
-
 def test_saved_recipients_roundtrip(orga, db):
     ok = ["a@x.test", "b@x.test", "c@x.test"]
     orga.post("/elections/new", data=_form(ok, save_recipients="true"))
