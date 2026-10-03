@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from .config import settings
-from .db import init_db, get_db, Organization, MagicLink, Election, Invitation, Vote
+from .db import init_db, get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 from .mail import send_magic_link
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
 from .services import (
-    finalize_due, abort_election, get_results, maintenance_loop,
+    finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation,
 )
 from .ratelimit import limiter
@@ -213,11 +213,11 @@ def new_election_form(request: Request, db: Session = Depends(get_db)):
 
 
 def _queue_invitations(background_tasks: BackgroundTasks, election: Election, created: list[tuple],
-                       reissued: bool = False):
+                       kind: str = "invite"):
     ends = fmt_local(election.ends_at)
     for inv_id, email, link in created:
         background_tasks.add_task(
-            deliver_invitation, inv_id, email, election.title, link, ends, reissued
+            deliver_invitation, inv_id, email, election.title, link, ends, kind
         )
 
 
@@ -251,6 +251,7 @@ def new_election_submit(
     emails_raw: str = Form(""),
     options_raw: str = Form(""),
     reminder_enabled: bool = Form(False),
+    receipts_enabled: bool = Form(False),
     save_recipients: bool = Form(False),
     db: Session = Depends(get_db),
 ):
@@ -290,6 +291,7 @@ def new_election_submit(
         ends_at=local_input_to_utc(ends_at),
         options=options,
         reminder_enabled=reminder_enabled,
+        receipts_enabled=receipts_enabled,
     )
     db.add(election)
     db.commit()
@@ -340,6 +342,12 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
             "total": total,
             "used": used,
             "results": get_results(db, election),
+            # Zufällige UUIDs, sortiert nach ID: Reihenfolge verrät nichts über die Abgabe
+            "ballots": (
+                db.query(Vote.id, Vote.choice).filter(Vote.election_id == election.id)
+                .order_by(Vote.id).all()
+                if election.receipts_enabled and results_available(election) else []
+            ),
             "min_voters": settings.min_voters,
             "invitations": db.query(Invitation)
             .filter(Invitation.election_id == election.id)
@@ -392,7 +400,7 @@ def election_reissue(
     result = reissue_invitation(db, election, invitation_id) if election.status == "open" else None
     if not result:
         return RedirectResponse(f"/elections/{election_id}?msg=reissue_failed", status_code=303)
-    _queue_invitations(background_tasks, election, [result], reissued=True)
+    _queue_invitations(background_tasks, election, [result], kind="reissue")
     return RedirectResponse(f"/elections/{election_id}?msg=reissued", status_code=303)
 
 
@@ -494,8 +502,11 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
     invitation.used = True
     # Bewusst KEINE Referenz auf invitation.id - Stimme und Einladung bleiben
     # in der Datenbank vollständig getrennt.
-    vote = Vote(election_id=election.id, choice=choice)
+    vote = Vote(id=new_uuid(), election_id=election.id, choice=choice)
     db.add(vote)
     db.commit()
 
-    return templates.TemplateResponse("vote_done.html", {"request": request, "election": election})
+    code = vote.id if election.receipts_enabled else None
+    return templates.TemplateResponse(
+        "vote_done.html", {"request": request, "election": election, "code": code}
+    )

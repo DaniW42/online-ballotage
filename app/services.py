@@ -2,11 +2,13 @@
 import asyncio
 import logging
 
+from datetime import timedelta
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .db import SessionLocal, Election, Invitation, Vote, Organization
+from .db import SessionLocal, Election, Invitation, Vote, Organization, MagicLink
 from .mail import send_result_mail, send_vote_invitation
 from .tokens import generate_token
 from .timeutil import utcnow, fmt_local
@@ -15,12 +17,12 @@ log = logging.getLogger("kugelung")
 
 
 def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
-                       ends_at_str: str, reissued: bool = False) -> None:
+                       ends_at_str: str, kind: str = "invite") -> None:
     """Versendet eine Einladung (läuft im Hintergrund, daher eigene DB-Session)
     und hält das Ergebnis am Einladungseintrag fest, damit Fehler sichtbar sind."""
     error = None
     try:
-        send_vote_invitation(to, title, link, ends_at_str, reissued=reissued)
+        send_vote_invitation(to, title, link, ends_at_str, kind=kind)
     except Exception as exc:
         log.exception("Einladungsmail an %s fehlgeschlagen", to)
         error = str(exc)[:200] or exc.__class__.__name__
@@ -179,12 +181,67 @@ def send_pending_result_mails(db: Session) -> None:
         db.commit()
 
 
+def send_due_reminders(db: Session) -> None:
+    """Erinnert Nicht-Abgestimmte kurz vor Fristende. Der alte Link kann nicht
+    erneut verschickt werden (nur sein Hash ist gespeichert), daher bekommt
+    jede Erinnerung einen frisch ausgestellten Link; der alte wird ungültig."""
+    now = utcnow()
+    due = (
+        db.query(Election)
+        .filter(Election.status == "open", Election.reminder_enabled.is_(True),
+                Election.reminder_sent.is_(False))
+        .all()
+    )
+    for election in due:
+        reminder_at = election.ends_at - timedelta(hours=settings.reminder_hours_before)
+        if now < reminder_at or now >= election.ends_at:
+            continue
+        election.reminder_sent = True  # auch bei sehr kurzen Abstimmungen nur einmal prüfen
+        db.commit()
+        if reminder_at <= election.created_at + timedelta(hours=1):
+            continue  # Abstimmung zu kurz: Erinnerung direkt nach der Einladung wäre Spam
+        pending = [
+            i for (i,) in db.query(Invitation.id).filter(
+                Invitation.election_id == election.id, Invitation.used.is_(False)
+            )
+        ]
+        for invitation_id in pending:
+            result = reissue_invitation(db, election, invitation_id)
+            if result:
+                inv_id, email, link = result
+                deliver_invitation(inv_id, email, election.title, link,
+                                   fmt_local(election.ends_at), kind="reminder")
+
+
+def purge_expired(db: Session) -> None:
+    """Datensparsamkeit: Einladungen (Emails) und alte Login-Links löschen.
+    Zähler stehen seit dem Abschluss an der Abstimmung; Stimmen bleiben erhalten."""
+    now = utcnow()
+    cutoff = now - timedelta(days=settings.retention_days)
+    old = (
+        db.query(Election)
+        .filter(Election.status.in_(["finished", "aborted"]), Election.purged.is_(False),
+                Election.finished_at < cutoff)
+        .all()
+    )
+    for election in old:
+        if election.status == "finished" and not election.result_mail_sent:
+            continue  # Ergebnis-Mail zuerst loswerden
+        db.query(Invitation).filter(Invitation.election_id == election.id).delete()
+        election.purged = True
+        db.commit()
+    db.query(MagicLink).filter(MagicLink.expires_at < now - timedelta(days=1)).delete()
+    db.commit()
+
+
 def run_maintenance() -> None:
     db = SessionLocal()
     try:
         for (election_id,) in db.query(Election.id).filter(Election.status == "open").all():
             finalize_due(db, election_id)
         send_pending_result_mails(db)
+        send_due_reminders(db)
+        purge_expired(db)
     finally:
         db.close()
 

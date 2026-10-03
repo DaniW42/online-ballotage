@@ -35,12 +35,18 @@ def send_magic_link(to: str, link: str) -> None:
 
 
 def send_vote_invitation(to: str, election_title: str, link: str, ends_at_str: str,
-                         reissued: bool = False) -> None:
-    if reissued:
+                         kind: str = "invite") -> None:
+    if kind == "reissue":
         subject = f"Abstimmung (neuer Link): {election_title}"
         intro = (
             f'Für die Abstimmung "{election_title}" wurde Ihnen ein neuer Link ausgestellt.\n'
             "Ein früher zugesandter Link ist damit ungültig.\n\n"
+        )
+    elif kind == "reminder":
+        subject = f"Erinnerung: {election_title}"
+        intro = (
+            f'Erinnerung: Sie haben bei der Abstimmung "{election_title}" noch nicht abgestimmt.\n'
+            "Dieser Mail liegt ein neuer Link bei; ein früher zugesandter Link ist damit ungültig.\n\n"
         )
     else:
         subject = f"Abstimmung: {election_title}"

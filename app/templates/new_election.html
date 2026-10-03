@@ -45,8 +45,17 @@
 
     <label>
       <input type="checkbox" name="reminder_enabled" value="true" style="width:auto;display:inline">
-      Erinnerungsmail kurz vor Fristende versenden
+      Erinnerungsmail kurz vor Fristende an alle, die noch nicht abgestimmt haben
     </label>
+    <div class="hint">Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.</div>
+
+    <label>
+      <input type="checkbox" name="receipts_enabled" value="true" style="width:auto;display:inline">
+      Stimmen nachprüfbar machen
+    </label>
+    <div class="hint">Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss wird
+      eine Liste aller Stimmen (Code und Auswahl) angezeigt, damit jede:r prüfen kann, dass die eigene
+      Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.</div>
   </details>
 
   <button type="submit" id="submit-btn">Abstimmung erstellen und einladen</button>

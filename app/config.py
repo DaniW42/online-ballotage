@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     # überhaupt sichtbar wird (sonst wäre die einzelne Stimme ableitbar).
     min_voters: int = 3
 
+    # Erinnerung an Nicht-Abgestimmte: so viele Stunden vor Fristende
+    reminder_hours_before: int = 24
+
+    # Datensparsamkeit: so viele Tage nach Abschluss werden die Einladungsdaten
+    # (Email-Adressen, Teilnahmestatus) gelöscht. Stimmen/Ergebnis bleiben.
+    retention_days: int = 30
+
     # Rate-Limits (pro Stunde) für Login/Registrierung
     rate_limit_per_email: int = 5
     rate_limit_per_ip: int = 20

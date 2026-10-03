@@ -6,4 +6,11 @@
   Ihre Stimme zu "{{ election.title }}" wurde erfasst. Das Ergebnis wird hier
   nicht angezeigt.
 </div>
+{% if code %}
+<p>Quittungscode: <code>{{ code }}</code></p>
+<p class="hint">Der Organisator hat die Nachprüfbarkeit aktiviert. Nach Abschluss der Abstimmung
+  erscheint dieser Code mit der gezählten Auswahl in einer Liste. Der Code ist keiner Person
+  zugeordnet; wer ihn kennt, kann Ihre Stimme erkennen – bewahren Sie ihn nur auf, wenn Sie
+  prüfen möchten.</p>
+{% endif %}
 {% endblock %}

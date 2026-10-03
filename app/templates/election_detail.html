@@ -21,6 +21,9 @@
   nicht einsehbar, auch nicht für Sie als Organisator.
 </div>
 
+{% if election.purged %}
+<p class="hint">Die Einladungsdaten (Email-Adressen) wurden nach Ablauf der Aufbewahrungsfrist gelöscht.</p>
+{% endif %}
 {% if invitations %}
 <table>
   <tr><th>Adresse</th><th>Stimme</th><th>Mail</th>{% if election.status == "open" %}<th></th>{% endif %}</tr>
@@ -78,6 +81,15 @@
   {% endfor %}
 </table>
 <p class="hint">Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.</p>
+{% if ballots %}
+<details>
+  <summary>Alle Stimmen zur Nachprüfung ({{ ballots|length }})</summary>
+  <p class="hint">Quittungscode und gezählte Auswahl, in zufälliger Reihenfolge.</p>
+  <table>
+    {% for code, choice in ballots %}<tr><td><code>{{ code }}</code></td><td>{{ choice }}</td></tr>{% endfor %}
+  </table>
+</details>
+{% endif %}
 {% else %}
 <div class="notice error">Weniger als {{ min_voters }} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt; die Stimmen wurden gelöscht.</div>
 {% endif %}
