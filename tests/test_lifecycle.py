@@ -269,3 +269,18 @@ def test_receipts_only_when_enabled(create_election, anon, orga):
     assert re.search(r"<code>[0-9a-f-]{36}</code>", done)
     election_id2, tokens2 = create_election(title="ohne", emails=("d@x.test", "e@x.test", "f@x.test"))
     assert "<code>" not in anon.post(f"/v/{tokens2['d@x.test']}", data={"choice": "Ja"}).text
+
+
+def test_failing_maintenance_step_does_not_block_others(create_election, anon, db, monkeypatch):
+    election_id, tokens = create_election()
+    for e in ("a@x.test", "b@x.test", "c@x.test"):
+        anon.post(f"/v/{tokens[e]}", data={"choice": "Ja"})
+
+    def broken(_db):
+        raise RuntimeError("kaputt")
+
+    monkeypatch.setattr(services, "MAINTENANCE_STEPS", (broken,) + services.MAINTENANCE_STEPS)
+    services.run_maintenance()
+    db.expire_all()
+    election = db.query(Election).one()
+    assert election.status == "finished" and election.result_mail_sent

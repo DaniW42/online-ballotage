@@ -368,16 +368,26 @@ def mark_stalled_sends(db: Session) -> None:
     db.commit()
 
 
+def _finalize_all_due(db: Session) -> None:
+    for (election_id,) in db.query(Election.id).filter(Election.status == "open").all():
+        finalize_due(db, election_id)
+
+
+MAINTENANCE_STEPS = (_finalize_all_due, dispatch_due_invitations, send_pending_result_mails,
+                     send_due_reminders, purge_expired, mark_stalled_sends)
+
+
 def run_maintenance() -> None:
+    """Jeder Schritt läuft für sich: Ein Fehler (z. B. Mailserver weg) blockiert nicht
+    die übrigen Aufgaben wie Abschluss oder Löschfristen."""
     db = SessionLocal()
     try:
-        for (election_id,) in db.query(Election.id).filter(Election.status == "open").all():
-            finalize_due(db, election_id)
-        dispatch_due_invitations(db)
-        send_pending_result_mails(db)
-        send_due_reminders(db)
-        purge_expired(db)
-        mark_stalled_sends(db)
+        for step in MAINTENANCE_STEPS:
+            try:
+                step(db)
+            except Exception:
+                log.exception("Wartungsschritt %s fehlgeschlagen", step.__name__)
+                db.rollback()
     finally:
         db.close()
 
