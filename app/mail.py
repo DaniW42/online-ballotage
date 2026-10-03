@@ -45,3 +45,31 @@ def send_vote_invitation(to: str, election_title: str, link: str, ends_at_str: s
             "Ihre Stimme wird anonym erfasst. Der Link zeigt kein Ergebnis an."
         ),
     )
+
+
+def send_result_mail(to: str, title: str, reason: str, period: str, total: int, voted: int,
+                     results: dict[str, int] | None, min_voters: int, link: str) -> None:
+    reason_text = {
+        "deadline": "Die Frist ist abgelaufen.",
+        "all_voted": "Alle Eingeladenen haben abgestimmt.",
+    }.get(reason, "")
+    if results is not None:
+        lines = "\n".join(f"  {choice}: {count}" for choice, count in results.items())
+        result_block = f"Ergebnis:\n{lines}"
+    else:
+        result_block = (
+            f"Es wurden weniger als {min_voters} Stimmen abgegeben. Aus Gründen der "
+            "Anonymität wird kein Ergebnis angezeigt und die Stimmen wurden gelöscht."
+        )
+    send_mail(
+        to=to,
+        subject=f"Ergebnis: {title}",
+        body=(
+            f'Die Abstimmung "{title}" ist beendet. {reason_text}\n\n'
+            f"Zeitraum: {period}\n"
+            f"Beteiligung: {voted} von {total}\n\n"
+            f"{result_block}\n\n"
+            "Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.\n"
+            f"Diese Mail wird nur einmal versendet. Details: {link}"
+        ),
+    )

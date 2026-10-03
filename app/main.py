@@ -14,13 +14,16 @@ from .db import init_db, get_db, Organization, MagicLink, Election, Invitation, 
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 from .mail import send_magic_link, send_vote_invitation
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
+from .services import finalize_due, abort_election, get_results, maintenance_loop
 from .ratelimit import limiter
 from .timeutil import utcnow, local_input_to_utc, fmt_local, to_local
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    task = asyncio.create_task(maintenance_loop())
     yield
+    task.cancel()
 
 
 app = FastAPI(title="Kugelung", lifespan=lifespan)
@@ -230,6 +233,12 @@ def new_election_submit(
     emails = extract_emails(emails_raw)
 
     # Optionen: Duplikate (case-insensitiv) entfernen, Reihenfolge behalten.
+    if len(emails) < settings.min_voters:
+        return _form_error(
+            request, org,
+            f"Mindestens {settings.min_voters} Email-Adressen nötig – bei weniger wäre die Anonymität nicht gewahrt.",
+        )
+
     options, seen = [], set()
     for o in (" ".join(o.split()) for o in options_raw.split(",")):
         if o and o.lower() not in seen:
@@ -286,23 +295,18 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
     if not election:
         return RedirectResponse("/dashboard")
 
-    total = db.query(func.count(Invitation.id)).filter(
-        Invitation.election_id == election.id
-    ).scalar()
-    used = db.query(func.count(Invitation.id)).filter(
-        Invitation.election_id == election.id, Invitation.used.is_(True)
-    ).scalar()
+    finalize_due(db, election.id)
+    db.refresh(election)
 
-    is_over = utcnow() > election.ends_at
-    results = None
-    if is_over:
-        rows = (
-            db.query(Vote.choice, func.count(Vote.id))
-            .filter(Vote.election_id == election.id)
-            .group_by(Vote.choice)
-            .all()
-        )
-        results = dict(rows)
+    if election.status == "open":
+        total = db.query(func.count(Invitation.id)).filter(
+            Invitation.election_id == election.id
+        ).scalar()
+        used = db.query(func.count(Invitation.id)).filter(
+            Invitation.election_id == election.id, Invitation.used.is_(True)
+        ).scalar()
+    else:
+        total, used = election.total_invited, election.total_voted
 
     return templates.TemplateResponse(
         "election_detail.html",
@@ -312,10 +316,50 @@ def election_detail(election_id: str, request: Request, db: Session = Depends(ge
             "election": election,
             "total": total,
             "used": used,
-            "is_over": is_over,
-            "results": results,
+            "results": get_results(db, election),
+            "min_voters": settings.min_voters,
+            "message": request.query_params.get("msg"),
         },
     )
+
+
+def _own_election(db: Session, request: Request, election_id: str) -> Election | None:
+    org = current_org(request, db)
+    if not org:
+        return None
+    return (
+        db.query(Election)
+        .filter(Election.id == election_id, Election.org_id == org.id)
+        .first()
+    )
+
+
+@app.post("/elections/{election_id}/abort")
+def election_abort(election_id: str, request: Request, db: Session = Depends(get_db)):
+    if not _own_election(db, request, election_id):
+        return RedirectResponse("/login", status_code=303)
+    done = abort_election(db, election_id)
+    msg = "aborted" if done else "not_open"
+    return RedirectResponse(f"/elections/{election_id}?msg={msg}", status_code=303)
+
+
+@app.post("/elections/{election_id}/extend")
+def election_extend(
+    election_id: str, request: Request, ends_at: str = Form(...), db: Session = Depends(get_db)
+):
+    if not _own_election(db, request, election_id):
+        return RedirectResponse("/login", status_code=303)
+    finalize_due(db, election_id)  # ggf. erst abschließen; danach ist Verlängern gesperrt
+    election = (
+        db.query(Election).filter(Election.id == election_id).with_for_update().first()
+    )
+    new_end = local_input_to_utc(ends_at)
+    if election.status != "open" or new_end <= election.ends_at:
+        db.rollback()
+        return RedirectResponse(f"/elections/{election_id}?msg=extend_failed", status_code=303)
+    election.ends_at = new_end
+    db.commit()
+    return RedirectResponse(f"/elections/{election_id}?msg=extended", status_code=303)
 
 
 # ---------- Abstimmen (Token-Link, kein Login) ----------
@@ -334,7 +378,7 @@ def vote_form(token: str, request: Request, db: Session = Depends(get_db)):
 
     election = db.query(Election).filter(Election.id == invitation.election_id).first()
     now = utcnow()
-    if now < election.starts_at or now > election.ends_at:
+    if election.status != "open" or now < election.starts_at or now > election.ends_at:
         return templates.TemplateResponse(
             "vote_invalid.html",
             {"request": request, "reason": "window", "election": election},
@@ -363,9 +407,16 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
             "vote_invalid.html", {"request": request, "reason": "used"}, status_code=410
         )
 
-    election = db.query(Election).filter(Election.id == invitation.election_id).first()
+    # Geteilte Sperre: ein parallel laufender Abschluss (FOR UPDATE) wartet,
+    # bis diese Stimme committet ist - oder wir sehen schon den Abschluss.
+    election = (
+        db.query(Election)
+        .filter(Election.id == invitation.election_id)
+        .with_for_update(read=True)
+        .first()
+    )
     now = utcnow()
-    if now < election.starts_at or now > election.ends_at:
+    if election.status != "open" or now < election.starts_at or now > election.ends_at:
         db.rollback()
         return templates.TemplateResponse(
             "vote_invalid.html",

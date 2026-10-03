@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # (Freigabe per `python -m app.cli verify <email>`).
     require_verification: bool = False
 
+    # Mindestanzahl Eingeladener und abgegebener Stimmen, damit ein Ergebnis
+    # überhaupt sichtbar wird (sonst wäre die einzelne Stimme ableitbar).
+    min_voters: int = 3
+
     # Rate-Limits (pro Stunde) für Login/Registrierung
     rate_limit_per_email: int = 5
     rate_limit_per_ip: int = 20

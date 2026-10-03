@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, String, Boolean, DateTime, ForeignKey, JSON, create_engine
+    Column, String, Boolean, DateTime, ForeignKey, Integer, JSON, create_engine
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -52,6 +52,18 @@ class Election(Base):
     ends_at = Column(DateTime, nullable=False)
     reminder_enabled = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Lebenszyklus: open -> finished (Frist abgelaufen / alle abgestimmt) oder aborted.
+    # Ab "finished"/"aborted" ist die Wählerliste eingefroren (kein Verlängern,
+    # kein Nachladen von Wählern), sonst ließe sich eine Stimme per Differenz ableiten.
+    status = Column(String, default="open", nullable=False)
+    finish_reason = Column(String, nullable=True)  # deadline | all_voted | aborted
+    finished_at = Column(DateTime, nullable=True)
+    # Beim Abschluss festgehalten, damit sie auch nach dem Löschen der
+    # Einladungen (Datensparsamkeit) noch angezeigt werden können.
+    total_invited = Column(Integer, nullable=True)
+    total_voted = Column(Integer, nullable=True)
+    result_mail_sent = Column(Boolean, default=False, nullable=False)
 
 
 class Invitation(Base):

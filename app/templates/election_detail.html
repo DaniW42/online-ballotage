@@ -6,15 +6,42 @@
 <h1>{{ election.title }}</h1>
 <p>Zeitraum: {{ election.starts_at|local }} – {{ election.ends_at|local }}</p>
 
+{% if message == "aborted" %}<div class="notice ok">Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.</div>{% endif %}
+{% if message == "extended" %}<div class="notice ok">Die Frist wurde verlängert.</div>{% endif %}
+{% if message == "extend_failed" %}<div class="notice error">Verlängern nicht möglich: Die Abstimmung ist nicht mehr offen oder das neue Ende liegt nicht nach dem bisherigen.</div>{% endif %}
+{% if message == "not_open" %}<div class="notice error">Die Abstimmung ist nicht mehr offen.</div>{% endif %}
+
 <h2>Beteiligung</h2>
-<p>{{ used }} von {{ total }} haben bereits abgestimmt.</p>
+<p>{{ used }} von {{ total }} haben abgestimmt.</p>
 <div class="hint">
   Wer bereits abgestimmt hat, sehen Sie – was gestimmt wurde, ist technisch
   nicht einsehbar, auch nicht für Sie als Organisator.
 </div>
 
-{% if is_over %}
+{% if election.status == "open" %}
+<p class="hint">Das Ergebnis erscheint, sobald die Frist abgelaufen ist oder alle abgestimmt haben, und wird Ihnen dann einmalig per E-Mail geschickt.</p>
+
+<h2>Verlängern</h2>
+<form method="post" action="/elections/{{ election.id }}/extend">
+  <label for="ends_at">Neues Ende</label>
+  <input type="datetime-local" id="ends_at" name="ends_at" required>
+  <button type="submit" class="secondary">Frist verlängern</button>
+</form>
+
+<h2>Abbrechen</h2>
+<p class="hint">Bricht die Abstimmung ab. Es wird <strong>nie</strong> ein Ergebnis angezeigt, die bisherigen Stimmen werden gelöscht.</p>
+<form method="post" action="/elections/{{ election.id }}/abort" onsubmit="return confirm('Abstimmung wirklich abbrechen? Das kann nicht rückgängig gemacht werden.')">
+  <button type="submit" class="secondary">Abstimmung abbrechen</button>
+</form>
+
+{% elif election.status == "aborted" %}
+<div class="notice error">Diese Abstimmung wurde abgebrochen. Es gibt kein Ergebnis.</div>
+
+{% else %}
 <h2>Ergebnis</h2>
+<p class="hint">
+  {% if election.finish_reason == "all_voted" %}Beendet, weil alle abgestimmt haben.{% else %}Beendet, weil die Frist abgelaufen ist.{% endif %}
+</p>
 {% if results %}
 <table>
   {% for choice, count in results.items() %}
@@ -23,9 +50,7 @@
 </table>
 <p class="hint">Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.</p>
 {% else %}
-<p>Keine Stimmen eingegangen.</p>
+<div class="notice error">Weniger als {{ min_voters }} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt; die Stimmen wurden gelöscht.</div>
 {% endif %}
-{% else %}
-<p class="hint">Das Ergebnis wird erst nach Ablauf der Frist angezeigt.</p>
 {% endif %}
 {% endblock %}
