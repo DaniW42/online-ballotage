@@ -20,7 +20,8 @@
     "register": "Registrieren",
     "dashboard": "Dashboard",
     "logout": "Abmelden",
-    "main": "Hauptnavigation"
+    "main": "Hauptnavigation",
+    "account": "Konto"
   },
   "footer": {
     "blurb": "Geheime Abstimmungen für Logen und Vereine – technisch so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat.",
@@ -594,7 +595,10 @@
     "recipients_title": "Gespeicherte Empfängerliste",
     "recipients_text": "{n} Adressen werden bei neuen Abstimmungen vorbefüllt.",
     "recipients_delete": "Liste löschen",
-    "recipients_confirm": "Gespeicherte Empfängerliste wirklich löschen?"
+    "recipients_confirm": "Gespeicherte Empfängerliste wirklich löschen?",
+    "recipients_edit": "Ansehen und bearbeiten",
+    "recipients_none": "Noch keine Empfängerliste gespeichert. Sie wird beim Anlegen einer Abstimmung automatisch gemerkt.",
+    "deleted": "Die Abstimmung wurde gelöscht."
   },
   "election": {
     "new": {
@@ -668,7 +672,10 @@
       "schedule_locked": "Es wurde bereits abgestimmt: Der Beginn steht fest, und das Ende kann nur verlängert werden. Ein Verkürzen würde es erlauben, den Abschluss gezielt dann auszulösen, wenn nur wenige bekannte Personen abgestimmt haben – und so die Anonymität zu verringern. Wer vorzeitig beenden möchte, kann die Abstimmung abbrechen.",
       "scheduled_notice": "Diese Abstimmung beginnt am {start}. Die Einladungen werden zu diesem Zeitpunkt versendet.",
       "mail_scheduled": "bei Beginn",
-      "reminder_planned": "Erinnerung an alle, die noch nicht abgestimmt haben: {when}."
+      "reminder_planned": "Erinnerung an alle, die noch nicht abgestimmt haben: {when}.",
+      "delete_title": "Löschen",
+      "delete_hint": "Entfernt die Abstimmung samt Daten endgültig. Laufende Abstimmungen werden dabei abgebrochen.",
+      "delete_link": "Abstimmung löschen…"
     },
     "msg": {
       "aborted": "Die Abstimmung wurde abgebrochen. Es wird kein Ergebnis angezeigt.",
@@ -678,7 +685,8 @@
       "reissue_failed": "Neuer Link nicht möglich (bereits abgestimmt oder Abstimmung nicht mehr offen).",
       "schedule_updated": "Der Zeitplan wurde gespeichert.",
       "schedule_failed": "Zeitplan nicht geändert: Das Ende muss nach dem Beginn und in der Zukunft liegen. Nach der ersten Stimme kann das Ende nur noch verlängert werden.",
-      "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet."
+      "added_scheduled": "{n} Empfänger hinzugefügt. Die Einladungen werden zum Beginn der Abstimmung versendet.",
+      "delete_blocked": "Löschen noch nicht möglich: Das Ergebnis wurde Ihnen noch nicht per E-Mail zugestellt. Bitte in einer Minute erneut versuchen."
     },
     "abort": {
       "meta_title": "Abstimmung abbrechen",
@@ -691,6 +699,25 @@
         "Das lässt sich **nicht rückgängig** machen. Für einen neuen Anlauf legen Sie eine neue Abstimmung an."
       ],
       "submit": "Ja, endgültig abbrechen",
+      "back": "Nein, zurück"
+    },
+    "delete": {
+      "meta_title": "Abstimmung löschen",
+      "title": "Abstimmung löschen?",
+      "intro": "Sie sind dabei, die Abstimmung „{title}“ zu löschen.",
+      "open": [
+        "Die Abstimmung läuft oder ist geplant und wird dabei **abgebrochen**: Es gibt **kein** Ergebnis, und alle Stimmen werden gelöscht.",
+        "Die Links der Eingeladenen werden ungültig."
+      ],
+      "finished": [
+        "Ergebnis, Stimmen und Teilnehmerliste werden **endgültig gelöscht**.",
+        "Die Ergebnis-Mail an Sie bleibt davon unberührt."
+      ],
+      "aborted": [
+        "Die Teilnehmerliste wird **endgültig gelöscht**."
+      ],
+      "irreversible": "Das lässt sich **nicht rückgängig** machen.",
+      "submit": "Ja, endgültig löschen",
       "back": "Nein, zurück"
     }
   },
@@ -737,5 +764,37 @@
       "suppressed": "Es wurden weniger als {min} Stimmen abgegeben. Aus Gründen der Anonymität wird kein Ergebnis angezeigt und die Stimmen wurden gelöscht.",
       "body": "Die Abstimmung \"{title}\" ist beendet. {reason}\n\nZeitraum: {period}\nBeteiligung: {voted} von {total}\n\n{block}\n\nDie Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.\nDiese E-Mail wird nur einmal versendet. Details: {link}"
     }
+  },
+  "recipients": {
+    "meta_title": "Empfängerliste",
+    "title": "Gespeicherte Empfängerliste",
+    "lead": "Diese Adressen werden beim Anlegen einer neuen Abstimmung vorbefüllt. Sie können sie hier einsehen, ändern und löschen.",
+    "count": "{n} Adressen gespeichert.",
+    "label": "E-Mail-Adressen",
+    "hint": "Beliebig formatiert, die Adressen werden automatisch erkannt. Der Inhalt ersetzt die gespeicherte Liste.",
+    "save": "Liste speichern",
+    "saved": "Die Liste wurde gespeichert.",
+    "delete": "Liste löschen",
+    "confirm": "Gespeicherte Empfängerliste wirklich löschen?",
+    "back": "← Zurück zur Übersicht"
+  },
+  "account": {
+    "meta_title": "Konto",
+    "title": "Ihr Konto",
+    "name": "Name",
+    "email": "E-Mail-Adresse",
+    "delete_title": "Konto löschen",
+    "delete_warning": "Das Löschen Ihres Kontos ist **endgültig**. Name, E-Mail-Adresse und gespeicherte Empfängerliste werden entfernt, und Sie können sich nicht mehr anmelden.",
+    "blocked": "Ihr Konto kann erst gelöscht werden, wenn alle Abstimmungen gelöscht sind. Laufende Abstimmungen werden dabei abgebrochen (kein Ergebnis, Stimmen gelöscht). Löschen Sie die folgenden Abstimmungen einzeln:",
+    "col_title": "Titel",
+    "delete_election": "Löschen",
+    "confirm_label": "Zur Bestätigung E-Mail-Adresse eingeben",
+    "submit": "Konto endgültig löschen",
+    "err_blocked": "Das Konto kann nicht gelöscht werden, solange noch Abstimmungen vorhanden sind.",
+    "err_email": "Die eingegebene E-Mail-Adresse stimmt nicht überein.",
+    "deleted_meta": "Konto gelöscht",
+    "deleted_title": "Ihr Konto wurde gelöscht",
+    "deleted_text": "Ihre Daten wurden entfernt. Vielen Dank, dass Sie ballotage.online genutzt haben.",
+    "deleted_home": "Zur Startseite"
   }
 }

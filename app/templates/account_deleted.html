@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ t('account.deleted_meta') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="error-page">
+  <h1>{{ t('account.deleted_title') }}</h1>
+  <p>{{ t('account.deleted_text') }}</p>
+  <p><a class="btn" href="/">{{ t('account.deleted_home') }}</a></p>
+</div>
+{% endblock %}

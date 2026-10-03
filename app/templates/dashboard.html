@@ -5,6 +5,7 @@
 <div class="wrap narrow wide">
 <div class="app-nav"><span>{{ org.name }} {% if org.verified %}<span class="badge">{{ t('dashboard.verified') }}</span>{% endif %}</span></div>
 <h1>{{ t('dashboard.title') }}</h1>
+{% if deleted %}<div class="notice ok">{{ t('dashboard.deleted') }}</div>{% endif %}
 <p><a class="btn" href="/elections/new">{{ t('dashboard.new') }}</a></p>
 
 {% if elections %}
@@ -25,13 +26,12 @@
 <p>{{ t('dashboard.empty') }}</p>
 {% endif %}
 
-{% if org.saved_recipients %}
 <h2>{{ t('dashboard.recipients_title') }}</h2>
+{% if org.saved_recipients %}
 <p class="hint">{{ t('dashboard.recipients_text', n=org.saved_recipients|length) }}</p>
-<form method="post" action="/recipients/clear" data-confirm="{{ t('dashboard.recipients_confirm') }}">
-  <button type="submit" class="secondary">{{ t('dashboard.recipients_delete') }}</button>
-</form>
+{% else %}
+<p class="hint">{{ t('dashboard.recipients_none') }}</p>
 {% endif %}
+<p><a class="btn secondary" href="/recipients">{{ t('dashboard.recipients_edit') }}</a></p>
 </div>
-<script src="/static/js/confirm.js?v={{ static_v }}"></script>
 {% endblock %}

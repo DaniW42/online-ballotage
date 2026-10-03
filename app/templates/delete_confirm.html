@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ t('election.delete.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<h1>{{ t('election.delete.title') }}</h1>
+<div class="notice error">
+  <p>{{ t('election.delete.intro', title=election.title) }}</p>
+  <ul>
+    {% for c in tl('election.delete.' ~ kind) %}<li>{{ c|md|replace('<p>', '')|replace('</p>', '')|safe }}</li>{% endfor %}
+    <li>{{ t('election.delete.irreversible')|md|replace('<p>', '')|replace('</p>', '')|safe }}</li>
+  </ul>
+</div>
+<form method="post" action="/elections/{{ election.id }}/delete" class="actions">
+  <input type="hidden" name="confirm" value="yes">
+  <button type="submit" class="danger">{{ t('election.delete.submit') }}</button>
+  <a class="btn secondary" href="/elections/{{ election.id }}">{{ t('election.delete.back') }}</a>
+</form>
+{% endblock %}

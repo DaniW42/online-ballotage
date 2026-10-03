@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ t('recipients.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="app-nav"><a href="/dashboard">{{ t('recipients.back') }}</a></div>
+<h1>{{ t('recipients.title') }}</h1>
+<p>{{ t('recipients.lead') }}</p>
+{% if saved %}<div class="notice ok">{{ t('recipients.saved') }}</div>{% endif %}
+<p class="hint">{{ t('recipients.count', n=recipients|length) }}</p>
+<form method="post" action="/recipients" class="card-form">
+  <label for="emails_raw">{{ t('recipients.label') }}</label>
+  <textarea id="emails_raw" name="emails_raw" rows="12">{{ recipients|join('\n') }}</textarea>
+  <div class="hint">{{ t('recipients.hint') }}</div>
+  <div class="actions"><button type="submit">{{ t('recipients.save') }}</button></div>
+</form>
+{% if recipients %}
+<form method="post" action="/recipients/clear" data-confirm="{{ t('recipients.confirm') }}">
+  <button type="submit" class="secondary">{{ t('recipients.delete') }}</button>
+</form>
+{% endif %}
+<script src="/static/js/confirm.js?v={{ static_v }}"></script>
+{% endblock %}

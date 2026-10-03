@@ -8,7 +8,7 @@
 <p>{{ t('election.detail.period') }}: {{ fmt_dt(election.starts_at) }} – {{ fmt_dt(election.ends_at) }}</p>
 
 {% if message %}
-<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
+<div class="notice {% if message in ('schedule_failed', 'not_open', 'reissue_failed', 'delete_blocked') %}error{% else %}ok{% endif %}">{{ t('election.msg.' ~ message, n=added) }}</div>
 {% endif %}
 
 {% if phase(election) == "scheduled" %}
@@ -94,4 +94,8 @@
 <div class="notice error">{{ t('election.detail.suppressed', n=min_voters) }}</div>
 {% endif %}
 {% endif %}
+
+<h2>{{ t('election.detail.delete_title') }}</h2>
+<div class="hint">{{ t('election.detail.delete_hint') }}</div>
+<p><a class="btn secondary" href="/elections/{{ election.id }}/delete">{{ t('election.detail.delete_link') }}</a></p>
 {% endblock %}

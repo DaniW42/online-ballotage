@@ -139,6 +139,25 @@ def abort_election(db: Session, election_id: str) -> bool:
     return True
 
 
+def delete_election(db: Session, election_id: str) -> str | None:
+    """Löscht eine Abstimmung samt Stimmen und Einladungen. Läuft sie noch, wird sie vorher
+    abgebrochen (kein Ergebnis). Gibt einen Fehlerschlüssel zurück, wenn es (noch) nicht geht."""
+    finalize_due(db, election_id)
+    election = db.query(Election).filter(Election.id == election_id).first()
+    if not election:
+        return "missing"
+    if election.status == "open":
+        abort_election(db, election_id)
+        db.refresh(election)
+    if election.status == "finished" and not election.result_mail_sent:
+        return "mail_pending"  # das Ergebnis wurde dem Organisator noch nicht zugestellt
+    db.query(Vote).filter(Vote.election_id == election.id).delete()
+    db.query(Invitation).filter(Invitation.election_id == election.id).delete()
+    db.delete(election)
+    db.commit()
+    return None
+
+
 def results_available(election: Election) -> bool:
     return (
         election.status == "finished"

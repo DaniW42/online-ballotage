@@ -21,7 +21,7 @@ from .mail import send_magic_link
 from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
-    deliver_invitation, create_invitations, reissue_invitation, period_text,
+    deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
 )
 from .timeutil import utcnow, local_input_to_utc, to_input_value
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
@@ -333,7 +333,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         .order_by(Election.created_at.desc())
         .all()
     )
-    return render(request, "dashboard.html", {"org": org, "elections": elections})
+    return render(request, "dashboard.html", {"org": org, "elections": elections,
+                                              "deleted": request.query_params.get("msg") == "deleted"})
 
 
 @app.get("/elections/new", response_class=HTMLResponse)
@@ -363,6 +364,25 @@ def _form_error(request: Request, org: Organization, message_key: str,
          "save_checked": True},
         status_code=400,
     )
+
+
+@app.get("/recipients", response_class=HTMLResponse)
+def recipients_form(request: Request, saved: str | None = None, db: Session = Depends(get_db)):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login")
+    return render(request, "recipients.html", {"org": org, "recipients": org.saved_recipients or [],
+                                               "saved": saved == "1"})
+
+
+@app.post("/recipients")
+def recipients_save(request: Request, emails_raw: str = Form(""), db: Session = Depends(get_db)):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login", status_code=303)
+    org.saved_recipients = extract_emails(emails_raw)
+    db.commit()
+    return RedirectResponse("/recipients?saved=1", status_code=303)
 
 
 @app.post("/recipients/clear")
@@ -445,7 +465,7 @@ def new_election_submit(
     return RedirectResponse(f"/elections/{election.id}", status_code=303)
 
 
-MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "added", "added_scheduled",
+MESSAGES = {"aborted", "schedule_updated", "schedule_failed", "not_open", "delete_blocked", "added", "added_scheduled",
             "reissued", "reissue_failed"}
 
 
@@ -580,6 +600,28 @@ def election_abort(
     return RedirectResponse(f"/elections/{election_id}?msg={msg}", status_code=303)
 
 
+@app.get("/elections/{election_id}/delete", response_class=HTMLResponse)
+def election_delete_confirm(election_id: str, request: Request, db: Session = Depends(get_db)):
+    election = _own_election(db, request, election_id)
+    if not election:
+        return RedirectResponse("/login")
+    kind = "open" if election.status == "open" else election.status  # geplant zählt als offen
+    return render(request, "delete_confirm.html", {"election": election, "kind": kind})
+
+
+@app.post("/elections/{election_id}/delete")
+def election_delete(
+    election_id: str, request: Request, confirm: str = Form(""), db: Session = Depends(get_db)
+):
+    if not _own_election(db, request, election_id):
+        return RedirectResponse("/login", status_code=303)
+    if confirm != "yes":
+        return RedirectResponse(f"/elections/{election_id}/delete", status_code=303)
+    if delete_election(db, election_id):
+        return RedirectResponse(f"/elections/{election_id}?msg=delete_blocked", status_code=303)
+    return RedirectResponse("/dashboard?msg=deleted", status_code=303)
+
+
 @app.post("/elections/{election_id}/schedule")
 def election_schedule(
     election_id: str, request: Request, ends_at: str = Form(...), starts_at: str = Form(""),
@@ -616,6 +658,36 @@ def election_schedule(
     election.starts_at, election.ends_at = new_start, new_end
     db.commit()
     return RedirectResponse(f"/elections/{election_id}?msg=schedule_updated", status_code=303)
+
+
+# ---------- Konto ----------
+
+@app.get("/account", response_class=HTMLResponse)
+def account_page(request: Request, error: str | None = None, db: Session = Depends(get_db)):
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login")
+    elections = db.query(Election).filter(Election.org_id == org.id).order_by(Election.created_at.desc()).all()
+    return render(request, "account.html", {"org": org, "elections": elections,
+                                            "error": error if error in ("blocked", "email") else None})
+
+
+@app.post("/account/delete")
+def account_delete(request: Request, confirm_email: str = Form(""), db: Session = Depends(get_db)):
+    """Konto löschen - nur wenn keine Abstimmung mehr existiert (alle vorher einzeln löschen)."""
+    org = current_org(request, db)
+    if not org:
+        return RedirectResponse("/login", status_code=303)
+    if db.query(Election).filter(Election.org_id == org.id).count():
+        return RedirectResponse("/account?error=blocked", status_code=303)
+    if confirm_email.strip().lower() != org.email:
+        return RedirectResponse("/account?error=email", status_code=303)
+    db.query(MagicLink).filter(MagicLink.org_id == org.id).delete()
+    db.delete(org)
+    db.commit()
+    response = render(request, "account_deleted.html")
+    response.delete_cookie(SESSION_COOKIE)
+    return response
 
 
 # ---------- Abstimmen (Token-Link, kein Login) ----------

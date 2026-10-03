@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ t('account.meta_title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="app-nav"><a href="/dashboard">{{ t('common.back') }}</a></div>
+<h1>{{ t('account.title') }}</h1>
+<dl class="facts">
+  <dt>{{ t('account.name') }}</dt><dd>{{ org.name }}</dd>
+  <dt>{{ t('account.email') }}</dt><dd>{{ org.email }}</dd>
+</dl>
+
+<h2>{{ t('account.delete_title') }}</h2>
+{% if error %}<div class="notice error">{{ t('account.err_' ~ error) }}</div>{% endif %}
+<div class="notice error">{{ t('account.delete_warning')|md }}</div>
+
+{% if elections %}
+<p>{{ t('account.blocked') }}</p>
+<div class="table-wrap"><table>
+  <tr><th>{{ t('account.col_title') }}</th><th>{{ t('dashboard.col_status') }}</th><th></th></tr>
+  {% for e in elections %}
+  <tr>
+    <td><a href="/elections/{{ e.id }}">{{ e.title }}</a></td>
+    <td><span class="status {{ phase(e) }}">{{ t('dashboard.status.' ~ phase(e)) }}</span></td>
+    <td><a href="/elections/{{ e.id }}/delete">{{ t('account.delete_election') }}</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}
+<form method="post" action="/account/delete" class="card-form">
+  <label for="confirm_email">{{ t('account.confirm_label') }}</label>
+  <input type="email" id="confirm_email" name="confirm_email" required autocomplete="off" placeholder="{{ org.email }}">
+  <div class="actions"><button type="submit" class="danger">{{ t('account.submit') }}</button></div>
+</form>
+{% endif %}
+{% endblock %}
