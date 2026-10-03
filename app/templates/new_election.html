@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Neue Abstimmung{% endblock %}
+{% block content %}
+<nav><a href="/dashboard">&larr; Zurück zur Übersicht</a></nav>
+
+<h1>Neue Abstimmung</h1>
+
+<form method="post" action="/elections/new" id="election-form" onsubmit="return prepareSubmit()">
+
+  <label for="title">Titel</label>
+  <input type="text" id="title" name="title" required placeholder="z. B. Aufnahme Br. Mustermann">
+
+  <label for="starts_at">Beginn</label>
+  <input type="datetime-local" id="starts_at" name="starts_at" required>
+
+  <label for="ends_at">Ende</label>
+  <input type="datetime-local" id="ends_at" name="ends_at" required>
+
+  <label for="paste_area">Email-Adressen</label>
+  <div class="hint">
+    Beliebig formatiert einfügen – aus Outlook, Excel, Fließtext, egal.
+    Mehrere Blöcke nacheinander möglich, jeweils auf "Übernehmen" klicken.
+  </div>
+  <textarea id="paste_area" placeholder="z. B.&#10;Max Mustermann &lt;max@loge.de&gt;&#10;anna@loge.de, bruder@loge.de"></textarea>
+  <button type="button" class="secondary" onclick="takeOver()">Übernehmen</button>
+
+  <ul class="email-list" id="email-list"></ul>
+  <button type="button" class="secondary" onclick="addEmptyRow()">+ Email hinzufügen</button>
+
+  <input type="hidden" name="emails_raw" id="emails_raw">
+
+  <details>
+    <summary>Erweiterte Einstellungen</summary>
+
+    <label for="options_raw">Abstimmungsoptionen</label>
+    <div class="hint">Komma-getrennt. Standard ist die klassische Kugelung.</div>
+    <input type="text" id="options_raw" name="options_raw" value="Ja, Nein, Enthaltung">
+
+    <label>
+      <input type="checkbox" name="reminder_enabled" value="true" style="width:auto;display:inline">
+      Erinnerungsmail kurz vor Fristende versenden
+    </label>
+  </details>
+
+  <button type="submit" id="submit-btn">Abstimmung erstellen und einladen</button>
+</form>
+
+<script>
+let emails = [];
+
+function emailPattern() {
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+}
+
+function extractFromText(text) {
+  const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+  return matches.map(m => m.toLowerCase());
+}
+
+function takeOver() {
+  const area = document.getElementById('paste_area');
+  const found = extractFromText(area.value);
+  found.forEach(e => { if (!emails.includes(e)) emails.push(e); });
+  area.value = '';
+  render();
+}
+
+function addEmptyRow() {
+  emails.push('');
+  render();
+}
+
+function updateEmail(i, value) {
+  emails[i] = value.trim().toLowerCase();
+  validateSubmit();
+}
+
+function removeEmail(i) {
+  emails.splice(i, 1);
+  render();
+}
+
+function render() {
+  const list = document.getElementById('email-list');
+  list.innerHTML = '';
+  emails.forEach((email, i) => {
+    const li = document.createElement('li');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = email;
+    input.oninput = () => { updateEmail(i, input.value); markValidity(input); };
+    markValidity(input);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removeEmail(i);
+
+    li.appendChild(input);
+    li.appendChild(removeBtn);
+    list.appendChild(li);
+  });
+  validateSubmit();
+}
+
+function markValidity(input) {
+  if (input.value && !emailPattern().test(input.value)) {
+    input.classList.add('invalid');
+  } else {
+    input.classList.remove('invalid');
+  }
+}
+
+function validateSubmit() {
+  const allValid = emails.length > 0 && emails.every(e => emailPattern().test(e));
+  document.getElementById('submit-btn').disabled = !allValid;
+}
+
+function prepareSubmit() {
+  document.getElementById('emails_raw').value = emails.join('\n');
+  return emails.length > 0;
+}
+
+render();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Abstimmen{% endblock %}
+{% block content %}
+<h1>{{ election.title }}</h1>
+<p>Ihre Stimme wird anonym erfasst. Nach dem Absenden ist dieser Link nicht mehr nutzbar.</p>
+
+<form method="post" action="/v/{{ token }}">
+  {% for option in election.options %}
+  <label style="font-weight:normal">
+    <input type="radio" name="choice" value="{{ option }}" required style="width:auto;display:inline">
+    {{ option }}
+  </label>
+  {% endfor %}
+  <button type="submit">Stimme abgeben</button>
+</form>
+{% endblock %}

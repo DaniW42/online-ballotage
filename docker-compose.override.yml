@@ -1,0 +1,22 @@
+# Nur für lokale Entwicklung: wird von `docker compose up` automatisch
+# zusätzlich geladen. Produktiv stattdessen starten mit:
+#   docker compose -f docker-compose.yml --env-file .env up -d --build
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # Weboberfläche (nur lokal erreichbar)
+      - "127.0.0.1:1025:1025"   # SMTP
+
+  app:
+    depends_on:
+      mailpit:
+        condition: service_started
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: kugelung@localhost
+      SMTP_USE_TLS: "false"

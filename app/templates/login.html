@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Anmelden{% endblock %}
+{% block content %}
+<h1>Anmelden</h1>
+<p>Geben Sie Ihre Email-Adresse ein. Sie erhalten einen Link zum Anmelden.</p>
+<form method="post" action="/login">
+  <label for="email">Email-Adresse</label>
+  <input type="email" id="email" name="email" required autofocus>
+  <button type="submit">Login-Link senden</button>
+</form>
+<p style="margin-top:2rem">Noch keine Loge angelegt? <a href="/register">Hier registrieren</a></p>
+{% endblock %}

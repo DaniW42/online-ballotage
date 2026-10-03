@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Registrieren{% endblock %}
+{% block content %}
+<h1>Neue Loge anlegen</h1>
+<p>Kein Passwort nötig. Sie melden sich künftig per Link an, den Sie per Email erhalten.</p>
+<form method="post" action="/register">
+  <label for="name">Name der Loge</label>
+  <input type="text" id="name" name="name" required>
+
+  <label for="email">Email-Adresse (für den Login)</label>
+  <input type="email" id="email" name="email" required>
+  <div class="hint">An diese Adresse senden wir künftig Ihre Login-Links.</div>
+
+  <button type="submit">Loge anlegen</button>
+</form>
+<p style="margin-top:2rem">Schon registriert? <a href="/login">Hier anmelden</a></p>
+{% endblock %}

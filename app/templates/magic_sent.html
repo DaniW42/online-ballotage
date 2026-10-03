@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Email gesendet{% endblock %}
+{% block content %}
+<h1>Email unterwegs</h1>
+<div class="notice ok">
+  Falls die Adresse <strong>{{ email }}</strong> bei uns bekannt ist, finden Sie dort
+  in Kürze einen Anmelde-Link. Der Link ist 15 Minuten gültig und kann nur einmal
+  verwendet werden.
+</div>
+{% endblock %}

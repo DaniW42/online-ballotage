@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kugelung
+      POSTGRES_USER: kugelung
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kugelung"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://kugelung:${DB_PASSWORD}@db:5432/kugelung
+      SECRET_KEY: ${SECRET_KEY}
+      BASE_URL: ${BASE_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+    ports:
+      - "8000:8000"
+    # Hinter NPM: ports-Block entfernen, stattdessen NPM-Proxy-Host auf
+    # Container-Netzwerk + Port 8000 zeigen lassen.
+
+volumes:
+  db_data:

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ election.title }}{% endblock %}
+{% block content %}
+<nav><a href="/dashboard">&larr; Zurück zur Übersicht</a></nav>
+
+<h1>{{ election.title }}</h1>
+<p>Zeitraum: {{ election.starts_at.strftime('%d.%m.%Y %H:%M') }} – {{ election.ends_at.strftime('%d.%m.%Y %H:%M') }}</p>
+
+<h2>Beteiligung</h2>
+<p>{{ used }} von {{ total }} haben bereits abgestimmt.</p>
+<div class="hint">
+  Wer bereits abgestimmt hat, sehen Sie – was gestimmt wurde, ist technisch
+  nicht einsehbar, auch nicht für Sie als Organisator.
+</div>
+
+{% if is_over %}
+<h2>Ergebnis</h2>
+{% if results %}
+<table>
+  {% for choice, count in results.items() %}
+  <tr><td>{{ choice }}</td><td>{{ count }}</td></tr>
+  {% endfor %}
+</table>
+<p class="hint">Die Bewertung (angenommen/abgelehnt) obliegt der Loge gemäß ihrem eigenen Ritual.</p>
+{% else %}
+<p>Keine Stimmen eingegangen.</p>
+{% endif %}
+{% else %}
+<p class="hint">Das Ergebnis wird erst nach Ablauf der Frist angezeigt.</p>
+{% endif %}
+{% endblock %}

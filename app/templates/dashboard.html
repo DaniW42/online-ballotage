@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Übersicht{% endblock %}
+{% block content %}
+<nav>
+  {{ org.name }}
+  {% if org.verified %}<span class="badge">Verifiziert</span>{% endif %}
+  &middot; <a href="/logout">Abmelden</a>
+</nav>
+
+<h1>Ihre Abstimmungen</h1>
+<p><a class="btn" href="/elections/new">+ Neue Abstimmung</a></p>
+
+{% if elections %}
+<table>
+  <tr><th>Titel</th><th>Zeitraum</th><th></th></tr>
+  {% for e in elections %}
+  <tr>
+    <td>{{ e.title }}</td>
+    <td>{{ e.starts_at.strftime('%d.%m.%Y') }} – {{ e.ends_at.strftime('%d.%m.%Y') }}</td>
+    <td><a href="/elections/{{ e.id }}">Details</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Noch keine Abstimmung angelegt.</p>
+{% endif %}
+{% endblock %}

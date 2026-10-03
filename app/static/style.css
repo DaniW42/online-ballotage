@@ -1,0 +1,82 @@
+:root {
+  --fg: #1a1a1a;
+  --bg: #fafaf8;
+  --accent: #5a3d2b;
+  --border: #d8d3c8;
+  --error: #8b2c2c;
+  --ok: #2c5a3d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+h1, h2 { font-weight: normal; }
+h1 { font-size: 1.6rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
+
+label { display: block; margin: 1.2rem 0 0.3rem; font-weight: bold; }
+.hint { font-size: 0.9rem; color: #555; margin-top: 0.2rem; }
+
+input[type=text], input[type=email], input[type=datetime-local], textarea, select {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+}
+
+textarea { min-height: 120px; resize: vertical; }
+
+button, .btn {
+  display: inline-block;
+  margin-top: 1.2rem;
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+}
+button.secondary, .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
+.email-list { list-style: none; padding: 0; margin: 0.8rem 0; }
+.email-list li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+.email-list input { flex: 1; }
+.email-list button.remove {
+  background: transparent; color: var(--error); border: 1px solid var(--error);
+  padding: 0.3rem 0.6rem; margin: 0;
+}
+.email-list input.invalid { border-color: var(--error); background: #fdf0f0; }
+
+details { margin-top: 1.5rem; border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; }
+summary { cursor: pointer; font-weight: bold; }
+
+.notice { padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+.notice.ok { background: #eaf3ec; border: 1px solid var(--ok); }
+.notice.error { background: #f6e9e9; border: 1px solid var(--error); }
+
+.badge { font-size: 0.8rem; background: var(--ok); color: white; padding: 0.1rem 0.5rem; border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+td, th { text-align: left; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+
+nav { margin-bottom: 2rem; font-size: 0.9rem; }
+nav a { color: var(--accent); }
