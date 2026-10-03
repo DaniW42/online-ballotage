@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from .config import settings
-from .db import init_db, get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
+from .db import get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 from .mail import send_magic_link
 from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
@@ -23,7 +23,6 @@ from .timeutil import utcnow, local_input_to_utc, fmt_local, to_local
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
     task = asyncio.create_task(maintenance_loop())
     yield
     task.cancel()

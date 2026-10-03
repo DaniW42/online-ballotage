@@ -7,3 +7,4 @@ python-multipart==0.0.12
 itsdangerous==2.2.0
 pydantic-settings==2.5.2
 tzdata==2024.2
+alembic==1.13.3

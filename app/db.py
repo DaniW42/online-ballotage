@@ -107,10 +107,6 @@ class Vote(Base):
     # Reihenfolge-Information; die ID ist ein zufälliges UUIDv4.
 
 
-def init_db():
-    Base.metadata.create_all(engine)
-
-
 def get_db():
     db = SessionLocal()
     try:
