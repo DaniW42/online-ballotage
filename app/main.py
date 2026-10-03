@@ -861,8 +861,12 @@ def account_page(request: Request, error: str | None = None, db: Session = Depen
     if not org:
         return RedirectResponse("/login")
     elections = db.query(Election).filter(Election.org_id == org.id).order_by(Election.created_at.desc()).all()
-    return render(request, "account.html", {"org": org, "elections": elections,
-                                            "error": error if error in ("blocked", "email") else None})
+    return render(request, "account.html", {
+        "org": org, "elections": elections,
+        "error": error if error in ("blocked", "email") else None,
+        "verification_enabled": bool(settings.admin_email), "verified": is_verified(org),
+        "pending": bool(org.verification_token_hash),
+    })
 
 
 @app.post("/account/delete")

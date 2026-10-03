@@ -178,3 +178,15 @@ def test_reject_deletes_org_with_all_data_and_notifies(verification_on, orga, ou
 def test_verification_page_requires_login(anon):
     assert anon.get("/verification").headers["location"] == "/login"
     assert anon.post("/verification", data=REQUEST).headers["location"] == "/login"
+
+
+def test_account_page_shows_verification_status(verification_on, orga, db):
+    assert "TESTMODUS" in orga.get("/account").text
+    _request_verification(orga)
+    assert "Antrag wird geprüft" in orga.get("/account").text
+    db.query(Organization).update({"verified": True, "verification_token_hash": None}); db.commit()
+    assert "verifiziert" in orga.get("/account").text
+
+
+def test_account_page_hides_verification_when_disabled(orga):
+    assert "Verifizierung" not in orga.get("/account").text

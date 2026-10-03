@@ -7,6 +7,10 @@
 <dl class="facts">
   <dt>{{ t('account.name') }}</dt><dd>{{ org.name }}</dd>
   <dt>{{ t('account.email') }}</dt><dd>{{ org.email }}</dd>
+  {% if verification_enabled %}
+  <dt>{{ t('account.verification') }}</dt>
+  <dd>{% if verified %}{{ t('account.verified') }}{% elif pending %}{{ t('account.pending') }} · <a href="/verification">{{ t('account.details') }}</a>{% else %}{{ t('testmode.badge') }} · <a href="/verification">{{ t('testmode.cta') }}</a>{% endif %}</dd>
+  {% endif %}
 </dl>
 
 <h2>{{ t('account.delete_title') }}</h2>

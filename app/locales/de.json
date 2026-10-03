@@ -826,7 +826,11 @@
     "deleted_meta": "Konto gelöscht",
     "deleted_title": "Dein Konto wurde gelöscht",
     "deleted_text": "Deine Daten wurden entfernt. Vielen Dank, dass du ballotage.online genutzt hast.",
-    "deleted_home": "Zur Startseite"
+    "deleted_home": "Zur Startseite",
+    "verification": "Verifizierung",
+    "verified": "verifiziert",
+    "pending": "Antrag wird geprüft",
+    "details": "Details"
   },
   "testmode": {
     "badge": "TESTMODUS",
