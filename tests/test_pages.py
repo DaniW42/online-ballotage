@@ -142,3 +142,12 @@ def test_home_hero_and_feature_cards(anon):
     features = html.split("Gemacht für Kugelungen")[1].split("</section>")[0]
     assert features.count('class="card"') == 4
     assert "Genaue Zählung" not in features and "Fristen im Griff" not in features
+
+
+def test_verified_badge_sits_below_lodge_name_and_uses_status_style(orga, db):
+    from app.db import Organization
+    db.query(Organization).update({"verified": True}); db.commit()
+    html = orga.get("/dashboard").text
+    block = html.split('class="app-nav org-line"')[1].split("</div>")[0]
+    assert block.index("Testloge") < block.index('<span class="status open">Verifiziert</span>')
+    assert 'class="badge"' not in html

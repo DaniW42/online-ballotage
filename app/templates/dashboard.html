@@ -3,7 +3,10 @@
 {% block robots %}noindex,nofollow{% endblock %}
 {% block main %}
 <div class="wrap narrow wide">
-<div class="app-nav"><span>{{ org.name }} {% if org.verified %}<span class="badge">{{ t('dashboard.verified') }}</span>{% endif %}</span></div>
+<div class="app-nav org-line">
+  <span>{{ org.name }}</span>
+  {% if org.verified %}<span class="status open">{{ t('dashboard.verified') }}</span>{% endif %}
+</div>
 {% if testmode %}{% include "_testmode.html" %}{% endif %}
 <h1>{{ t('dashboard.title') }}</h1>
 {% if deleted %}<div class="notice ok">{{ t('dashboard.deleted') }}</div>{% endif %}
