@@ -196,3 +196,17 @@ def test_css_supports_forced_and_automatic_dark_mode(anon):
 
 def test_privacy_names_the_theme_cookie(anon):
     assert "`theme`" in anon.get("/datenschutz").text or "<code>theme</code>" in anon.get("/datenschutz").text
+
+
+def test_cloudflare_and_backup_notes_only_when_configured(anon, monkeypatch):
+    from app.config import settings
+    privacy, security = anon.get("/datenschutz").text, anon.get("/security").text
+    assert "Cloudflare" not in privacy and "Cloudflare auf dieser Instanz" not in security
+    assert "Datensicherungen" not in privacy
+    monkeypatch.setattr(settings, "legal_cdn", "cloudflare")
+    monkeypatch.setattr(settings, "backup_retention_days", 35)
+    privacy, security = anon.get("/datenschutz").text, anon.get("/security").text
+    assert "Cloudflare, Inc." in privacy and "Data Privacy Framework" in privacy
+    assert 'href="https://www.cloudflare.com/privacypolicy/"' in privacy
+    assert "höchstens 35 Tagen" in privacy
+    assert "Cloudflare auf dieser Instanz" in security

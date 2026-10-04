@@ -292,7 +292,9 @@
     "report_title": "Schwachstelle gefunden?",
     "report": "Bitte melde sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
     "source_title": "Nachprüfen statt glauben",
-    "source": "Der gesamte Quelltext ist einsehbar, die Tests ebenfalls. Siehe [Quelltext & Lizenz](/source)."
+    "source": "Der gesamte Quelltext ist einsehbar, die Tests ebenfalls. Siehe [Quelltext & Lizenz](/source).",
+    "cdn_title": "Cloudflare auf dieser Instanz",
+    "cdn": "Auf dieser Instanz läuft der Datenverkehr über Cloudflare. Die verschlüsselte Verbindung endet dort, Cloudflare könnte also technisch die aufgerufenen Adressen (auch Abstimmungs- und Login-Links) und übermittelte Formulardaten sehen – wie jeder vorgeschaltete Dienst dieser Art. In der Datenbank bleiben Stimme und Person davon unabhängig getrennt. Wer das vermeiden möchte, betreibt die Software [selbst](/self-hosting) ohne vorgeschalteten Dienst."
   },
   "faq": {
     "meta_title": "Häufige Fragen",
@@ -523,7 +525,8 @@
       },
       {
         "t": "3. Aufruf der Website, Server-Logs",
-        "p": "Die Anwendung selbst schreibt keine Zugriffsprotokolle. Der vorgeschaltete Webserver ist so eingerichtet, dass Aufrufe der Pfade `/v/` (Stimmabgabe) und `/auth/` (Login) nicht protokolliert werden, weil diese Adressen geheime Tokens enthalten. Technisch notwendige Verbindungsdaten (z. B. IP-Adresse) werden vom Webserver nur kurzzeitig verarbeitet, um die Seite auszuliefern und Missbrauch abzuwehren (Art. 6 Abs. 1 lit. f DSGVO)."
+        "p": "Die Anwendung selbst schreibt keine Zugriffsprotokolle. Der vorgeschaltete Webserver ist so eingerichtet, dass Aufrufe der Pfade `/v/` (Stimmabgabe) und `/auth/` (Login) nicht protokolliert werden, weil diese Adressen geheime Tokens enthalten. Technisch notwendige Verbindungsdaten (z. B. IP-Adresse) werden vom Webserver nur kurzzeitig verarbeitet, um die Seite auszuliefern und Missbrauch abzuwehren (Art. 6 Abs. 1 lit. f DSGVO).",
+        "cdn": true
       },
       {
         "t": "4. Registrierung und Login von Organisatoren",
@@ -531,7 +534,8 @@
       },
       {
         "t": "5. Durchführung von Abstimmungen",
-        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden {retention_days} Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als {min_voters_word} Stimmen werden sofort gelöscht. Titel, Zeitraum, Optionen und das Ergebnis (Anzahl je Option) einer Abstimmung bleiben gespeichert, bis die Organisatoren die Abstimmung löschen. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
+        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden {retention_days} Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als {min_voters_word} Stimmen werden sofort gelöscht. Titel, Zeitraum, Optionen und das Ergebnis (Anzahl je Option) einer Abstimmung bleiben gespeichert, bis die Organisatoren die Abstimmung löschen. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen.",
+        "backup": true
       },
       {
         "t": "6. E-Mail-Versand",
@@ -557,7 +561,9 @@
         "t": "11. Änderungen",
         "p": "Wir passen diese Erklärung an, wenn sich der Dienst oder die Rechtslage ändert. Es gilt die jeweils hier veröffentlichte Fassung."
       }
-    ]
+    ],
+    "cloudflare": "**Cloudflare:** Diese Website wird über das Netzwerk der Cloudflare, Inc., 101 Townsend St., San Francisco, CA 94107, USA, ausgeliefert. Alle Aufrufe – einschließlich IP-Adresse, aufgerufener Adresse, übermittelter Formulardaten und technischer Verbindungsdaten – laufen dabei über Server von Cloudflare; die verschlüsselte Verbindung endet bei Cloudflare und wird von dort an unseren Server weitergeleitet. Cloudflare verarbeitet diese Daten in unserem Auftrag, um die Seite bereitzustellen und vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO); mit Cloudflare besteht ein Vertrag zur Auftragsverarbeitung. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert (Art. 45 DSGVO). Weitere Informationen in der [Datenschutzerklärung von Cloudflare](https://www.cloudflare.com/privacypolicy/).",
+    "backup": "Datensicherungen der Datenbank werden nach höchstens {days} Tagen gelöscht. Bis dahin können dort auch Daten enthalten sein, die im laufenden System bereits gelöscht wurden."
   },
   "auth": {
     "login": {

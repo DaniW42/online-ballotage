@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     legal_vat_id: str = ""        # optional (USt-IdNr.)
     legal_hosting: str = ""       # optional: Hosting-Anbieter für die Datenschutzerklärung
     repo_url: str = ""            # optional: Link zum Quelltext
+    legal_cdn: str = ""           # "cloudflare", wenn der Verkehr über Cloudflare läuft (Datenschutz/Sicherheit)
+    backup_retention_days: int = 0  # >0: Datenschutz nennt die maximale Aufbewahrung von Datensicherungen
 
     # Zeitzone, in der Beginn/Ende eingegeben und angezeigt werden.
     # Intern wird alles als naive UTC gespeichert.

@@ -22,6 +22,11 @@
   {{ s.p|md }}
   {% endfor %}
 
+  {% if cfg.legal_cdn == 'cloudflare' %}
+  <h2>{{ t('security.cdn_title') }}</h2>
+  {{ t('security.cdn')|md }}
+  {% endif %}
+
   <h2>{{ t('security.limits_title') }}</h2>
   <div class="notice error">{{ t('security.limits')|md }}</div>
 

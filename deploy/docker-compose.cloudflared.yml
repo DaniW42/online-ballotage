@@ -1,0 +1,18 @@
+# Optional: cloudflared für einen Cloudflare Tunnel (Token-basiert). TUNNEL_TOKEN aus dem
+# Cloudflare-Dashboard (Zero Trust > Networks > Tunnels) als Variable setzen. Der Tunnel
+# muss im selben Docker-Netz hängen wie der ballotage-Stack (PROXY_NETWORK).
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run
+    restart: unless-stopped
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN fehlt}
+      TZ: Europe/Berlin
+    networks: [proxy]
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

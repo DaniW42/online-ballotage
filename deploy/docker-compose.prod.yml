@@ -1,0 +1,113 @@
+# Produktions-Stack mit fertigem Image (`docker compose -f deploy/docker-compose.prod.yml
+# --env-file … up -d` oder Inhalt in eine Stack-Verwaltung übernehmen).
+# Kein Port nach außen: Die App ist nur über das externe Docker-Netz PROXY_NETWORK
+# erreichbar, in dem auch der Reverse-Proxy bzw. cloudflared hängt
+# (Ziel: http://ballotage-app:8000). Automatische Image-Updater sind per Label
+# ausgeschlossen; Updates bewusst durch Neustart mit neuem Image.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-no-auto-update: &no-auto-update
+  com.centurylinklabs.watchtower.enable: "false"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ballotage-db
+    restart: unless-stopped
+    logging: *logging
+    labels: *no-auto-update
+    environment:
+      POSTGRES_DB: ballotage
+      POSTGRES_USER: ballotage
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD fehlt}
+    volumes:
+      - ballotage_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ballotage -d ballotage"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [internal]
+
+  app:
+    image: ghcr.io/daniw42/online-ballotage:${APP_TAG:-latest}
+    container_name: ballotage-app
+    restart: unless-stopped
+    logging: *logging
+    labels: *no-auto-update
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ballotage:${DB_PASSWORD}@db:5432/ballotage
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY fehlt (mind. 32 Zeichen)}
+      BASE_URL: ${BASE_URL:-https://ballotage.online}
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST fehlt}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:?SMTP_FROM fehlt}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      TIMEZONE: ${TIMEZONE:-Europe/Berlin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      LEGAL_NAME: ${LEGAL_NAME:-}
+      LEGAL_STREET: ${LEGAL_STREET:-}
+      LEGAL_CITY: ${LEGAL_CITY:-}
+      LEGAL_COUNTRY: ${LEGAL_COUNTRY:-Deutschland}
+      LEGAL_EMAIL: ${LEGAL_EMAIL:-}
+      LEGAL_PHONE: ${LEGAL_PHONE:-}
+      LEGAL_VAT_ID: ${LEGAL_VAT_ID:-}
+      LEGAL_HOSTING: ${LEGAL_HOSTING:-}
+      LEGAL_CDN: ${LEGAL_CDN:-cloudflare}
+      BACKUP_RETENTION_DAYS: "35"
+      REPO_URL: ${REPO_URL:-}
+      # Nur cloudflared im internen Docker-Netz erreicht die App
+      FORWARDED_ALLOW_IPS: "*"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    networks: [internal, proxy]
+
+  # Nächtlicher pg_dump: 7 Tages-, 4 Wochensicherungen (höchstens ca. 5 Wochen alt)
+  backup:
+    image: prodrigestivill/postgres-backup-local:16
+    container_name: ballotage-backup
+    restart: unless-stopped
+    logging: *logging
+    labels: *no-auto-update
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ballotage
+      POSTGRES_USER: ballotage
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      SCHEDULE: "15 3 * * *"
+      TZ: Europe/Berlin
+      BACKUP_KEEP_DAYS: "7"
+      BACKUP_KEEP_WEEKS: "4"
+      BACKUP_KEEP_MONTHS: "0"
+      POSTGRES_EXTRA_OPTS: "-Z9 --no-owner --no-privileges"
+      HEALTHCHECK_PORT: "8080"
+    volumes:
+      - ${BACKUP_DIR:?BACKUP_DIR fehlt (Host-Verzeichnis für Sicherungen)}:/backups
+    networks: [internal]
+
+networks:
+  internal: {}
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}
+
+volumes:
+  ballotage_db:

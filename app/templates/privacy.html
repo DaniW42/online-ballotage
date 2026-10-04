@@ -9,6 +9,9 @@
   <p>{{ t('privacy.controller_text') }}</p>
   {% include "_controller.html" %}
   {% if cfg.legal_hosting %}<p>{{ t('privacy.hosting_line', provider=cfg.legal_hosting) }}</p>{% endif %}
-  {% for s in tl('privacy.sections') %}<h2>{{ s.t }}</h2>{{ s.p|md }}{% endfor %}
+  {% for s in tl('privacy.sections') %}<h2>{{ s.t }}</h2>{{ s.p|md }}
+  {% if s.cdn and cfg.legal_cdn == 'cloudflare' %}{{ t('privacy.cloudflare')|md }}{% endif %}
+  {% if s.backup and cfg.backup_retention_days %}<p>{{ t('privacy.backup', days=cfg.backup_retention_days) }}</p>{% endif %}
+  {% endfor %}
 </div>
 {% endblock %}

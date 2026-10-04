@@ -65,6 +65,8 @@ services:
       LEGAL_VAT_ID: ${LEGAL_VAT_ID:-}
       LEGAL_HOSTING: ${LEGAL_HOSTING:-}
       REPO_URL: ${REPO_URL:-}
+      LEGAL_CDN: ${LEGAL_CDN:-}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-0}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status == 200 else 1)"]
       interval: 10s
