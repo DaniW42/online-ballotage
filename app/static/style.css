@@ -43,7 +43,8 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* Scrollbar immer anzeigen, damit das Layout beim Seitenwechsel nicht springt */
+html { -webkit-text-size-adjust: 100%; overflow-y: scroll; }
 body {
   margin: 0; font-family: var(--sans); font-size: 17px; line-height: 1.6;
   color: var(--fg); background: var(--bg);
