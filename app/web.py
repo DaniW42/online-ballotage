@@ -29,6 +29,7 @@ def _template_context(request: Request) -> dict:
     lang = getattr(request.state, "lang", i18n.DEFAULT_LANG)
     return {
         "lang": lang,
+        "theme": getattr(request.state, "theme", "auto"),
         "t": lambda key, **kw: i18n.t(lang, key, **kw),
         "tl": lambda key: i18n.tl(lang, key),
         "fmt_dt": lambda dt: i18n.fmt_datetime(lang, dt),

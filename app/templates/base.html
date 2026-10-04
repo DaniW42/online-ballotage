@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ t('meta.html_lang') }}">
+<html lang="{{ t('meta.html_lang') }}"{% if theme != 'auto' %} data-theme="{{ theme }}"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -83,6 +83,11 @@
         </div>
         {% endif %}
       </div>
+      {% if not request.url.path.startswith('/v/') and not request.url.path.startswith('/auth/') %}
+      <p class="theme-switch">{{ t('footer.theme') }}:
+        {% for mode in ['auto', 'light', 'dark'] %}<a href="/theme/{{ mode }}?next={{ request.url.path }}"{% if theme == mode %} aria-current="true"{% endif %}>{{ t('footer.theme_' ~ mode) }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+      </p>
+      {% endif %}
       <p class="footer-note">© {{ now_year }} {{ cfg.legal_name or t('brand.name') }} · {{ t('footer.license_note') }}</p>
     </div>
   </footer>

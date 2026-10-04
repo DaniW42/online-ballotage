@@ -16,19 +16,30 @@
   --ok-bg: #eaf3ec;
   --shadow: 0 1px 2px rgba(28, 34, 48, .06), 0 8px 24px rgba(28, 34, 48, .06);
   --radius: 12px;
+  color-scheme: light;
+  --on-signal: #ffffff;
   --serif: Georgia, "Times New Roman", serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+/* Dunkel: automatisch nach Systemeinstellung, außer der Nutzer hat "Hell" gewählt;
+   oder erzwungen über data-theme="dark" (Schalter im Footer, Cookie "theme"). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: #11151d; --surface: #181e2a; --surface-alt: #1d2433; --fg: #e9e6df; --muted: #a2a8b6;
     --primary: #d9b872; --primary-fg: #11151d; --accent: #d9b872; --accent-soft: #2b2a24;
     --border: #2d3548; --error: #f0a0a0; --error-bg: #2e1c1f; --ok: #8fd0a6; --ok-bg: #18271f;
+    --on-signal: #11151d;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
-  /* helle Signalfarben brauchen dunkle Schrift */
-  button.danger, .badge { color: var(--bg); }
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #11151d; --surface: #181e2a; --surface-alt: #1d2433; --fg: #e9e6df; --muted: #a2a8b6;
+    --primary: #d9b872; --primary-fg: #11151d; --accent: #d9b872; --accent-soft: #2b2a24;
+    --border: #2d3548; --error: #f0a0a0; --error-bg: #2e1c1f; --ok: #8fd0a6; --ok-bg: #18271f;
+    --on-signal: #11151d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
 }
 
 * { box-sizing: border-box; }
@@ -88,7 +99,7 @@ button, .btn {
 }
 button:hover, .btn:hover { filter: brightness(1.12); }
 button.secondary, .btn.secondary { background: transparent; color: var(--primary); }
-button.danger { background: var(--error); border-color: var(--error); color: #fff; }
+button.danger { background: var(--error); border-color: var(--error); color: var(--on-signal); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 .btn.large { padding: .85rem 1.6rem; font-size: 1.05rem; }
 .btn.light { background: var(--primary-fg); color: var(--primary); border-color: var(--primary-fg); }
@@ -120,7 +131,7 @@ summary { cursor: pointer; font-weight: 600; }
 .notice.ok { background: var(--ok-bg); border-color: var(--ok); }
 .notice.error { background: var(--error-bg); border-color: var(--error); }
 .notice p:last-child { margin-bottom: 0; }
-.badge { font-size: .75rem; background: var(--ok); color: #fff; padding: .1rem .5rem; border-radius: 999px; font-family: var(--sans); vertical-align: middle; }
+.badge { font-size: .75rem; background: var(--ok); color: var(--on-signal); padding: .1rem .5rem; border-radius: 999px; font-family: var(--sans); vertical-align: middle; }
 .status { display: inline-block; font-size: .8rem; padding: .05rem .6rem; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); }
 .status.scheduled { background: var(--accent-soft); border-color: var(--accent); }
 .status.open { background: var(--ok-bg); border-color: var(--ok); }
@@ -215,7 +226,6 @@ dl.facts dt { color: var(--muted); } dl.facts dd { margin: 0; }
 .notice.testmode { background: var(--accent-soft); border-color: var(--accent); }
 .badge.testmode { background: var(--accent); }
 .btn.small-btn { padding: .4rem .9rem; font-size: .9rem; }
-@media (prefers-color-scheme: dark) { .badge.testmode { color: var(--bg); } }
 
 /* Admin-Portal */
 .subnav { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 1.5rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
@@ -228,3 +238,7 @@ dl.facts dt { color: var(--muted); } dl.facts dd { margin: 0; }
 .filters button { margin: 0; }
 .stack.card { margin-bottom: 1.2rem; }
 .org-line { flex-direction: column; align-items: flex-start; gap: .35rem; justify-content: flex-start; }
+
+.theme-switch { margin-top: 1rem; font-size: .85rem; }
+.theme-switch a { color: var(--muted); }
+.theme-switch a[aria-current="true"] { color: var(--fg); font-weight: 700; text-decoration: none; }

@@ -67,6 +67,8 @@ async def common_middleware(request: Request, call_next):
     request.state.lang = i18n.pick_language(
         request.cookies.get(i18n.LANG_COOKIE), request.headers.get("accept-language")
     )
+    theme = request.cookies.get(THEME_COOKIE)
+    request.state.theme = theme if theme in ("light", "dark") else "auto"  # auto = Systemeinstellung
     if request.method == "POST":
         if _is_cross_site(request):
             # CSRF-Schutz, auch gegen Login-CSRF (fremdes Konto unterschieben)
@@ -113,16 +115,35 @@ async def http_error(request: Request, exc: StarletteHTTPException):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code, headers=exc.headers)
 
 
+THEME_COOKIE = "theme"
+
+
+def _safe_target(next_url: str) -> str:
+    # Nur lokale Pfade; "//" und "/\\" würden Browser als fremde Domain deuten.
+    safe = next_url.startswith("/") and not next_url.startswith("//") and "\\" not in next_url \
+        and not any(ord(c) < 32 for c in next_url)
+    return next_url if safe else "/"
+
+
 @app.get("/lang/{code}")
 def switch_language(code: str, next: str = "/"):
-    # Nur lokale Pfade; "//" und "/\\" würden Browser als fremde Domain deuten.
-    safe = next.startswith("/") and not next.startswith("//") and "\\" not in next \
-        and not any(ord(c) < 32 for c in next)
-    target = next if safe else "/"
-    response = RedirectResponse(target, status_code=303)
+    response = RedirectResponse(_safe_target(next), status_code=303)
     if code in i18n.CATALOGS:
         response.set_cookie(i18n.LANG_COOKIE, code, max_age=60 * 60 * 24 * 365,
                             samesite="lax", httponly=True, secure=COOKIE_SECURE)
+    return response
+
+
+@app.get("/theme/{mode}")
+def switch_theme(mode: str, next: str = "/"):
+    """Darstellung: auto (Systemeinstellung, Standard), light oder dark. Das Cookie wird nur
+    gesetzt, wenn jemand den Schalter benutzt, und enthält nur diese Auswahl."""
+    response = RedirectResponse(_safe_target(next), status_code=303)
+    if mode in ("light", "dark"):
+        response.set_cookie(THEME_COOKIE, mode, max_age=60 * 60 * 24 * 365,
+                            samesite="lax", httponly=True, secure=COOKIE_SECURE)
+    elif mode == "auto":
+        response.delete_cookie(THEME_COOKIE)
     return response
 
 

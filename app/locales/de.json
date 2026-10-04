@@ -33,7 +33,11 @@
     "privacy": "Datenschutz",
     "source": "Quelltext & Lizenz",
     "language": "Sprache",
-    "license_note": "Source-available unter der Elastic License 2.0"
+    "license_note": "Source-available unter der Elastic License 2.0",
+    "theme": "Darstellung",
+    "theme_auto": "Automatisch",
+    "theme_light": "Hell",
+    "theme_dark": "Dunkel"
   },
   "common": {
     "back": "← Zurück zur Übersicht",
@@ -538,7 +542,7 @@
       },
       {
         "t": "8. Cookies",
-        "p": "Wir setzen ausschließlich technisch notwendige Cookies: ein Sitzungs-Cookie (`session`) hält Organisatoren nach dem Login angemeldet (bis zu {session_days} Tage, nur per HTTP übertragen), ein Cookie `lang` merkt die gewählte Sprache (ein Jahr). Beide dienen allein dem Betrieb der Seite und erfordern keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG). Tracking-Cookies gibt es nicht."
+        "p": "Wir setzen ausschließlich technisch notwendige Cookies: ein Sitzungs-Cookie (`session`) hält Organisatoren nach dem Login angemeldet (bis zu {session_days} Tage, nur per HTTP übertragen), ein Cookie `lang` merkt die gewählte Sprache und ein Cookie `theme` die gewählte Darstellung (hell oder dunkel), jeweils ein Jahr – beide werden nur gesetzt, wenn du den jeweiligen Schalter benutzt. Diese Cookies dienen allein dem Betrieb der Seite und erfordern keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG). Tracking-Cookies gibt es nicht."
       },
       {
         "t": "9. Ihre Rechte",

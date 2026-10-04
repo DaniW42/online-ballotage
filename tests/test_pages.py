@@ -151,3 +151,48 @@ def test_verified_badge_sits_below_lodge_name_and_uses_status_style(orga, db):
     block = html.split('class="app-nav org-line"')[1].split("</div>")[0]
     assert block.index("Testloge") < block.index('<span class="status open">Verifiziert</span>')
     assert 'class="badge"' not in html
+
+
+# ---------- Dark-Mode-Schalter ----------
+
+def test_theme_defaults_to_system_without_cookie(anon):
+    html = anon.get("/").text
+    assert "data-theme" not in html and "Darstellung" in html
+    assert 'href="/theme/dark?next=/"' in html and 'href="/theme/light?next=/"' in html
+    assert 'aria-current="true">Automatisch' in html
+
+
+def test_theme_switch_sets_cookie_and_renders_attribute(anon):
+    response = anon.get("/theme/dark?next=/faq")
+    assert response.headers["location"] == "/faq"
+    cookie = response.headers["set-cookie"].lower()
+    assert "theme=dark" in cookie and "max-age=31536000" in cookie and "httponly" in cookie and "samesite=lax" in cookie
+    html = anon.get("/faq", cookies={"theme": "dark"}).text
+    assert 'data-theme="dark"' in html and 'aria-current="true">Dunkel' in html
+    assert 'data-theme="light"' in anon.get("/faq", cookies={"theme": "light"}).text
+
+
+def test_theme_auto_removes_cookie_and_ignores_garbage(anon):
+    assert "theme=" in anon.get("/theme/auto").headers["set-cookie"] and "Max-Age=0" in anon.get("/theme/auto").headers["set-cookie"]
+    assert "set-cookie" not in anon.get("/theme/neon").headers
+    assert "data-theme" not in anon.get("/", cookies={"theme": "neon"}).text
+
+
+@pytest.mark.parametrize("target", ["/\\evil.test", "//evil.test", "https://evil.test"])
+def test_theme_switch_has_no_open_redirect(anon, target):
+    assert anon.get("/theme/dark", params={"next": target}).headers["location"] == "/"
+
+
+def test_theme_switch_hidden_on_token_pages(create_election, anon):
+    _, tokens = create_election()
+    assert "/theme/" not in anon.get(f"/v/{tokens['a@x.test']}").text
+
+
+def test_css_supports_forced_and_automatic_dark_mode(anon):
+    css = anon.get("/static/style.css").text
+    assert ':root[data-theme="dark"]' in css and ':root:not([data-theme="light"])' in css
+    assert "--on-signal" in css and "prefers-color-scheme: dark" in css
+
+
+def test_privacy_names_the_theme_cookie(anon):
+    assert "`theme`" in anon.get("/datenschutz").text or "<code>theme</code>" in anon.get("/datenschutz").text
