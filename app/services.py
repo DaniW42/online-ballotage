@@ -1,6 +1,7 @@
 """Lebenszyklus der Abstimmungen: Abschluss, Ergebnis, Ergebnis-Mail."""
 import asyncio
 import logging
+import re
 import secrets
 
 from datetime import timedelta
@@ -45,18 +46,35 @@ def period_text(election: Election) -> str:
             f"{fmt_datetime(election.language, election.ends_at)}")
 
 
+_EMAIL_IN_TEXT = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+
+
+def strip_emails(text_value: str) -> str:
+    return _EMAIL_IN_TEXT.sub("[Adresse]", text_value)
+
+
 def deliver_invitation(invitation_id: str, to: str, title: str, link: str,
                        period: str, kind: str = "invite", lang: str = "de") -> None:
     """Versendet eine Einladung (läuft im Hintergrund, daher eigene DB-Session)
     und hält das Ergebnis am Einladungseintrag fest, damit Fehler sichtbar sind."""
-    error = None
-    try:
-        send_vote_invitation(to, title, link, period, kind=kind, lang=lang)
-    except Exception as exc:
-        log.exception("Einladungsmail fehlgeschlagen (Einladung %s)", invitation_id)
-        error = str(exc)[:200] or exc.__class__.__name__
     db = SessionLocal()
     try:
+        # Vor dem Versand prüfen: Einladung noch da, Adresse unverändert (nicht gelöscht/
+        # anonymisiert), Loge nicht gesperrt? Sonst nichts schicken.
+        row = (db.query(Invitation, Organization.blocked)
+               .join(Election, Election.id == Invitation.election_id)
+               .join(Organization, Organization.id == Election.org_id)
+               .filter(Invitation.id == invitation_id).first())
+        if not row or row[0].email != to or row[1]:
+            return
+        error = None
+        try:
+            send_vote_invitation(to, title, link, period, kind=kind, lang=lang)
+        except Exception as exc:
+            # Fehlertexte von Mailservern enthalten oft die Empfängeradresse: weder ins Log
+            # noch in die Datenbank übernehmen.
+            log.error("Einladungsmail fehlgeschlagen (Einladung %s): %s", invitation_id, exc.__class__.__name__)
+            error = strip_emails(str(exc))[:200] or exc.__class__.__name__
         inv = db.query(Invitation).filter(Invitation.id == invitation_id).first()
         if inv:
             inv.sent_at = None if error else utcnow()
@@ -195,6 +213,9 @@ def sync_admin_identity(db: Session) -> None:
         if state.admin_email_hash is not None:
             state.session_version += 1
             db.query(MagicLink).filter(MagicLink.admin.is_(True), MagicLink.used_at.is_(None)).delete()
+            # Freigabe-Links aus Antrags-Mails an die alte Adresse ebenfalls entwerten
+            db.query(Organization).filter(Organization.verification_token_hash.isnot(None)) \
+                .update({"verification_token_hash": None}, synchronize_session=False)
         state.admin_email_hash = current
         db.commit()
 
@@ -329,6 +350,8 @@ def send_due_reminders(db: Session) -> None:
     """Erinnert Nicht-Abgestimmte kurz vor Fristende. Der alte Link kann nicht
     erneut verschickt werden (nur sein Hash ist gespeichert), daher bekommt
     jede Erinnerung einen frisch ausgestellten Link; der alte wird ungültig."""
+    if mail_queue.paused:
+        return  # sonst würde der alte Link ungültig, während der neue in der Warteschlange hängt
     now = utcnow()
     due = (
         db.query(Election)
@@ -363,6 +386,8 @@ def send_due_reminders(db: Session) -> None:
 def dispatch_due_invitations(db: Session) -> None:
     """Geplante Abstimmungen: Einladungen erst zum Beginn versenden. Die Tokens werden
     erst jetzt erzeugt (beim Anlegen wurde nur ein Platzhalter gespeichert)."""
+    if mail_queue.paused:
+        return  # nicht neue Links erzeugen, die dann in der angehaltenen Warteschlange hängen
     now = utcnow()
     due = (
         db.query(Election)
@@ -404,9 +429,11 @@ def purge_expired(db: Session) -> None:
                 Election.finished_at < cutoff)
         .all()
     )
+    blocked = {o for (o,) in db.query(Organization.id).filter(Organization.blocked.is_(True))}
     for election in old:
-        if election.status == "finished" and not result_mail_settled(election):
-            continue  # Ergebnis-Mail zuerst loswerden (oder aufgeben)
+        if election.status == "finished" and not result_mail_settled(election) \
+                and election.org_id not in blocked:
+            continue  # Ergebnis-Mail zuerst loswerden (oder aufgeben); gesperrte bekommen keine
         db.query(Invitation).filter(Invitation.election_id == election.id).delete()
         election.purged = True
         db.commit()
@@ -415,7 +442,7 @@ def purge_expired(db: Session) -> None:
     # Nie bestätigte Registrierungen (Login-Link nie benutzt) nach 24 h löschen
     stale = (
         db.query(Organization)
-        .filter(Organization.confirmed_at.is_(None),
+        .filter(Organization.confirmed_at.is_(None), Organization.blocked.is_(False),
                 Organization.created_at < now - timedelta(hours=24))
         .all()
     )

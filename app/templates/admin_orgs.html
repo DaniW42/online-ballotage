@@ -24,7 +24,7 @@
   {% endfor %}
 </table></div>
 {% if pages > 1 %}<p class="hint">{{ t('admin.orgs.page', page=page, pages=pages) }}
-  {% if page > 1 %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status }}&page={{ page - 1 }}">←</a>{% endif %}
-  {% if page < pages %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status }}&page={{ page + 1 }}">→</a>{% endif %}</p>{% endif %}
+  {% if page > 1 %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status|urlencode }}&page={{ page - 1 }}">←</a>{% endif %}
+  {% if page < pages %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status|urlencode }}&page={{ page + 1 }}">→</a>{% endif %}</p>{% endif %}
 </div>
 {% endblock %}

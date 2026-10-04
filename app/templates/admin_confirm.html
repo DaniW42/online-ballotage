@@ -11,6 +11,7 @@
   {% if action == 'delete' %}<p>{{ t('admin.confirm.delete.elections', n=elections) }}</p>{% endif %}
 </div>
 <form method="post" action="/admin/orgs/{{ org.id }}/{{ 'delete' if action == 'delete' else 'block' }}" class="card-form">
+  {% if action in ('block', 'unblock') %}<input type="hidden" name="action" value="{{ action }}">{% endif %}
   {% if typed %}
   <input type="hidden" name="notify" value="{{ '1' if notify else '' }}">
   <label for="confirm_name">{{ t('admin.confirm.type_name', name=org.name) }}</label>

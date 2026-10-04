@@ -72,9 +72,12 @@ def test_normal_sessions_last_ten_days(outbox):
     assert f"Max-Age={10 * 86400}" in client.post(f"/auth/{token}").headers["set-cookie"]
 
 
-def test_admin_address_cannot_register_as_lodge(anon, outbox):
+def test_admin_address_cannot_register_as_lodge_and_is_not_revealed(anon, outbox, db):
     response = anon.post("/register", data={"name": "Fake", "email": ADMIN})
-    assert response.status_code == 400 and "reserviert" in response.text and not outbox
+    normal = anon.post("/register", data={"name": "Echt", "email": "neu@loge.test"})
+    assert response.status_code == normal.status_code == 200
+    assert "reserviert" not in response.text and "Wir haben eine E-Mail" in response.text
+    assert not outbox.to(ADMIN) and db.query(Organization).filter_by(email=ADMIN).count() == 0
 
 
 @pytest.mark.parametrize("path", ADMIN_PAGES)
@@ -224,7 +227,7 @@ def test_block_requires_confirmation_page_and_ends_sessions(admin, orga, outbox,
     org = _org(db)
     assert "Loge sperren?" in admin.get(f"/admin/orgs/{org.id}/block").text
     assert orga.get("/dashboard").status_code == 200
-    admin.post(f"/admin/orgs/{org.id}/block")
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})
     assert orga.get("/dashboard").headers["location"] == "/login"        # bestehende Sitzung beendet
     outbox.clear()
     anon = TestClient(app, follow_redirects=False)
@@ -232,7 +235,7 @@ def test_block_requires_confirmation_page_and_ends_sessions(admin, orga, outbox,
     assert not outbox.to("orga@loge.test")                                # kein neuer Login-Link
     anon.post("/register", data={"name": "X", "email": "orga@loge.test"})
     assert not outbox.to("orga@loge.test")
-    admin.post(f"/admin/orgs/{org.id}/block")                             # entsperren
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "unblock"})  # entsperren
     anon.post("/login", data={"email": "orga@loge.test"})
     assert outbox.to("orga@loge.test")
 
@@ -240,12 +243,12 @@ def test_block_requires_confirmation_page_and_ends_sessions(admin, orga, outbox,
 def test_blocked_org_gets_no_bulk_mails(admin, orga, outbox, db, create_election):
     election_id, _ = create_election(start=60 * 24, end=60 * 72, reminder_enabled="true")
     org = _org(db)
-    admin.post(f"/admin/orgs/{org.id}/block")
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})
     sql(db, "update elections set starts_at = now() at time zone 'utc' - interval '1 minute'")
     outbox.clear()
     services.run_maintenance()
     assert not outbox                                                      # kein Versand zum Beginn
-    admin.post(f"/admin/orgs/{org.id}/block")                              # Sperre aufheben
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "unblock"})   # Sperre aufheben
     services.run_maintenance()
     assert len(outbox.to("a@x.test")) == 1
 
@@ -344,6 +347,7 @@ def test_system_page(admin):
 def test_privacy_lookup_and_erase(admin, orga, create_election, db):
     election_id, _ = create_election()
     orga.post("/recipients", data={"emails_raw": "a@x.test, z@x.test"})
+    orga.post(f"/elections/{election_id}/abort", data={"confirm": "yes"})   # Abstimmung beendet
     page = admin.get("/admin/privacy?email=A@X.test").text
     assert "1 Einladung(en)" in page and "Gespeicherte Empfängerliste" in page
     assert admin.get("/admin/privacy?email=nirgends@x.test").text.count("keine Daten gespeichert") == 1
@@ -357,7 +361,9 @@ def test_privacy_lookup_and_erase(admin, orga, create_election, db):
     assert db.query(Invitation).count() == 3                              # Zähler bleiben richtig
     assert _org(db).saved_recipients == ["z@x.test"]
     entry = db.query(AuditLog).filter_by(action="erase_email").one()
-    assert "a@x.test" not in (entry.target or "") and "Hash" in entry.target
+    assert "a@x.test" not in (entry.target or "") and "Kennung" in entry.target
+    import hashlib
+    assert hashlib.sha256(b"a@x.test").hexdigest()[:10] not in entry.target  # nicht per Liste umkehrbar
 
 
 def test_erase_clears_verification_contact_data(admin, orga, db):
@@ -377,7 +383,7 @@ def test_privacy_rejects_invalid_address(admin):
 def test_audit_log_records_actions_without_email_addresses(admin, orga, db):
     org = _org(db)
     admin.post(f"/admin/orgs/{org.id}/verify")
-    admin.post(f"/admin/orgs/{org.id}/block")
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})
     admin.post("/admin/mail/pause")
     page = admin.get("/admin/audit").text
     for label in ("Admin-Anmeldung", "Loge verifiziert", "Loge gesperrt", "Massenmails angehalten"):
@@ -401,3 +407,110 @@ def test_changing_admin_email_invalidates_sessions_and_links(admin, outbox, db, 
     services.sync_admin_identity(db)                       # simulierter Neustart mit neuer Adresse
     assert admin.get("/admin").headers["location"] == "/login"
     assert "error=expired" in anon.post(f"/auth/{old_link}").headers["location"]
+
+
+# ---------- Audit 2 ----------
+
+def test_block_is_explicit_not_a_toggle(admin, orga, db):
+    org = _org(db)
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})       # doppelt abgeschickt
+    db.expire_all()
+    assert _org(db).blocked is True
+    assert admin.post(f"/admin/orgs/{org.id}/block").headers["location"] == "/admin/orgs"   # ohne Ziel: nichts
+
+
+def test_queued_mails_are_not_sent_after_block_or_erase(admin, orga, db, outbox, create_election):
+    from app.services import deliver_invitation
+    election_id, _ = create_election()
+    inv = db.query(Invitation).filter_by(email="b@x.test").one()
+    outbox.clear()
+    admin.post(f"/admin/orgs/{_org(db).id}/block", data={"action": "block"})
+    deliver_invitation(inv.id, "b@x.test", "T", "http://x/v/abc", "p")       # Job aus der Warteschlange
+    assert not outbox
+    admin.post(f"/admin/orgs/{_org(db).id}/block", data={"action": "unblock"})
+    deliver_invitation(inv.id, "anders@x.test", "T", "http://x/v/abc", "p")  # Adresse inzwischen geändert
+    assert not outbox
+    deliver_invitation("00000000-0000-0000-0000-000000000000", "b@x.test", "T", "l", "p")  # Einladung gelöscht
+    assert not outbox
+
+
+def test_send_errors_do_not_store_addresses(orga, db, outbox):
+    import smtplib
+
+    def refuse(to, subject, body):
+        raise smtplib.SMTPRecipientsRefused({to: (550, b"no such user")})
+    from app import mail as m
+    import pytest as _p
+    mp = _p.MonkeyPatch()
+    mp.setattr(m, "send_mail", refuse)
+    try:
+        orga.post("/elections/new", data={"title": "T", "starts_at": local_input(-60), "ends_at": local_input(60),
+                                          "emails_raw": "a@x.test b@x.test c@x.test", "options_raw": ""})
+    finally:
+        mp.undo()
+    errors = [i.send_error for i in db.query(Invitation)]
+    assert all(e for e in errors) and not any("@x.test" in e for e in errors)
+
+
+def test_erase_skips_running_elections_to_prevent_double_votes(admin, orga, create_election, db, anon):
+    election_id, tokens = create_election()
+    anon.post(f"/v/{tokens['a@x.test']}", data={"choice": "Ja"})
+    response = admin.post("/admin/privacy/erase", data={"email": "a@x.test", "confirm_email": "a@x.test"})
+    assert "erased_partial" in response.headers["location"]
+    assert db.query(Invitation).filter_by(email="a@x.test").count() == 1      # bleibt bis zum Abschluss
+    # erneutes Einladen derselben Adresse bleibt damit ausgeschlossen
+    assert "n=0" in orga.post(f"/elections/{election_id}/voters", data={"emails_raw": "a@x.test"}).headers["location"]
+
+
+def test_dispatch_and_reminders_wait_while_mail_is_paused(admin, orga, db, outbox, create_election):
+    create_election(start=60 * 24, end=60 * 72)
+    admin.post("/admin/mail/pause")
+    sql(db, "update elections set starts_at = now() at time zone 'utc' - interval '1 minute'")
+    outbox.clear()
+    services.run_maintenance()
+    db.expire_all()
+    assert not outbox and db.query(Election).one().invitations_dispatched is False
+    admin.post("/admin/mail/resume")
+    services.run_maintenance()
+    assert len(outbox.to("a@x.test")) == 1
+
+
+def test_blocked_lodges_data_is_still_purged(admin, orga, create_election, anon, db, outbox):
+    election_id, tokens = create_election()
+    for e in ("a@x.test", "b@x.test", "c@x.test"):
+        anon.post(f"/v/{tokens[e]}", data={"choice": "Ja"})
+    admin.post(f"/admin/orgs/{_org(db).id}/block", data={"action": "block"})
+    services.run_maintenance()                                              # keine Ergebnis-Mail (gesperrt)
+    sql(db, "update elections set finished_at = finished_at - interval '40 days'")
+    services.run_maintenance()
+    assert db.query(Invitation).count() == 0
+
+
+def test_blocked_unconfirmed_accounts_are_not_purged(admin, anon, db, outbox):
+    anon.post("/register", data={"name": "Spam", "email": "spam@x.test"})
+    org = _org(db, email="spam@x.test")
+    admin.post(f"/admin/orgs/{org.id}/block", data={"action": "block"})
+    sql(db, "update organizations set created_at = created_at - interval '3 days'")
+    services.run_maintenance()
+    assert db.query(Organization).filter_by(email="spam@x.test").count() == 1
+
+
+def test_saved_list_respects_per_lodge_limit(admin, orga, db):
+    org = _org(db)
+    admin.post(f"/admin/orgs/{org.id}/limit", data={"max_recipients": "150"})
+    orga.post("/recipients", data={"emails_raw": " ".join(f"r{i}@x.test" for i in range(120))})
+    db.expire_all()
+    assert len(_org(db).saved_recipients) == 120
+
+
+def test_admin_login_not_blocked_by_global_address_cap(outbox, monkeypatch):
+    import app.main as main
+    for i in range(6):                                                      # viele IPs eines Angreifers
+        monkeypatch.setattr(main, "_client_ip", lambda request, i=i: f"6.6.6.{i}")
+        for _ in range(5):
+            TestClient(app).post("/login", data={"email": ADMIN})
+    before = len(outbox.to(ADMIN))
+    monkeypatch.setattr(main, "_client_ip", lambda request: "1.2.3.4")
+    TestClient(app).post("/login", data={"email": ADMIN})
+    assert len(outbox.to(ADMIN)) == before + 1

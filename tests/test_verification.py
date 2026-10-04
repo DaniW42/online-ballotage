@@ -168,7 +168,9 @@ def test_reject_deletes_org_with_all_data_and_notifies(verification_on, orga, ou
     anon.post(f"/v/{tokens['a@x.test']}", data={"choice": "Ja"})
     _request_verification(orga)
     link = _admin_link(outbox)
-    response = anon.post(link + "/reject")
+    wrong = anon.post(link + "/reject", data={"confirm_name": "falsch"})
+    assert "bad_confirmation" in wrong.headers["location"] and db.query(Organization).count() == 1
+    response = anon.post(link + "/reject", data={"confirm_name": "Testloge"})
     assert response.status_code == 200 and "abgelehnt" in response.text
     assert [db.query(m).count() for m in (Organization, Election, Invitation, Vote, MagicLink)] == [0] * 5
     assert "nicht verifizieren" in outbox.to("orga@loge.test")[-1].body
@@ -190,3 +192,25 @@ def test_account_page_shows_verification_status(verification_on, orga, db):
 
 def test_account_page_hides_verification_when_disabled(orga):
     assert "Verifizierung" not in orga.get("/account").text
+
+
+def test_review_link_expires_and_decisions_are_audited(verification_on, orga, outbox, anon, db):
+    from app.db import AuditLog
+    from conftest import sql
+    _request_verification(orga)
+    link = _admin_link(outbox)
+    sql(db, "update organizations set verification_requested_at = verification_requested_at - interval '15 days'")
+    assert anon.get(link).status_code == 404
+    sql(db, "update organizations set verification_requested_at = now() at time zone 'utc'")
+    anon.post(link + "/approve")
+    assert db.query(AuditLog).filter_by(action="verify").count() == 1
+
+
+def test_admin_email_change_kills_pending_review_links(verification_on, orga, outbox, anon, db, monkeypatch):
+    from app import services
+    services.sync_admin_identity(db)
+    _request_verification(orga)
+    link = _admin_link(outbox)
+    monkeypatch.setattr(settings, "admin_email", "neu@x.test")
+    services.sync_admin_identity(db)
+    assert anon.get(link).status_code == 404

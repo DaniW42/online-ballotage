@@ -6,7 +6,7 @@
 {% include "_admin_nav.html" %}
 <h1>{{ t('admin.privacy.title') }}</h1>
 <p>{{ t('admin.privacy.lead') }}</p>
-{% if flash %}<div class="notice {{ 'error' if flash == 'bad_confirmation' else 'ok' }}">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
+{% if flash %}<div class="notice {{ 'error' if flash in ('bad_confirmation', 'erased_partial') else 'ok' }}">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
 <form method="get" action="/admin/privacy" class="filters">
   <input type="email" name="email" value="{{ email }}" placeholder="name@example.org" required aria-label="{{ t('admin.privacy.email') }}">
   <button type="submit">{{ t('admin.privacy.search') }}</button>
@@ -19,6 +19,7 @@
     {% for o in result.accounts %}<li>{{ t('admin.privacy.account') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a> ({{ t('admin.status.' ~ ('blocked' if o.blocked else ('verified' if o.verified else 'testmode'))) }})</li>{% endfor %}
     {% for o in result.contacts %}<li>{{ t('admin.privacy.contact') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a></li>{% endfor %}
     {% for status, n in result.invitations.items() %}<li>{{ t('admin.privacy.invitations', n=n, status=t('dashboard.status.' ~ status)) }}</li>{% endfor %}
+    {% if result.send_errors %}<li>{{ t('admin.privacy.send_errors', n=result.send_errors) }}</li>{% endif %}
     {% for o in result.lists %}<li>{{ t('admin.privacy.list') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a></li>{% endfor %}
   </ul>
   <p class="hint">{{ t('admin.privacy.explain') }}</p>

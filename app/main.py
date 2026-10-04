@@ -262,7 +262,9 @@ def register_submit(
     if not name or len(name) > 200:
         return render(request, "register.html", {"error": "auth.invalid_name"}, 400)
     if settings.admin_email and email == settings.admin_email.lower():
-        return render(request, "register.html", {"error": "auth.reserved_email"}, 400)
+        # Nicht verraten, dass dies die Admin-Adresse ist: gleiche Antwort, keine Mail
+        return render(request, "magic_sent.html",
+                      {"email": email, "minutes": settings.magic_link_ttl_minutes, "registered": True})
     if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
         return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
@@ -409,9 +411,12 @@ def logout(request: Request, db: Session = Depends(get_db)):
 
 
 def _mail_allowed(request: Request, email: str) -> bool:
-    """Login-Mails pro Adresse begrenzen, ohne dass Dritte jemanden aussperren können:
-    das enge Limit gilt pro Adresse UND IP, ein großzügigeres global pro Adresse."""
+    """Login-Mails pro Adresse begrenzen: eng pro Adresse UND IP, großzügiger global pro
+    Adresse. Das erschwert Aussperren durch Dritte, verhindert es aber nicht ganz (viele IPs).
+    Die Admin-Adresse hat nur das Limit pro IP, damit sie im Ernstfall erreichbar bleibt."""
     per_pair = limiter.allow(f"mail:{email}:{_client_ip(request)}", settings.rate_limit_per_email)
+    if settings.admin_email and email == settings.admin_email.lower():
+        return per_pair
     return per_pair and limiter.allow(f"mail:{email}", settings.rate_limit_per_email * 4)
 
 
@@ -487,7 +492,7 @@ def recipients_save(request: Request, emails_raw: str = Form(""), db: Session = 
     org = current_org(request, db)
     if not org:
         return RedirectResponse("/login", status_code=303)
-    org.saved_recipients = extract_emails(emails_raw)[:settings.max_recipients]
+    org.saved_recipients = extract_emails(emails_raw)[:org_recipient_limit(org)]
     db.commit()
     return RedirectResponse("/recipients?saved=1", status_code=303)
 
@@ -865,11 +870,18 @@ def verification_submit(
     return RedirectResponse("/verification?sent=1", status_code=303)
 
 
+VERIFY_LINK_DAYS = 14
+
+
 def _org_for_review(db: Session, token: str) -> Organization | None:
     if not settings.admin_email:
         return None
-    return db.query(Organization).filter(
+    org = db.query(Organization).filter(
         Organization.verification_token_hash == hash_token(token)).first()
+    if not org or not org.verification_requested_at \
+            or org.verification_requested_at < utcnow() - timedelta(days=VERIFY_LINK_DAYS):
+        return None  # abgelaufen: neuer Antrag oder Entscheidung im Admin-Portal
+    return org
 
 
 @app.get("/auth/verify/{token}", response_class=HTMLResponse)
@@ -880,17 +892,22 @@ def verify_review(token: str, request: Request, db: Session = Depends(get_db)):
     if not org:
         return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
     elections = db.query(func.count(Election.id)).filter(Election.org_id == org.id).scalar()
-    return render(request, "verify_review.html", {"org": org, "token": token, "elections": elections})
+    return render(request, "verify_review.html", {"org": org, "token": token, "elections": elections,
+                                                  "bad": request.query_params.get("msg") == "bad_confirmation"})
 
 
 @app.post("/auth/verify/{token}/{decision}")
-def verify_decide(token: str, decision: str, request: Request,
+def verify_decide(token: str, decision: str, request: Request, confirm_name: str = Form(""),
                   db: Session = Depends(get_db)):
     request.state.lang = i18n.DEFAULT_LANG
     org = _org_for_review(db, token)
     if not org or decision not in ("approve", "reject"):
         return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
+    if decision == "reject" and " ".join(confirm_name.split()).lower() != " ".join(org.name.split()).lower():
+        # Ablehnen löscht alles - wie im Admin-Portal nur mit Eingabe des Namens
+        return RedirectResponse(f"/auth/verify/{token}?msg=bad_confirmation", status_code=303)
     name, email = decide_verification(db, org, decision == "approve")  # Ablehnen löscht die Loge
+    audit(db, "verify" if decision == "approve" else "delete_org", f"Loge „{name}“ (über Antrags-Mail)")
     mail_queue.submit(PRIORITY_LOGIN, send_verification_result, email, name, decision == "approve",
                       i18n.DEFAULT_LANG)
     return render(request, "verify_done.html", {"approved": decision == "approve", "org_name": name})

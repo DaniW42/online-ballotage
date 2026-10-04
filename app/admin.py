@@ -6,10 +6,12 @@ Zustände - nie Abstimmungstitel, Teilnehmerlisten, Stimmen oder Ergebnisse.
 Gefährliche Aktionen (Sperren, Löschen) brauchen eine eigene Bestätigungsseite,
 Löschen zusätzlich die Eingabe des Namens."""
 import hashlib
+import hmac
 import logging
 import os
 import uuid
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -74,7 +76,7 @@ def _flash(request: Request) -> str | None:
 
 
 FLASH_KEYS = {"verified", "unverified", "blocked", "unblocked", "limit_saved", "limit_invalid", "deleted",
-              "mail_paused", "mail_resumed", "mail_cleared", "bad_confirmation", "erased"}
+              "mail_paused", "mail_resumed", "mail_cleared", "bad_confirmation", "erased", "erased_partial"}
 
 
 # ---------- Übersicht ----------
@@ -233,13 +235,14 @@ def block_confirm(org_id: str, request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/orgs/{org_id}/block")
-def block_apply(org_id: str, request: Request, db: Session = Depends(get_db)):
+def block_apply(org_id: str, request: Request, action: str = Form(""), db: Session = Depends(get_db)):
     if not _admin(request, db):
         return _login_redirect()
     org = _get_org(db, org_id)
-    if not org:
+    if not org or action not in ("block", "unblock"):
         return RedirectResponse("/admin/orgs", status_code=303)
-    org.blocked = not org.blocked
+    # Ausdrücklicher Zielzustand statt Umschalten: doppeltes Absenden hebt die Sperre nicht auf
+    org.blocked = action == "block"
     if org.blocked:
         org.session_version += 1  # bestehende Sitzungen sofort beenden
     db.commit()
@@ -270,7 +273,8 @@ def delete_apply(org_id: str, request: Request, confirm_name: str = Form(""), no
     if not org:
         return RedirectResponse("/admin/orgs", status_code=303)
     if " ".join(confirm_name.split()).lower() != " ".join(org.name.split()).lower():
-        return RedirectResponse(f"/admin/orgs/{org_id}/delete?msg=bad_confirmation&notify={notify}", status_code=303)
+        query = urlencode({"msg": "bad_confirmation", "notify": "1" if notify == "1" else ""})
+        return RedirectResponse(f"/admin/orgs/{org_id}/delete?{query}", status_code=303)
     name, email = org.name, org.email
     purge_organization(db, org)
     audit(db, "delete_org", f"Loge „{name}“")
@@ -399,9 +403,11 @@ def _lookup(db: Session, email: str) -> dict:
     invitation_rows = (db.query(Election.status, func.count(Invitation.id))
                        .join(Invitation, Invitation.election_id == Election.id)
                        .filter(Invitation.email == email).group_by(Election.status).all())
+    errors = db.query(func.count(Invitation.id)).filter(Invitation.email == email,
+                                                        Invitation.send_error.isnot(None)).scalar()
     lists = [o for o in db.query(Organization).all() if email in (o.saved_recipients or [])]
     return {"accounts": accounts, "contacts": contacts, "invitations": dict(invitation_rows),
-            "lists": lists,
+            "lists": lists, "send_errors": errors,
             "found": bool(accounts or contacts or invitation_rows or lists)}
 
 
@@ -427,17 +433,30 @@ def privacy_erase(request: Request, email: str = Form(""), confirm_email: str = 
         return _login_redirect()
     email = email.strip().lower()
     if not is_valid_email(email) or confirm_email.strip().lower() != email:
-        return RedirectResponse(f"/admin/privacy?email={email}&msg=bad_confirmation", status_code=303)
-    for invitation in db.query(Invitation).filter(Invitation.email == email):
+        query = urlencode({"email": email, "msg": "bad_confirmation"})
+        return RedirectResponse(f"/admin/privacy?{query}", status_code=303)
+    skipped = 0
+    for invitation, status in (db.query(Invitation, Election.status)
+                               .join(Election, Election.id == Invitation.election_id)
+                               .filter(Invitation.email == email)):
+        if status == "open":
+            # Laufende Abstimmung: Umbenennen würde erneutes Einladen (= zweite Stimme)
+            # ermöglichen. Erst nach Abschluss löschen.
+            skipped += 1
+            continue
         invitation.email = f"geloescht-{uuid.uuid4().hex[:12]}@invalid.invalid"
+        invitation.send_error = None
     for org in db.query(Organization).all():
         if email in (org.saved_recipients or []):
             org.saved_recipients = [e for e in org.saved_recipients if e != email]
         if org.contact_email == email:
             org.contact_name = org.contact_email = org.contact_website = org.contact_phone = None
     db.commit()
-    digest = hashlib.sha256(email.encode()).hexdigest()[:10]  # die Adresse selbst nicht protokollieren
-    audit(db, "erase_email", f"E-Mail-Adresse (Hash {digest})")
+    # Nicht umkehrbarer Schlüssel (HMAC mit SECRET_KEY) statt der Adresse selbst
+    digest = hmac.new(settings.secret_key.encode(), email.encode(), hashlib.sha256).hexdigest()[:12]
+    audit(db, "erase_email", f"E-Mail-Adresse (Kennung {digest})" + (f", {skipped} in laufenden Abstimmungen offen" if skipped else ""))
+    if skipped:
+        return RedirectResponse("/admin/privacy?" + urlencode({"msg": "erased_partial", "email": email}), status_code=303)
     return RedirectResponse("/admin/privacy?msg=erased", status_code=303)
 
 

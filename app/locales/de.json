@@ -597,8 +597,7 @@
     },
     "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
     "invalid_name": "Bitte gib den Namen deiner Loge oder deines Vereins an (höchstens 200 Zeichen).",
-    "logout_note": "Abmelden beendet alle Sitzungen auf allen Geräten.",
-    "reserved_email": "Diese E-Mail-Adresse ist reserviert und kann nicht für eine Loge verwendet werden."
+    "logout_note": "Abmelden beendet alle Sitzungen auf allen Geräten."
   },
   "dashboard": {
     "meta_title": "Übersicht",
@@ -804,7 +803,7 @@
     },
     "verify_request": {
       "subject": "Verifizierungsantrag: {org}",
-      "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen, freischalten oder ablehnen:\n{link}\n\nDer Link ist geheim und nur bis zur Entscheidung gültig."
+      "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen, freischalten oder ablehnen:\n{link}\n\nDer Link ist geheim und bis zur Entscheidung gültig, höchstens 14 Tage. Offene Anträge findest du auch im Admin-Portal."
     },
     "verify_approved": {
       "subject": "Deine Loge wurde verifiziert",
@@ -896,8 +895,7 @@
       "approve": "Freischalten",
       "reject": "Ablehnen und löschen",
       "reject_hint": "Beim Ablehnen werden die Loge und alle ihre Daten (Abstimmungen, Einladungen, Stimmen) endgültig gelöscht. Die Loge wird per E-Mail informiert.",
-      "reject_confirm": "Loge wirklich ablehnen und alle Daten löschen?",
-      "invalid": "Dieser Freigabe-Link ist ungültig oder wurde bereits verwendet."
+      "invalid": "Dieser Freigabe-Link ist ungültig, abgelaufen (nach 14 Tagen) oder wurde bereits verwendet. Offene Anträge findest du auch im Admin-Portal."
     },
     "done": {
       "meta_title": "Entscheidung gespeichert",
@@ -934,7 +932,8 @@
       "mail_resumed": "Der Versand läuft wieder.",
       "mail_cleared": "Wartende Massenmails wurden verworfen.",
       "bad_confirmation": "Die Bestätigung stimmt nicht überein.",
-      "erased": "Die Daten zu dieser Adresse wurden entfernt bzw. anonymisiert."
+      "erased": "Die Daten zu dieser Adresse wurden entfernt bzw. anonymisiert.",
+      "erased_partial": "Teilweise gelöscht: Einladungen in noch laufenden Abstimmungen bleiben bis zum Abschluss bestehen (sonst wäre eine zweite Stimme möglich). Bitte nach Abschluss erneut löschen."
     },
     "dashboard": {
       "title": "Admin-Übersicht",
@@ -1003,7 +1002,7 @@
         "title": "Loge sperren?",
         "consequences": [
           "Die Loge kann sich nicht mehr anmelden, bestehende Sitzungen werden beendet.",
-          "Für die Loge werden keine Einladungen, Erinnerungen und Ergebnis-Mails mehr versendet.",
+          "Für die Loge werden keine Einladungen, Erinnerungen und Ergebnis-Mails mehr versendet – auch nicht solche, die bereits in der Warteschlange stehen.",
           "Bereits verschickte Abstimmungslinks funktionieren weiter."
         ],
         "submit": "Ja, sperren"
@@ -1011,7 +1010,8 @@
       "unblock": {
         "title": "Sperre aufheben?",
         "consequences": [
-          "Die Loge kann sich wieder anmelden, wartende Mails werden wieder versendet."
+          "Die Loge kann sich wieder anmelden.",
+          "Geplante Einladungen und ausstehende Ergebnis-Mails werden wieder versendet. Erinnerungen, deren Zeitpunkt während der Sperre verstrichen ist, entfallen."
         ],
         "submit": "Sperre aufheben"
       },
@@ -1035,7 +1035,7 @@
       "failed": "Fehlgeschlagen",
       "failed_value": "{inv} Einladungen · {res} aufgegebene Ergebnis-Mails",
       "controls": "Steuerung",
-      "controls_hint": "Anhalten stoppt Einladungen und Erinnerungen (Notaus bei Missbrauch); Login-Mails laufen weiter. „Verwerfen“ löscht wartende Massenmails – die betroffenen Einladungen lassen sich später per „Neuer Link“ erneut senden.",
+      "controls_hint": "Anhalten stoppt Einladungen und Erinnerungen (Notaus bei Missbrauch); Login-Mails laufen weiter. Solange angehalten ist, werden auch keine geplanten Einladungen und Erinnerungen erzeugt. „Verwerfen“ löscht wartende Massenmails – die betroffenen Einladungen lassen sich später per „Neuer Link“ erneut senden.",
       "pause": "Massenmails anhalten",
       "resume": "Versand fortsetzen",
       "clear": "Wartende Massenmails verwerfen",
@@ -1086,9 +1086,10 @@
       "contact": "Kontakt in einem Verifizierungsantrag",
       "invitations": "{n} Einladung(en) in Abstimmungen mit Status „{status}“",
       "list": "Gespeicherte Empfängerliste der Loge",
-      "explain": "Löschen anonymisiert die Adresse in allen Einladungen (Zähler bleiben richtig), entfernt sie aus gespeicherten Empfängerlisten und löscht Kontaktangaben aus Verifizierungsanträgen. Ein Login-Konto wird nicht automatisch gelöscht – das geht über die Logen-Seite.",
+      "explain": "Löschen anonymisiert die Adresse in Einladungen beendeter oder abgebrochener Abstimmungen (Zähler bleiben richtig), entfernt sie aus gespeicherten Empfängerlisten und löscht Kontaktangaben aus Verifizierungsanträgen. Einladungen in noch laufenden Abstimmungen bleiben bis zum Abschluss bestehen, sonst könnte dieselbe Person ein zweites Mal eingeladen werden. Ein Login-Konto wird nicht automatisch gelöscht – das geht über die Logen-Seite.",
       "confirm_label": "Zur Bestätigung die Adresse noch einmal eingeben: {email}",
-      "erase": "Daten zu dieser Adresse löschen"
+      "erase": "Daten zu dieser Adresse löschen",
+      "send_errors": "{n} gespeicherte Versandfehler zu dieser Adresse"
     },
     "audit": {
       "title": "Protokoll",

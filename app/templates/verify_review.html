@@ -15,10 +15,13 @@
   <dt>{{ t('verification.review.elections') }}</dt><dd>{{ elections }}</dd>
 </dl>
 <p class="hint">{{ t('verification.review.website_note') }}</p>
-<div class="actions">
-  <form method="post" action="/auth/verify/{{ token }}/approve" class="inline"><button type="submit">{{ t('verification.review.approve') }}</button></form>
-  <form method="post" action="/auth/verify/{{ token }}/reject" class="inline" data-confirm="{{ t('verification.review.reject_confirm') }}"><button type="submit" class="danger">{{ t('verification.review.reject') }}</button></form>
-</div>
+{% if bad %}<div class="notice error">{{ t('admin.flash.bad_confirmation') }}</div>{% endif %}
+<form method="post" action="/auth/verify/{{ token }}/approve" class="actions"><button type="submit">{{ t('verification.review.approve') }}</button></form>
+<h2>{{ t('verification.review.reject') }}</h2>
 <p class="hint">{{ t('verification.review.reject_hint') }}</p>
-<script src="/static/js/confirm.js?v={{ static_v }}"></script>
+<form method="post" action="/auth/verify/{{ token }}/reject" class="card-form">
+  <label for="confirm_name">{{ t('admin.confirm.type_name', name=org.name) }}</label>
+  <input type="text" id="confirm_name" name="confirm_name" required autocomplete="off">
+  <div class="actions"><button type="submit" class="danger">{{ t('verification.review.reject') }}</button></div>
+</form>
 {% endblock %}
