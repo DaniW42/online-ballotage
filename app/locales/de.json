@@ -23,7 +23,8 @@
     "main": "Hauptnavigation",
     "account": "Konto",
     "verification": "Verifizierung",
-    "admin": "Admin"
+    "admin": "Admin",
+    "menu": "Menü"
   },
   "footer": {
     "blurb": "Geheime Abstimmungen für Logen und Vereine – technisch so gebaut, dass niemand nachvollziehen kann, wer wie gestimmt hat.",

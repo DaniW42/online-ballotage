@@ -22,6 +22,11 @@
         <span>{{ t('brand.name') }}</span>
       </a>
       {% if not request.url.path.startswith('/v/') %}
+      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-menu" hidden>
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="visually-hidden">{{ t('nav.menu') }}</span>
+      </button>
+      <div class="site-menu" id="site-menu">
       <nav class="main-nav" aria-label="{{ t('nav.main') }}">
         <a href="/how-it-works"{% if request.url.path == '/how-it-works' %} aria-current="page"{% endif %}>{{ t('nav.how') }}</a>
         <a href="/security"{% if request.url.path == '/security' %} aria-current="page"{% endif %}>{{ t('nav.security') }}</a>
@@ -39,6 +44,7 @@
           <a href="/login">{{ t('nav.login') }}</a>
           <a class="btn" href="/register">{{ t('nav.register') }}</a>
         {% endif %}
+      </div>
       </div>
       {% endif %}
     </div>
@@ -91,5 +97,6 @@
       <p class="footer-note">© {{ now_year }} {{ cfg.legal_name or t('brand.name') }} · {{ t('footer.license_note') }}</p>
     </div>
   </footer>
+  <script src="/static/js/nav.js?v={{ static_v }}"></script>
 </body>
 </html>
