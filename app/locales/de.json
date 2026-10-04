@@ -803,7 +803,7 @@
     },
     "verify_request": {
       "subject": "Verifizierungsantrag: {org}",
-      "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen, freischalten oder ablehnen:\n{link}\n\nDer Link ist geheim und bis zur Entscheidung gültig, höchstens 14 Tage. Offene Anträge findest du auch im Admin-Portal."
+      "body": "Eine Loge bittet um Verifizierung.\n\nLoge / Verein: {org}\nLogin-E-Mail: {org_email}\n\nVerantwortliche Person: {contact_name}\nKontakt-E-Mail: {contact_email}\nWebseite: {website}\nTelefon: {phone}\n\nPrüfen und entscheiden im Admin-Portal (Anmeldung mit deiner Admin-Adresse):\n{link}"
     },
     "verify_approved": {
       "subject": "Deine Loge wurde verifiziert",
@@ -878,30 +878,7 @@
     "resubmit": "Antrag erneut senden",
     "err_name": "Bitte gib den Namen einer verantwortlichen Person an.",
     "err_email": "Bitte gib eine gültige E-Mail-Adresse an.",
-    "err_contact": "Bitte gib eine Webseite oder eine Telefonnummer an.",
-    "review": {
-      "meta_title": "Verifizierung prüfen",
-      "title": "Verifizierungsantrag",
-      "lead": "Eine Loge bittet um Freischaltung.",
-      "org": "Loge / Verein",
-      "login_email": "Login-E-Mail",
-      "contact_name": "Verantwortliche Person",
-      "contact_email": "Kontakt-E-Mail",
-      "website": "Webseite",
-      "phone": "Telefon",
-      "requested": "Beantragt am",
-      "elections": "Bisher angelegte Abstimmungen (Testmodus)",
-      "website_note": "Die Webseite ist absichtlich nicht verlinkt; bitte manuell prüfen.",
-      "approve": "Freischalten",
-      "reject": "Ablehnen und löschen",
-      "reject_hint": "Beim Ablehnen werden die Loge und alle ihre Daten (Abstimmungen, Einladungen, Stimmen) endgültig gelöscht. Die Loge wird per E-Mail informiert.",
-      "invalid": "Dieser Freigabe-Link ist ungültig, abgelaufen (nach 14 Tagen) oder wurde bereits verwendet. Offene Anträge findest du auch im Admin-Portal."
-    },
-    "done": {
-      "meta_title": "Entscheidung gespeichert",
-      "approved": "{org} wurde freigeschaltet. Die Loge wird per E-Mail informiert.",
-      "rejected": "{org} wurde abgelehnt und gelöscht. Die Loge wird per E-Mail informiert."
-    }
+    "err_contact": "Bitte gib eine Webseite oder eine Telefonnummer an."
   },
   "admin": {
     "nav": {

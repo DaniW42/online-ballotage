@@ -213,9 +213,6 @@ def sync_admin_identity(db: Session) -> None:
         if state.admin_email_hash is not None:
             state.session_version += 1
             db.query(MagicLink).filter(MagicLink.admin.is_(True), MagicLink.used_at.is_(None)).delete()
-            # Freigabe-Links aus Antrags-Mails an die alte Adresse ebenfalls entwerten
-            db.query(Organization).filter(Organization.verification_token_hash.isnot(None)) \
-                .update({"verification_token_hash": None}, synchronize_session=False)
         state.admin_email_hash = current
         db.commit()
 

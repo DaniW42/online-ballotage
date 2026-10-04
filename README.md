@@ -62,8 +62,8 @@ Konfiguration über Umgebungsvariablen: siehe `.env.example` und `app/config.py`
 **Verifizierung:** Ist `ADMIN_EMAIL` gesetzt, laufen neue Logen im Testmodus (höchstens 3 Empfänger
 je Abstimmung und 10 Einladungen pro Tag).
 Im Konto können sie die Verifizierung beantragen (verantwortliche Person, E-Mail, Webseite oder Telefon);
-der Admin erhält eine Mail mit geheimem Link, über den er die Loge freischaltet oder ablehnt und
-löscht. Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
+der Admin erhält eine Mail mit den Angaben und einem Link ins Admin-Portal, wo er nach dem Login
+freischaltet oder ablehnt (Ablehnen löscht die Loge, nur mit Namenseingabe). Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
 `docker compose exec app python -m app.cli verify loge@example.org`.
 
 **Admin-Portal (`/admin`):** Wer sich auf der Login-Seite mit der `ADMIN_EMAIL` anmeldet, landet im

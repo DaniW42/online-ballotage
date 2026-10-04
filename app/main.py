@@ -29,7 +29,7 @@ from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
     is_verified, invitations_last_24h, scramble_row_versions,
-    get_admin_state, audit, org_recipient_limit, decide_verification, sync_admin_identity,
+    get_admin_state, audit, org_recipient_limit, sync_admin_identity,
 )
 from . import admin
 from .timeutil import utcnow, local_input_to_utc
@@ -856,7 +856,9 @@ def verification_submit(
     if not limiter.allow(f"verify:{org.id}", 3):
         return _too_many(request)
 
-    raw, token_hash = generate_token()  # ein erneuter Antrag macht den alten Link ungültig
+    # Markiert den Antrag als offen. Entschieden wird ausschließlich im Admin-Portal
+    # (mit Admin-Login); die Mail enthält keinen Link, der selbst etwas auslöst.
+    _, token_hash = generate_token()
     org.contact_name, org.contact_email = values["contact_name"], values["contact_email"]
     org.contact_website, org.contact_phone = values["contact_website"] or None, values["contact_phone"] or None
     org.verification_requested_at = utcnow()
@@ -865,52 +867,16 @@ def verification_submit(
     mail_queue.submit(
         PRIORITY_LOGIN, send_verification_request, settings.admin_email, org.name, org.email,
         values["contact_name"], values["contact_email"], values["contact_website"],
-        values["contact_phone"], f"{settings.base_url}/auth/verify/{raw}", i18n.DEFAULT_LANG,
+        values["contact_phone"], f"{settings.base_url}/admin/verifications", i18n.DEFAULT_LANG,
     )
     return RedirectResponse("/verification?sent=1", status_code=303)
 
 
-VERIFY_LINK_DAYS = 14
-
-
-def _org_for_review(db: Session, token: str) -> Organization | None:
-    if not settings.admin_email:
-        return None
-    org = db.query(Organization).filter(
-        Organization.verification_token_hash == hash_token(token)).first()
-    if not org or not org.verification_requested_at \
-            or org.verification_requested_at < utcnow() - timedelta(days=VERIFY_LINK_DAYS):
-        return None  # abgelaufen: neuer Antrag oder Entscheidung im Admin-Portal
-    return org
-
-
-@app.get("/auth/verify/{token}", response_class=HTMLResponse)
-def verify_review(token: str, request: Request, db: Session = Depends(get_db)):
-    """Freigabeseite für den Admin. Der geheime Link ist die Berechtigung (kein Login)."""
-    request.state.lang = i18n.DEFAULT_LANG
-    org = _org_for_review(db, token)
-    if not org:
-        return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
-    elections = db.query(func.count(Election.id)).filter(Election.org_id == org.id).scalar()
-    return render(request, "verify_review.html", {"org": org, "token": token, "elections": elections,
-                                                  "bad": request.query_params.get("msg") == "bad_confirmation"})
-
-
-@app.post("/auth/verify/{token}/{decision}")
-def verify_decide(token: str, decision: str, request: Request, confirm_name: str = Form(""),
-                  db: Session = Depends(get_db)):
-    request.state.lang = i18n.DEFAULT_LANG
-    org = _org_for_review(db, token)
-    if not org or decision not in ("approve", "reject"):
-        return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
-    if decision == "reject" and " ".join(confirm_name.split()).lower() != " ".join(org.name.split()).lower():
-        # Ablehnen löscht alles - wie im Admin-Portal nur mit Eingabe des Namens
-        return RedirectResponse(f"/auth/verify/{token}?msg=bad_confirmation", status_code=303)
-    name, email = decide_verification(db, org, decision == "approve")  # Ablehnen löscht die Loge
-    audit(db, "verify" if decision == "approve" else "delete_org", f"Loge „{name}“ (über Antrags-Mail)")
-    mail_queue.submit(PRIORITY_LOGIN, send_verification_result, email, name, decision == "approve",
-                      i18n.DEFAULT_LANG)
-    return render(request, "verify_done.html", {"approved": decision == "approve", "org_name": name})
+@app.get("/auth/verify/{token}")
+def legacy_verify_link(token: str):
+    """Ältere Antrags-Mails enthielten direkte Freigabe-Links. Entschieden wird jetzt nur
+    noch im Admin-Portal - alte Links führen dorthin (Login erforderlich)."""
+    return RedirectResponse("/admin/verifications", status_code=303)
 
 
 # ---------- Konto ----------

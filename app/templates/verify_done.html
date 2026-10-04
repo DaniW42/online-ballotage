@@ -1,6 +1,0 @@
-{% extends "base.html" %}
-{% block title %}{{ t('verification.done.meta_title') }}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
-{% block content %}
-<div class="notice ok">{% if approved %}{{ t('verification.done.approved', org=org_name) }}{% else %}{{ t('verification.done.rejected', org=org_name) }}{% endif %}</div>
-{% endblock %}

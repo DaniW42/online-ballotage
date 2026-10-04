@@ -179,11 +179,11 @@ def test_reject_requires_typed_name_and_deletes_with_mail(admin, orga, outbox, d
     assert db.query(AuditLog).filter_by(action="delete_org").count() == 1
 
 
-def test_mail_link_flow_still_works(orga, outbox, anon, db):
+def test_request_mail_points_to_portal_which_requires_login(orga, outbox, anon):
     _request_verification(orga)
-    link = re.search(r"(/auth/verify/[\w-]+)", outbox.to(ADMIN)[-1].body).group(1)
-    assert anon.post(link + "/approve").status_code == 200
-    assert _org(db).verified
+    body = outbox.to(ADMIN)[-1].body
+    assert "/admin/verifications" in body and "/auth/verify/" not in body
+    assert anon.get("/admin/verifications").headers["location"] == "/login"
 
 
 # ---------- Logen ----------

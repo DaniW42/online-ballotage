@@ -44,7 +44,7 @@ class Organization(Base):
     contact_website = Column(String, nullable=True)
     contact_phone = Column(String, nullable=True)
     verification_requested_at = Column(DateTime, nullable=True)
-    # Hash des Freigabe-Links aus der Admin-Mail; nach der Entscheidung gelöscht
+    # Gesetzt = offener Verifizierungsantrag (Zufallswert, kein Link); nach der Entscheidung gelöscht
     verification_token_hash = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=utcnow)
 
