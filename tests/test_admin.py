@@ -331,7 +331,10 @@ def test_mail_page_lists_failed_counts_per_org_without_addresses(admin, orga, ou
 
 def test_system_page(admin):
     html = admin.get("/admin/system").text
-    assert "0008" in html and "Konfigurations-Check" in html and "10 Tage" in html and "6 Stunden" in html
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+    head = ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
+    assert f"<code>{head}</code>" in html and "Konfigurations-Check" in html and "10 Tage" in html and "6 Stunden" in html
     services.run_maintenance()
     assert "vor " in admin.get("/admin/system").text
 
@@ -387,3 +390,14 @@ def test_audit_log_is_purged_after_a_year(admin, db):
     sql(db, "update audit_log set at = at - interval '400 days'")
     services.run_maintenance()
     assert db.query(AuditLog).count() == 0
+
+
+def test_changing_admin_email_invalidates_sessions_and_links(admin, outbox, db, monkeypatch):
+    services.sync_admin_identity(db)                       # Stand für ADMIN festhalten
+    anon = TestClient(app, follow_redirects=False)
+    anon.post("/login", data={"email": ADMIN})              # offener Link an die alte Adresse
+    old_link = re.search(r"/auth/(\S+)", outbox.to(ADMIN)[-1].body).group(1)
+    monkeypatch.setattr(settings, "admin_email", "neu@ballotage.test")
+    services.sync_admin_identity(db)                       # simulierter Neustart mit neuer Adresse
+    assert admin.get("/admin").headers["location"] == "/login"
+    assert "error=expired" in anon.post(f"/auth/{old_link}").headers["location"]

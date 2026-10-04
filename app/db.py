@@ -146,6 +146,9 @@ class AdminState(Base):
     id = Column(Integer, primary_key=True, default=1)
     session_version = Column(Integer, default=0, nullable=False, server_default="0")
     mail_paused = Column(Boolean, default=False, nullable=False, server_default="false")
+    # Hash der ADMIN_EMAIL, für die Sitzungen/Links ausgestellt wurden. Ändert sich die
+    # Adresse, werden alte Admin-Sitzungen und offene Admin-Login-Links ungültig.
+    admin_email_hash = Column(String, nullable=True)
 
 
 class AuditLog(Base):

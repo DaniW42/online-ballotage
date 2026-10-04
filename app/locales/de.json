@@ -49,7 +49,8 @@
     "not_found": "Diese Seite gibt es nicht.",
     "too_many": "Zu viele Anfragen. Bitte versuche es später erneut.",
     "heading": "Hinweis",
-    "home": "Zur Startseite"
+    "home": "Zur Startseite",
+    "bad_request": "Die Anfrage war unvollständig. Bitte prüfe deine Eingaben und versuche es erneut."
   },
   "home": {
     "meta_title": "Anonyme Online-Kugelung für Logen und Vereine",

@@ -184,6 +184,21 @@ def get_admin_state(db: Session) -> AdminState:
     return state
 
 
+def sync_admin_identity(db: Session) -> None:
+    """Beim Start: Wurde ADMIN_EMAIL geändert, verlieren alte Admin-Sitzungen und noch
+    offene Admin-Login-Links (an die alte Adresse geschickt) ihre Gültigkeit."""
+    import hashlib
+    current = hashlib.sha256(settings.admin_email.strip().lower().encode()).hexdigest() \
+        if settings.admin_email else None
+    state = get_admin_state(db)
+    if state.admin_email_hash != current:
+        if state.admin_email_hash is not None:
+            state.session_version += 1
+            db.query(MagicLink).filter(MagicLink.admin.is_(True), MagicLink.used_at.is_(None)).delete()
+        state.admin_email_hash = current
+        db.commit()
+
+
 def audit(db: Session, action: str, target: str | None = None) -> None:
     """Admin-Aktion protokollieren (nur Metadaten, keine Abstimmungsinhalte)."""
     db.add(AuditLog(action=action, target=target))

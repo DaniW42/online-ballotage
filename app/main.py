@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse,
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
+from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import i18n
@@ -28,7 +29,7 @@ from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
     is_verified, invitations_last_24h, scramble_row_versions,
-    get_admin_state, audit, org_recipient_limit, decide_verification,
+    get_admin_state, audit, org_recipient_limit, decide_verification, sync_admin_identity,
 )
 from . import admin
 from .timeutil import utcnow, local_input_to_utc
@@ -43,6 +44,7 @@ async def lifespan(app: FastAPI):
         log.warning("Impressum unvollständig: LEGAL_NAME/LEGAL_STREET/LEGAL_CITY/LEGAL_EMAIL setzen.")
     db = SessionLocal()
     try:
+        sync_admin_identity(db)
         mail_queue.paused = get_admin_state(db).mail_paused  # Pause übersteht Neustarts
     finally:
         db.close()
@@ -106,6 +108,12 @@ def _is_cross_site(request: Request) -> bool:
         if urlsplit(origin).netloc not in allowed:
             return True
     return False
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    """Fehlende/ungültige Formularfelder: verständliche Seite statt rohem JSON."""
+    return render(request, "error.html", {"message_key": "errors.bad_request", "status": 400}, 400)
 
 
 @app.exception_handler(StarletteHTTPException)

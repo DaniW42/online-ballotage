@@ -229,7 +229,7 @@ def test_stolen_cookie_is_useless_after_logout(orga):
     attacker = TestClient(app, follow_redirects=False)
     attacker.cookies.set("session", stolen)
     assert attacker.get("/dashboard").headers["location"] == "/login"
-    assert attacker.post("/elections/new", data={}).status_code in (303, 422)
+    assert attacker.post("/elections/new", data={}).status_code in (303, 400)
 
 
 def test_login_works_again_after_logout(orga, outbox):
@@ -251,3 +251,10 @@ def test_old_cookies_without_version_still_work(orga, db):
 
 def test_defaults():
     assert settings.max_recipients == 100
+
+
+def test_missing_form_fields_show_friendly_page(anon, create_election):
+    _, tokens = create_election()
+    response = anon.post(f"/v/{tokens['a@x.test']}", data={})
+    assert response.status_code == 400 and "unvollständig" in response.text
+    assert not response.headers["content-type"].startswith("application/json")

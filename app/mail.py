@@ -106,8 +106,9 @@ class MailQueue:
 
     def clear_bulk(self) -> int:
         """Verwirft wartende Massenmails (Login-Mails bleiben). Gibt die Anzahl zurück."""
-        dropped = len(self._held)
-        self._held = []
+        with self._lock:
+            dropped = len(self._held)
+            self._held = []
         keep = []
         while True:
             try:
@@ -128,7 +129,8 @@ class MailQueue:
             item = self.queue.get()
             priority, _, func, args = item
             if priority == PRIORITY_BULK and self.paused:
-                self._held.append(item)
+                with self._lock:
+                    self._held.append(item)
                 self.queue.task_done()
                 continue
             try:
