@@ -18,6 +18,7 @@ Das externe Netz einmalig anlegen, falls noch nicht vorhanden: `docker network c
 | `DB_PASSWORD` | ja | langes Zufallspasswort |
 | `SECRET_KEY` | ja | mind. 32 Zeichen: `python3 -c "import secrets;print(secrets.token_urlsafe(32))"` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | ja | Mailserver braucht ein gültiges TLS-Zertifikat |
+| `SMTP_FROM_NAME` | | Absendername, Standard `ballotage.online` |
 | `SMTP_USE_TLS` / `SMTP_SSL` | | STARTTLS (587, Standard) bzw. implizites TLS (465) |
 | `PROXY_NETWORK` | ja | Name des externen Docker-Netzes des Reverse-Proxys |
 | `BACKUP_DIR` | ja | Host-Verzeichnis für die Datensicherungen |

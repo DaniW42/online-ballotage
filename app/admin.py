@@ -302,9 +302,13 @@ def mail_page(request: Request, db: Session = Depends(get_db)):
     return render(request, "admin_mail.html", {
         "stats": stats, "failed_by_org": [(names.get(k, "?"), k, v) for k, v in per_org.items()],
         "flash": _flash(request), "test_result": None, "section": "mail",
-        "smtp": {"host": settings.smtp_host, "port": settings.smtp_port,
-                 "mode": "SSL" if settings.smtp_ssl else ("STARTTLS" if settings.smtp_use_tls else "unverschlüsselt")},
+        "smtp": _smtp_info(),
     })
+
+
+def _smtp_info() -> dict:
+    return {"host": settings.smtp_host, "port": settings.smtp_port, "sender": mail_module.sender_address(),
+            "mode": "SSL" if settings.smtp_ssl else ("STARTTLS" if settings.smtp_use_tls else "unverschlüsselt")}
 
 
 def _set_pause(db: Session, paused: bool) -> None:
@@ -350,17 +354,16 @@ def mail_test(request: Request, db: Session = Depends(get_db)):
     if not _admin(request, db):
         return _login_redirect()
     try:
-        mail_module.send_mail(settings.admin_email, i18n.t(i18n.DEFAULT_LANG, "admin.mail.test_subject"),
-                  i18n.t(i18n.DEFAULT_LANG, "admin.mail.test_body"))
-        result = {"ok": True, "error": ""}
+        reply = mail_module.send_mail(settings.admin_email, i18n.t(i18n.DEFAULT_LANG, "admin.mail.test_subject"),
+                                      i18n.t(i18n.DEFAULT_LANG, "admin.mail.test_body"))
+        result = {"ok": True, "error": "", "reply": (reply or "")[:300]}
     except Exception as exc:  # Ursache anzeigen (Zertifikat, Zugangsdaten, Timeout ...)
-        result = {"ok": False, "error": f"{exc.__class__.__name__}: {exc}"[:300]}
+        result = {"ok": False, "error": f"{exc.__class__.__name__}: {exc}"[:300], "reply": ""}
     audit(db, "smtp_test", "ok" if result["ok"] else "fehlgeschlagen")
     stats = collect_stats(db)
     return render(request, "admin_mail.html", {
         "stats": stats, "failed_by_org": [], "flash": None, "test_result": result, "section": "mail",
-        "smtp": {"host": settings.smtp_host, "port": settings.smtp_port,
-                 "mode": "SSL" if settings.smtp_ssl else ("STARTTLS" if settings.smtp_use_tls else "unverschlüsselt")},
+        "smtp": _smtp_info(),
     })
 
 

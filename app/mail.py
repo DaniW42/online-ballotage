@@ -3,6 +3,7 @@ import logging
 import queue
 import smtplib
 import ssl
+from email.utils import formataddr
 import threading
 import time
 from email.message import EmailMessage
@@ -39,10 +40,23 @@ class MailThrottle:
 throttle = MailThrottle(settings.mail_min_interval_seconds)
 
 
-def send_mail(to: str, subject: str, body: str) -> None:
+def sender_address() -> str:
+    """'Name <adresse>' für den From-Header (Umlaute werden korrekt kodiert)."""
+    name = settings.smtp_from_name.strip() or t(i18n_default_lang(), "brand.name")
+    return formataddr((" ".join(name.split()), settings.smtp_from))
+
+
+def i18n_default_lang() -> str:
+    from .i18n import DEFAULT_LANG
+    return DEFAULT_LANG
+
+
+def send_mail(to: str, subject: str, body: str) -> str | None:
+    """Übergibt die Mail an den SMTP-Server. Gibt dessen Antwort auf die Nachricht zurück
+    (z. B. "250 OK: queued as …"). Annahme durch den Server heißt NICHT Zustellung."""
     throttle.wait()
     msg = EmailMessage()
-    msg["From"] = settings.smtp_from
+    msg["From"] = sender_address()
     msg["To"] = to
     # Zeilenumbrüche im Betreff wären Header-Injection / werfen im Hintergrundtask.
     msg["Subject"] = " ".join(subject.split())
@@ -63,7 +77,21 @@ def send_mail(to: str, subject: str, body: str) -> None:
         # Zugangsdaten nur mitschicken, wenn welche gesetzt sind.
         if settings.smtp_user:
             smtp.login(settings.smtp_user, settings.smtp_password)
+        # Antwort des Servers auf DATA mitschneiden (enthält oft eine Queue-ID)
+        replies = []
+        original_data = getattr(smtp, "data", None)
+        if original_data is not None:
+            def data(message, _orig=original_data):
+                reply = _orig(message)
+                replies.append(reply)
+                return reply
+            smtp.data = data
         smtp.send_message(msg)
+    if replies:
+        code, text = replies[-1]
+        text = text.decode(errors="replace") if isinstance(text, bytes) else str(text)
+        return f"{code} {text}"
+    return None
 
 
 PRIORITY_LOGIN = 0      # Login-Links und Verifizierung: nie hinter einer großen Einladungsrunde

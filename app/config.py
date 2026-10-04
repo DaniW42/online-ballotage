@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     smtp_user: str
     smtp_password: str
     smtp_from: str
+    smtp_from_name: str = ""      # Absendername; leer = Name der Seite (brand.name)
     smtp_use_tls: bool = True      # STARTTLS (Port 587), Zertifikat wird geprüft
     smtp_ssl: bool = False         # implizites TLS (Port 465) statt STARTTLS
     smtp_timeout_seconds: int = 30

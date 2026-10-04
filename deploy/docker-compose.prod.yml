@@ -52,6 +52,7 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:?SMTP_FROM fehlt}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       SMTP_SSL: ${SMTP_SSL:-false}
       TIMEZONE: ${TIMEZONE:-Europe/Berlin}

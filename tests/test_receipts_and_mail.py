@@ -124,3 +124,50 @@ def test_targeted_login_lockout_is_not_possible(anon, outbox, monkeypatch):
     monkeypatch.setattr(main, "_client_ip", lambda request: "1.2.3.4")      # das Opfer selbst
     anon.post("/login", data={"email": "opfer@loge.test"})
     assert attacker_mails == 5 and len(outbox.to("opfer@loge.test")) == 6
+
+
+class ReplyingSMTP:
+    """Simuliert einen Server, der auf DATA mit einer Queue-ID antwortet."""
+    sent = []
+
+    def __init__(self, *a, **k):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def starttls(self, context=None):
+        pass
+
+    def login(self, *a):
+        pass
+
+    def data(self, message):
+        return (250, b"2.0.0 OK: queued as ABC123")
+
+    def send_message(self, msg):
+        ReplyingSMTP.sent.append(msg)
+        self.data(msg.as_bytes())
+
+
+def test_send_mail_returns_server_reply_and_uses_sender_name(monkeypatch):
+    ReplyingSMTP.sent = []
+    monkeypatch.setattr(smtplib, "SMTP", ReplyingSMTP)
+    monkeypatch.setattr(mail.throttle, "interval", 0)
+    monkeypatch.setattr(mail.settings, "smtp_from", "noreply@ballotage.test")
+    monkeypatch.setattr(mail.settings, "smtp_from_name", "Loge Zur Eintracht Ö")
+    reply = ORIGINAL_SEND_MAIL("a@x.test", "S", "B")
+    assert reply == "250 2.0.0 OK: queued as ABC123"
+    from email.utils import parseaddr
+    name, addr = parseaddr(str(ReplyingSMTP.sent[-1]["From"]))
+    assert addr == "noreply@ballotage.test" and name == "Loge Zur Eintracht Ö"
+
+
+def test_default_sender_name_is_site_name(monkeypatch):
+    monkeypatch.setattr(mail.settings, "smtp_from", "noreply@ballotage.test")
+    monkeypatch.setattr(mail.settings, "smtp_from_name", "")
+    from email.utils import parseaddr
+    assert parseaddr(mail.sender_address()) == ("ballotage.online", "noreply@ballotage.test")

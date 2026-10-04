@@ -7,11 +7,14 @@
 <h1>{{ t('admin.mail.title') }}</h1>
 {% if flash %}<div class="notice ok">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
 {% if test_result %}
-  {% if test_result.ok %}<div class="notice ok">{{ t('admin.mail.test_ok', to=cfg.admin_email) }}</div>
+  {% if test_result.ok %}<div class="notice ok"><p>{{ t('admin.mail.test_ok', to=cfg.admin_email) }}</p>
+    {% if test_result.reply %}<p>{{ t('admin.mail.test_reply') }} <code>{{ test_result.reply }}</code></p>{% endif %}
+    <p class="hint">{{ t('admin.mail.test_note') }}</p></div>
   {% else %}<div class="notice error"><p>{{ t('admin.mail.test_failed') }}</p><p><code>{{ test_result.error }}</code></p></div>{% endif %}
 {% endif %}
 <dl class="facts">
   <dt>{{ t('admin.mail.server') }}</dt><dd>{{ smtp.host }}:{{ smtp.port }} ({{ smtp.mode }})</dd>
+  <dt>{{ t('admin.mail.sender') }}</dt><dd>{{ smtp.sender }}</dd>
   <dt>{{ t('admin.mail.queue') }}</dt><dd>{{ stats.queue_size }} {% if stats.paused %}· <strong>{{ t('admin.dashboard.paused') }}</strong>{% endif %}</dd>
   <dt>{{ t('admin.mail.today') }}</dt><dd>{{ t('admin.mail.today_value', inv=stats.invites_today, login=stats.login_mails_today) }}</dd>
   <dt>{{ t('admin.mail.failed') }}</dt><dd>{{ t('admin.mail.failed_value', inv=stats.failed_invitations, res=stats.failed_result_mails) }}</dd>

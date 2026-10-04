@@ -316,7 +316,7 @@ def test_pause_survives_restart(admin, db):
 
 def test_smtp_test_mail_success_and_failure(admin, outbox):
     ok = admin.post("/admin/mail/test").text
-    assert "wurde übergeben" in ok and outbox.to(ADMIN)[-1].subject.startswith("Test-Mail")
+    assert "angenommen" in ok and "nicht zugestellt" in ok and outbox.to(ADMIN)[-1].subject.startswith("Test-Mail")
     outbox.fail_for = {ADMIN}
     failed = admin.post("/admin/mail/test").text
     assert "fehlgeschlagen" in failed and "SMTPException" in failed

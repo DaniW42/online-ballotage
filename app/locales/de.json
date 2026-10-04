@@ -1024,11 +1024,14 @@
       "clear": "Wartende Massenmails verwerfen",
       "clear_confirm": "Wartende Einladungen und Erinnerungen wirklich verwerfen?",
       "test": "Test-Mail an mich senden",
-      "test_ok": "Test-Mail an {to} wurde übergeben. Prüfe dein Postfach.",
+      "test_ok": "Der Mailserver hat die Test-Mail an {to} angenommen.",
       "test_failed": "Der Versand ist fehlgeschlagen:",
       "test_subject": "Test-Mail von ballotage.online",
       "test_body": "Dies ist eine Test-Mail. Der Mailversand funktioniert, inklusive Zertifikatsprüfung.",
-      "failed_by_org": "Fehlgeschlagene Einladungen je Loge"
+      "failed_by_org": "Fehlgeschlagene Einladungen je Loge",
+      "test_reply": "Antwort des Servers:",
+      "test_note": "Angenommen heißt nicht zugestellt: Ob die Mail ankommt, entscheidet der Mail-Anbieter (z. B. gesperrtes Konto, Spamfilter, nicht verifizierter Absender). Kommt nichts an, im Protokoll des Anbieters nach der Kennung aus der Server-Antwort suchen.",
+      "sender": "Absender"
     },
     "system": {
       "title": "System",
