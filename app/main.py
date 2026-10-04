@@ -1,8 +1,6 @@
 import asyncio
-import hashlib
 import logging
 import uuid
-from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
@@ -10,41 +8,44 @@ from urllib.parse import urlsplit
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import i18n
-from .auth import create_session_cookie, read_session, read_session_data, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
+from .auth import (
+    create_session_cookie, read_session, read_session_data, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE,
+    ADMIN_COOKIE, ADMIN_SESSION_MAX_AGE, create_admin_cookie, read_admin_cookie,
+)
 from .config import settings
-from .db import get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
+from .db import SessionLocal, get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
 from .mail import (
-    send_magic_link, send_verification_request, send_verification_result,
+    send_magic_link, send_admin_login, send_verification_request, send_verification_result,
     mail_queue, PRIORITY_LOGIN, PRIORITY_BULK,
 )
 from .ratelimit import limiter
 from .services import (
     finalize_due, abort_election, get_results, results_available, maintenance_loop,
     deliver_invitation, create_invitations, reissue_invitation, period_text, delete_election,
-    is_verified, purge_organization, invitations_last_24h, scramble_row_versions,
+    is_verified, invitations_last_24h, scramble_row_versions,
+    get_admin_state, audit, org_recipient_limit, decide_verification,
 )
-from .timeutil import utcnow, local_input_to_utc, to_input_value
+from . import admin
+from .timeutil import utcnow, local_input_to_utc
+from .web import templates, render, election_phase  # noqa: F401
 from .tokens import extract_emails, generate_token, hash_token, is_valid_email
 
 log = logging.getLogger("kugelung")
-
-# Cache-Busting für statische Dateien: Änderung am Inhalt = neue URL
-_static_dir = Path(__file__).parent / "static"
-STATIC_VERSION = hashlib.sha1(
-    b"".join(p.read_bytes() for p in sorted(_static_dir.rglob("*")) if p.is_file())
-).hexdigest()[:10]
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not settings.legal_complete:
         log.warning("Impressum unvollständig: LEGAL_NAME/LEGAL_STREET/LEGAL_CITY/LEGAL_EMAIL setzen.")
+    db = SessionLocal()
+    try:
+        mail_queue.paused = get_admin_state(db).mail_paused  # Pause übersteht Neustarts
+    finally:
+        db.close()
     task = asyncio.create_task(maintenance_loop())
     yield
     task.cancel()
@@ -54,35 +55,7 @@ app = FastAPI(title="ballotage.online", lifespan=lifespan, docs_url=None, redoc_
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
-# ---------- Templates, Sprache ----------
-
-def _template_context(request: Request) -> dict:
-    lang = getattr(request.state, "lang", i18n.DEFAULT_LANG)
-    return {
-        "lang": lang,
-        "t": lambda key, **kw: i18n.t(lang, key, **kw),
-        "tl": lambda key: i18n.tl(lang, key),
-        "fmt_dt": lambda dt: i18n.fmt_datetime(lang, dt),
-        "fmt_date": lambda dt: i18n.fmt_date(lang, dt),
-        "languages": i18n.languages(),
-        "logged_in": read_session(request) is not None,
-        "cfg": settings,
-        "now_year": utcnow().year,
-        "static_v": STATIC_VERSION,
-        "phase": election_phase,
-        "input_dt": to_input_value,
-        "reminder_hours": settings.reminder_hours_before,
-        "base_url": settings.base_url,
-    }
-
-
-templates = Jinja2Templates(directory="app/templates", context_processors=[_template_context])
-templates.env.filters["md"] = i18n.render_md
-
-
-def render(request: Request, name: str, context: dict | None = None, status_code: int = 200):
-    return templates.TemplateResponse(request, name, context or {}, status_code=status_code)
-
+# ---------- Sprache ----------
 
 def _set_lang(request: Request, lang: str) -> None:
     if lang in i18n.CATALOGS:
@@ -178,8 +151,8 @@ def current_org(request: Request, db: Session) -> Organization | None:
     if not session:
         return None
     org = db.query(Organization).filter(Organization.id == session[0]).first()
-    # Abgemeldete Sitzungen (alte Version im Cookie) gelten nicht mehr
-    return org if org and org.session_version == session[1] else None
+    # Abgemeldete Sitzungen (alte Version im Cookie) und gesperrte Konten gelten nicht
+    return org if org and not org.blocked and org.session_version == session[1] else None
 
 
 # ---------- Öffentliche Seiten ----------
@@ -194,13 +167,6 @@ PUBLIC_PAGES = {
     "/impressum": "impressum.html",
     "/datenschutz": "privacy.html",
 }
-
-
-def election_phase(election: Election) -> str:
-    """Anzeigestatus: scheduled | open | finished | aborted ('open' erst ab Beginn)."""
-    if election.status == "open" and utcnow() < election.starts_at:
-        return "scheduled"
-    return election.status
 
 
 def _register_public(path: str, template: str):
@@ -266,6 +232,8 @@ def register_submit(
         return render(request, "register.html", {"error": "auth.invalid_email"}, 400)
     if not name or len(name) > 200:
         return render(request, "register.html", {"error": "auth.invalid_name"}, 400)
+    if settings.admin_email and email == settings.admin_email.lower():
+        return render(request, "register.html", {"error": "auth.reserved_email"}, 400)
     if not limiter.allow(f"ip:{_client_ip(request)}", settings.rate_limit_per_ip):
         return _too_many(request)
     org = db.query(Organization).filter(Organization.email == email).first()
@@ -280,7 +248,7 @@ def register_submit(
         org.name = name
         db.commit()
 
-    if _mail_allowed(request, email):
+    if not org.blocked and _mail_allowed(request, email):
         _send_magic_link(db, org, request.state.lang)
     # Gleiche Antwort für neue und bestehende Adressen (keine Enumeration)
     return render(request, "magic_sent.html",
@@ -306,7 +274,10 @@ def login_submit(
     org = db.query(Organization).filter(Organization.email == email).first()
     # Bewusst dieselbe Antwort, egal ob die Email existiert oder das
     # Limit pro Adresse greift (keine Enumeration, kein Mail-Bombing).
-    if org and _mail_allowed(request, email):
+    if settings.admin_email and email == settings.admin_email.lower():
+        if _mail_allowed(request, email):
+            _send_admin_link(db)  # Die Admin-Adresse meldet sich immer ins Admin-Portal an
+    elif org and not org.blocked and _mail_allowed(request, email):
         _send_magic_link(db, org, request.state.lang)
     return render(request, "magic_sent.html", {"email": email, "minutes": settings.magic_link_ttl_minutes})
 
@@ -322,6 +293,15 @@ def _send_magic_link(db: Session, org: Organization, lang: str):
     db.commit()
     url = f"{settings.base_url}/auth/{raw}"
     mail_queue.submit(PRIORITY_LOGIN, send_magic_link, org.email, url, lang)
+
+
+def _send_admin_link(db: Session):
+    raw, token_hash = generate_token()
+    db.add(MagicLink(org_id=None, admin=True, token_hash=token_hash,
+                     expires_at=utcnow() + timedelta(minutes=settings.magic_link_ttl_minutes)))
+    db.commit()
+    mail_queue.submit(PRIORITY_LOGIN, send_admin_login, settings.admin_email,
+                      f"{settings.base_url}/auth/{raw}", i18n.DEFAULT_LANG)
 
 
 def _valid_magic_link(db: Session, token: str, lock: bool = False) -> MagicLink | None:
@@ -348,9 +328,25 @@ def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
         return RedirectResponse("/login?error=expired", status_code=303)
 
     link.used_at = utcnow()
+    if link.admin:
+        if not settings.admin_email:
+            db.rollback()
+            return RedirectResponse("/login?error=expired", status_code=303)
+        state = get_admin_state(db)
+        db.commit()
+        audit(db, "admin_login")
+        response = RedirectResponse("/admin", status_code=303)
+        response.set_cookie(ADMIN_COOKIE, create_admin_cookie(state.session_version),
+                            max_age=ADMIN_SESSION_MAX_AGE, httponly=True, samesite="strict",
+                            secure=COOKIE_SECURE)
+        return response
     org = db.query(Organization).filter(Organization.id == link.org_id).first()
-    if org and org.confirmed_at is None:
+    if not org or org.blocked:
+        db.rollback()
+        return RedirectResponse("/login?error=expired", status_code=303)
+    if org.confirmed_at is None:
         org.confirmed_at = utcnow()
+    org.last_active_at = utcnow()
     db.commit()
 
     response = RedirectResponse("/dashboard", status_code=303)
@@ -372,8 +368,14 @@ def logout(request: Request, db: Session = Depends(get_db)):
     if org:
         org.session_version += 1
         db.commit()
+    if read_admin_cookie(request) is not None:
+        state = get_admin_state(db)
+        if read_admin_cookie(request) == state.session_version:
+            state.session_version += 1  # alle Admin-Sitzungen beenden
+            db.commit()
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(SESSION_COOKIE)
+    response.delete_cookie(ADMIN_COOKIE)
     return response
 
 
@@ -491,9 +493,9 @@ def new_election_submit(
     # Server-seitig erneut extrahieren/validieren - Client-Liste nie blind
     # übernehmen, unabhängig davon, was das Frontend vorbereitet hat.
     emails = extract_emails(emails_raw)
-    if len(emails) > settings.max_recipients:
-        return _form_error(request, org, "election.new.err_max_recipients", emails[:settings.max_recipients],
-                           n=settings.max_recipients)
+    limit = org_recipient_limit(org)
+    if len(emails) > limit:
+        return _form_error(request, org, "election.new.err_max_recipients", emails[:limit], n=limit)
     if len(emails) < settings.min_voters:
         return _form_error(request, org, "election.new.err_min_voters", emails, n=settings.min_voters)
 
@@ -527,6 +529,7 @@ def new_election_submit(
     # Beginn in der Zukunft: Einladungen erst zum Beginn versenden
     scheduled = starts > now + timedelta(minutes=1)
 
+    org.last_active_at = utcnow()
     election = Election(
         org_id=org.id,
         title=title,
@@ -643,7 +646,7 @@ def election_add_voters(
     existing = db.query(func.count(Invitation.id)).filter(Invitation.election_id == election.id).scalar()
     already = {e for (e,) in db.query(Invitation.email).filter(Invitation.election_id == election.id)}
     fresh = len([e for e in new_emails if e not in already])
-    if existing + fresh > settings.max_recipients:
+    if existing + fresh > org_recipient_limit(org):
         db.rollback()
         return RedirectResponse(f"/elections/{election_id}?msg=max_recipients", status_code=303)
     if not is_verified(org) and (
@@ -858,13 +861,7 @@ def verify_decide(token: str, decision: str, request: Request,
     org = _org_for_review(db, token)
     if not org or decision not in ("approve", "reject"):
         return render(request, "error.html", {"message_key": "verification.review.invalid", "status": 404}, 404)
-    name, email = org.name, org.email
-    if decision == "approve":
-        org.verified = True
-        org.verification_token_hash = None
-        db.commit()
-    else:
-        purge_organization(db, org)  # Loge samt aller Daten löschen
+    name, email = decide_verification(db, org, decision == "approve")  # Ablehnen löscht die Loge
     mail_queue.submit(PRIORITY_LOGIN, send_verification_result, email, name, decision == "approve",
                       i18n.DEFAULT_LANG)
     return render(request, "verify_done.html", {"approved": decision == "approve", "org_name": name})
@@ -980,3 +977,6 @@ def vote_submit(token: str, request: Request, choice: str = Form(...), db: Sessi
 
     code = vote.id if election.receipts_enabled else None
     return render(request, "vote_done.html", {"election": election, "code": code})
+
+
+app.include_router(admin.router)

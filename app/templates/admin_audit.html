@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.audit.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.audit.title') }}</h1>
+<p class="hint">{{ t('admin.audit.lead') }}</p>
+<div class="table-wrap"><table>
+  <tr><th>{{ t('admin.audit.when') }}</th><th>{{ t('admin.audit.action') }}</th><th>{{ t('admin.audit.target') }}</th></tr>
+  {% for e in entries %}<tr><td>{{ fmt_dt(e.at) }}</td><td>{{ t('admin.audit.actions.' ~ e.action) }}</td><td>{{ e.target or '–' }}</td></tr>{% endfor %}
+</table></div>
+</div>
+{% endblock %}

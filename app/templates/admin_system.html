@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.system.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.system.title') }}</h1>
+<dl class="facts">
+  <dt>{{ t('admin.system.version') }}</dt><dd>{{ version }}</dd>
+  <dt>{{ t('admin.system.migration') }}</dt><dd><code>{{ revision }}</code></dd>
+  <dt>{{ t('admin.system.maintenance') }}</dt>
+  <dd>{% if last_maintenance %}{{ fmt_dt(last_maintenance) }} ({{ t('admin.system.seconds_ago', n=seconds_ago) }}){% else %}{{ t('admin.system.never') }}{% endif %}</dd>
+  <dt>{{ t('admin.system.sessions') }}</dt><dd>{{ t('admin.system.sessions_value', days=cfg.session_days, hours=cfg.admin_session_hours) }}</dd>
+</dl>
+<h2>{{ t('admin.system.checks') }}</h2>
+<div class="table-wrap"><table>
+  {% for key, ok in checks %}
+  <tr><td>{% if ok %}✓{% else %}⚠{% endif %}</td><td>{{ t('admin.system.check.' ~ key) }}</td><td class="hint">{% if not ok %}{{ t('admin.system.hint.' ~ key) }}{% endif %}</td></tr>
+  {% endfor %}
+</table></div>
+</div>
+{% endblock %}

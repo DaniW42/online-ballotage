@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.mail.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.mail.title') }}</h1>
+{% if flash %}<div class="notice ok">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
+{% if test_result %}
+  {% if test_result.ok %}<div class="notice ok">{{ t('admin.mail.test_ok', to=cfg.admin_email) }}</div>
+  {% else %}<div class="notice error"><p>{{ t('admin.mail.test_failed') }}</p><p><code>{{ test_result.error }}</code></p></div>{% endif %}
+{% endif %}
+<dl class="facts">
+  <dt>{{ t('admin.mail.server') }}</dt><dd>{{ smtp.host }}:{{ smtp.port }} ({{ smtp.mode }})</dd>
+  <dt>{{ t('admin.mail.queue') }}</dt><dd>{{ stats.queue_size }} {% if stats.paused %}· <strong>{{ t('admin.dashboard.paused') }}</strong>{% endif %}</dd>
+  <dt>{{ t('admin.mail.today') }}</dt><dd>{{ t('admin.mail.today_value', inv=stats.invites_today, login=stats.login_mails_today) }}</dd>
+  <dt>{{ t('admin.mail.failed') }}</dt><dd>{{ t('admin.mail.failed_value', inv=stats.failed_invitations, res=stats.failed_result_mails) }}</dd>
+</dl>
+<h2>{{ t('admin.mail.controls') }}</h2>
+<p class="hint">{{ t('admin.mail.controls_hint') }}</p>
+<div class="actions">
+  {% if stats.paused %}
+  <form method="post" action="/admin/mail/resume" class="inline"><button type="submit">{{ t('admin.mail.resume') }}</button></form>
+  {% else %}
+  <form method="post" action="/admin/mail/pause" class="inline"><button type="submit" class="secondary">{{ t('admin.mail.pause') }}</button></form>
+  {% endif %}
+  <form method="post" action="/admin/mail/clear" class="inline" data-confirm="{{ t('admin.mail.clear_confirm') }}"><button type="submit" class="secondary">{{ t('admin.mail.clear') }}</button></form>
+  <form method="post" action="/admin/mail/test" class="inline"><button type="submit">{{ t('admin.mail.test') }}</button></form>
+</div>
+{% if failed_by_org %}
+<h2>{{ t('admin.mail.failed_by_org') }}</h2>
+<div class="table-wrap"><table>
+  <tr><th>{{ t('admin.orgs.name') }}</th><th>{{ t('admin.mail.failed') }}</th></tr>
+  {% for name, org_id, n in failed_by_org %}<tr><td><a href="/admin/orgs/{{ org_id }}">{{ name }}</a></td><td>{{ n }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+</div>
+<script src="/static/js/confirm.js?v={{ static_v }}"></script>
+{% endblock %}

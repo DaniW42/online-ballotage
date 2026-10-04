@@ -66,6 +66,17 @@ der Admin erhält eine Mail mit geheimem Link, über den er die Loge freischalte
 löscht. Ohne `ADMIN_EMAIL` ist die Verifizierung aus. Notfalls per CLI:
 `docker compose exec app python -m app.cli verify loge@example.org`.
 
+**Admin-Portal (`/admin`):** Wer sich auf der Login-Seite mit der `ADMIN_EMAIL` anmeldet, landet im
+Admin-Portal (eigene Sitzung, `ADMIN_SESSION_HOURS`=6, serverseitig widerrufbar; die Adresse kann nicht als
+Loge registriert werden). Es bietet Verifizierungs-Warteschlange, Logen-Übersicht (suchen, verifizieren,
+sperren, löschen, Empfängergrenze je Loge), Kennzahlen, Mail-Steuerung (Massenmails anhalten/verwerfen,
+SMTP-Testmail), Systemstatus mit Konfigurations-Check, Datenschutz-Anfragen (Auskunft/Löschung je
+E-Mail-Adresse) und ein Admin-Protokoll (12 Monate). Es zeigt **nie** Abstimmungstitel, Teilnehmer,
+Stimmen oder Ergebnisse. Sperren und Löschen laufen über Bestätigungsseiten, Löschen mit Namenseingabe.
+Ohne `ADMIN_EMAIL` gibt es kein Portal.
+
+**Sitzungen:** Logen 10 Tage (`SESSION_DAYS`), Admin 6 Stunden; „Abmelden“ beendet alle Sitzungen des Kontos.
+
 **Mailversand:** Ein eigener Sender-Thread verschickt alle Mails, global höchstens eine pro Sekunde
 (`MAIL_MIN_INTERVAL_SECONDS`); Login-Links überholen wartende Einladungen. Die Verbindung zum
 Mailserver nutzt STARTTLS (`SMTP_USE_TLS`) oder implizites TLS (`SMTP_SSL`) **mit Zertifikatsprüfung**

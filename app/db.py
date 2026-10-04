@@ -30,6 +30,11 @@ class Organization(Base):
     # Wird beim Abmelden erhöht: macht alle bisher ausgestellten Sitzungs-Cookies ungültig
     # (serverseitige Abmeldung auf allen Geräten).
     session_version = Column(Integer, default=0, nullable=False, server_default="0")
+    # Vom Admin gesperrt: kein Login, keine neuen Mails für diese Loge
+    blocked = Column(Boolean, default=False, nullable=False, server_default="false")
+    last_active_at = Column(DateTime, nullable=True)
+    # Individuelle Obergrenze für Empfänger pro Abstimmung (sonst MAX_RECIPIENTS)
+    max_recipients = Column(Integer, nullable=True)
     # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
     # Kann jederzeit gelöscht werden (Datensparsamkeit).
     saved_recipients = Column(JSON, default=list, nullable=False)
@@ -49,7 +54,9 @@ class MagicLink(Base):
     __tablename__ = "magic_links"
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=new_uuid)
-    org_id = Column(UUID(as_uuid=False), ForeignKey("organizations.id"), nullable=False)
+    # org_id ist leer bei Admin-Login-Links
+    org_id = Column(UUID(as_uuid=False), ForeignKey("organizations.id"), nullable=True)
+    admin = Column(Boolean, default=False, nullable=False, server_default="false")
     token_hash = Column(String, nullable=False, unique=True, index=True)
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)
@@ -130,6 +137,25 @@ class Vote(Base):
     choice = Column(String, nullable=False)
     # Bewusst KEIN Zeitstempel (siehe Invitation.used) und keine
     # Reihenfolge-Information; die ID ist ein zufälliges UUIDv4.
+
+
+class AdminState(Base):
+    """Einzelne Zeile (id=1): Zustand des Admin-Portals."""
+    __tablename__ = "admin_state"
+
+    id = Column(Integer, primary_key=True, default=1)
+    session_version = Column(Integer, default=0, nullable=False, server_default="0")
+    mail_paused = Column(Boolean, default=False, nullable=False, server_default="false")
+
+
+class AuditLog(Base):
+    """Protokoll der Admin-Aktionen. Nur Metadaten (Aktion, Ziel), nie Abstimmungsinhalte."""
+    __tablename__ = "audit_log"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=new_uuid)
+    at = Column(DateTime, default=utcnow, nullable=False, index=True)
+    action = Column(String, nullable=False)
+    target = Column(String, nullable=True)
 
 
 def get_db():

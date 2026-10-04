@@ -58,12 +58,13 @@ def clean_state():
     db = SessionLocal()
     db.execute(
         __import__("sqlalchemy").text(
-            "TRUNCATE votes, invitations, magic_links, elections, organizations CASCADE"
+            "TRUNCATE votes, invitations, magic_links, elections, organizations, admin_state, audit_log CASCADE"
         )
     )
     db.commit()
     db.close()
     limiter.hits.clear()
+    mail_module.mail_queue.paused = False
 
 
 class Outbox(list):

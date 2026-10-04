@@ -78,6 +78,8 @@ class MailQueue:
     def __init__(self):
         self.queue = queue.PriorityQueue()
         self.synchronous = False  # Tests: sofort ausführen
+        self.paused = False       # hält Massenmails (Einladungen/Erinnerungen) an, Login-Mails laufen weiter
+        self._held: list = []
         self._seq = itertools.count()
         self._thread = None
         self._lock = threading.Lock()
@@ -92,9 +94,43 @@ class MailQueue:
                 self._thread.start()
         self.queue.put((priority, next(self._seq), func, args))
 
+    def size(self) -> int:
+        return self.queue.qsize() + len(self._held)
+
+    def resume(self) -> None:
+        with self._lock:
+            self.paused = False
+            held, self._held = self._held, []
+        for item in held:
+            self.queue.put(item)
+
+    def clear_bulk(self) -> int:
+        """Verwirft wartende Massenmails (Login-Mails bleiben). Gibt die Anzahl zurück."""
+        dropped = len(self._held)
+        self._held = []
+        keep = []
+        while True:
+            try:
+                item = self.queue.get_nowait()
+            except queue.Empty:
+                break
+            self.queue.task_done()
+            if item[0] == PRIORITY_BULK:
+                dropped += 1
+            else:
+                keep.append(item)
+        for item in keep:
+            self.queue.put(item)
+        return dropped
+
     def _run(self) -> None:
         while True:
-            _, _, func, args = self.queue.get()
+            item = self.queue.get()
+            priority, _, func, args = item
+            if priority == PRIORITY_BULK and self.paused:
+                self._held.append(item)
+                self.queue.task_done()
+                continue
             try:
                 func(*args)
             except Exception:
@@ -142,6 +178,15 @@ def send_result_mail(to: str, title: str, reason: str, period: str, total: int, 
             reason=t(lang, f"mail.result.reason_{reason}"),
             period=period, voted=voted, total=total, block=result_block, link=link,
         ),
+    )
+
+
+def send_admin_login(to: str, link: str, lang: str = "de") -> None:
+    send_mail(
+        to=to,
+        subject=t(lang, "mail.admin_magic.subject"),
+        body=t(lang, "mail.admin_magic.body", link=link, minutes=settings.magic_link_ttl_minutes,
+               hours=settings.admin_session_hours),
     )
 
 

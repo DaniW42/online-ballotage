@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<p><a href="/admin/orgs">{{ t('admin.org.back') }}</a></p>
+<h1>{{ org.name }} <span class="status {{ 'open' if status == 'verified' else ('aborted' if status == 'blocked' else '') }}">{{ t('admin.status.' ~ status) }}</span></h1>
+{% if flash %}<div class="notice ok">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
+<dl class="facts">
+  <dt>{{ t('admin.org.login_email') }}</dt><dd>{{ org.email }}</dd>
+  <dt>{{ t('admin.orgs.created') }}</dt><dd>{{ fmt_dt(org.created_at) }}</dd>
+  <dt>{{ t('admin.orgs.last_active') }}</dt><dd>{% if org.last_active_at %}{{ fmt_dt(org.last_active_at) }}{% else %}–{% endif %}</dd>
+  <dt>{{ t('admin.org.elections') }}</dt><dd>{{ t('admin.org.elections_split', open=by_status.get('open', 0), finished=by_status.get('finished', 0), aborted=by_status.get('aborted', 0)) }}</dd>
+  <dt>{{ t('admin.org.invitations') }}</dt><dd>{{ invitations }}</dd>
+  {% if org.contact_name %}<dt>{{ t('admin.verifications.contact') }}</dt><dd>{{ org.contact_name }} · {{ org.contact_email }}</dd>
+  <dt>{{ t('admin.verifications.website') }}</dt><dd>{{ org.contact_website or '–' }}</dd>
+  <dt>{{ t('admin.verifications.phone') }}</dt><dd>{{ org.contact_phone or '–' }}</dd>{% endif %}
+</dl>
+<p class="hint">{{ t('admin.org.privacy_note') }}</p>
+
+<h2>{{ t('admin.org.actions') }}</h2>
+<div class="actions">
+  {% if org.verified %}
+  <form method="post" action="/admin/orgs/{{ org.id }}/unverify" class="inline"><button type="submit" class="secondary">{{ t('admin.org.unverify') }}</button></form>
+  {% else %}
+  <form method="post" action="/admin/orgs/{{ org.id }}/verify" class="inline"><button type="submit">{{ t('admin.org.verify') }}</button></form>
+  {% endif %}
+  <a class="btn secondary" href="/admin/orgs/{{ org.id }}/block">{% if org.blocked %}{{ t('admin.org.unblock') }}{% else %}{{ t('admin.org.block') }}{% endif %}</a>
+  <a class="btn secondary" href="/admin/orgs/{{ org.id }}/delete">{{ t('admin.org.delete') }}</a>
+</div>
+
+<h2>{{ t('admin.org.limit_title') }}</h2>
+<form method="post" action="/admin/orgs/{{ org.id }}/limit" class="card-form">
+  <label for="max_recipients">{{ t('admin.org.limit_label') }}</label>
+  <input type="text" id="max_recipients" name="max_recipients" inputmode="numeric" value="{{ org.max_recipients or '' }}" placeholder="{{ cfg.max_recipients }}">
+  <div class="hint">{{ t('admin.org.limit_hint', n=cfg.max_recipients) }}</div>
+  <div class="actions"><button type="submit" class="secondary">{{ t('common.save') }}</button></div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.privacy.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.privacy.title') }}</h1>
+<p>{{ t('admin.privacy.lead') }}</p>
+{% if flash %}<div class="notice {{ 'error' if flash == 'bad_confirmation' else 'ok' }}">{{ t('admin.flash.' ~ flash) }}</div>{% endif %}
+<form method="get" action="/admin/privacy" class="filters">
+  <input type="email" name="email" value="{{ email }}" placeholder="name@example.org" required aria-label="{{ t('admin.privacy.email') }}">
+  <button type="submit">{{ t('admin.privacy.search') }}</button>
+</form>
+{% if invalid %}<div class="notice error">{{ t('admin.privacy.invalid') }}</div>{% endif %}
+{% if result %}
+  {% if not result.found %}<div class="notice ok">{{ t('admin.privacy.none') }}</div>{% else %}
+  <h2>{{ t('admin.privacy.found') }}</h2>
+  <ul>
+    {% for o in result.accounts %}<li>{{ t('admin.privacy.account') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a> ({{ t('admin.status.' ~ ('blocked' if o.blocked else ('verified' if o.verified else 'testmode'))) }})</li>{% endfor %}
+    {% for o in result.contacts %}<li>{{ t('admin.privacy.contact') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a></li>{% endfor %}
+    {% for status, n in result.invitations.items() %}<li>{{ t('admin.privacy.invitations', n=n, status=t('dashboard.status.' ~ status)) }}</li>{% endfor %}
+    {% for o in result.lists %}<li>{{ t('admin.privacy.list') }}: <a href="/admin/orgs/{{ o.id }}">{{ o.name }}</a></li>{% endfor %}
+  </ul>
+  <p class="hint">{{ t('admin.privacy.explain') }}</p>
+  <form method="post" action="/admin/privacy/erase" class="card-form">
+    <input type="hidden" name="email" value="{{ email }}">
+    <label for="confirm_email">{{ t('admin.privacy.confirm_label', email=email) }}</label>
+    <input type="email" id="confirm_email" name="confirm_email" required autocomplete="off">
+    <div class="actions"><button type="submit" class="danger">{{ t('admin.privacy.erase') }}</button></div>
+  </form>
+  {% endif %}
+{% endif %}
+</div>
+{% endblock %}

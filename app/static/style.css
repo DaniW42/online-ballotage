@@ -216,3 +216,14 @@ dl.facts dt { color: var(--muted); } dl.facts dd { margin: 0; }
 .badge.testmode { background: var(--accent); }
 .btn.small-btn { padding: .4rem .9rem; font-size: .9rem; }
 @media (prefers-color-scheme: dark) { .badge.testmode { color: var(--bg); } }
+
+/* Admin-Portal */
+.subnav { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 1.5rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
+.subnav a { color: var(--muted); text-decoration: none; padding: 4px 2px; }
+.subnav a[aria-current="page"], .subnav a:hover { color: var(--fg); text-decoration: underline; }
+.kpis { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 1.5rem 0; }
+.kpi { font: 600 2.2rem var(--serif); line-height: 1; margin-bottom: .3rem; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 1rem 0; }
+.filters input, .filters select { width: auto; flex: 1 1 220px; }
+.filters button { margin: 0; }
+.stack.card { margin-bottom: 1.2rem; }

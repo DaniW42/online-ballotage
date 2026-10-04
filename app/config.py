@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     smtp_ssl: bool = False         # implizites TLS (Port 465) statt STARTTLS
     smtp_timeout_seconds: int = 30
 
+    # Sitzungsdauer: normale Konten in Tagen, Admin-Portal in Stunden
+    session_days: int = 10
+    admin_session_hours: int = 6
+
     # Magic Links: Gültigkeitsdauer in Minuten
     magic_link_ttl_minutes: int = 15
 

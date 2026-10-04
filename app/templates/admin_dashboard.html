@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.dashboard.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.dashboard.title') }}</h1>
+{% if stats.pending_verifications %}<div class="notice testmode"><a href="/admin/verifications">{{ t('admin.dashboard.pending', n=stats.pending_verifications) }}</a></div>{% endif %}
+{% if stats.failed_result_mails or stats.failed_invitations %}<div class="notice error"><a href="/admin/mail">{{ t('admin.dashboard.problems', inv=stats.failed_invitations, res=stats.failed_result_mails) }}</a></div>{% endif %}
+<div class="kpis">
+  <div class="card"><div class="kpi">{{ stats.orgs }}</div><p>{{ t('admin.dashboard.orgs') }}</p>
+    <p class="hint">{{ t('admin.dashboard.orgs_split', verified=stats.status_counts.verified, testmode=stats.status_counts.testmode, unconfirmed=stats.status_counts.unconfirmed, blocked=stats.status_counts.blocked) }}</p></div>
+  <div class="card"><div class="kpi">{{ stats.phases.running }}</div><p>{{ t('admin.dashboard.running') }}</p>
+    <p class="hint">{{ t('admin.dashboard.elections_split', scheduled=stats.phases.scheduled, finished=stats.phases.finished, aborted=stats.phases.aborted) }}</p></div>
+  <div class="card"><div class="kpi">{{ stats.invites_today }}</div><p>{{ t('admin.dashboard.invites_today') }}</p>
+    <p class="hint">{{ t('admin.dashboard.login_mails', n=stats.login_mails_today) }}</p></div>
+  <div class="card"><div class="kpi">{{ stats.queue_size }}</div><p>{{ t('admin.dashboard.queue') }}</p>
+    <p class="hint">{% if stats.paused %}{{ t('admin.dashboard.paused') }}{% else %}{{ t('admin.dashboard.active') }}{% endif %}</p></div>
+</div>
+<h2>{{ t('admin.dashboard.weeks') }}</h2>
+<div class="table-wrap"><table>
+  <tr><th>{{ t('admin.dashboard.week_of') }}</th><th>{{ t('admin.dashboard.registrations') }}</th></tr>
+  {% for start, count in stats.weeks %}<tr><td>{{ fmt_date(start) }}</td><td>{{ count }}</td></tr>{% endfor %}
+</table></div>
+<p class="hint">{{ t('admin.dashboard.privacy_note') }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.confirm.' ~ action ~ '.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow">
+<h1>{{ t('admin.confirm.' ~ action ~ '.title') }}</h1>
+{% if bad %}<div class="notice error">{{ t('admin.flash.bad_confirmation') }}</div>{% endif %}
+<div class="notice error">
+  <p>{{ t('admin.confirm.org', name=org.name, email=org.email) }}</p>
+  <ul>{% for line in tl('admin.confirm.' ~ action ~ '.consequences') %}<li>{{ line|md|replace('<p>', '')|replace('</p>', '')|safe }}</li>{% endfor %}</ul>
+  {% if action == 'delete' %}<p>{{ t('admin.confirm.delete.elections', n=elections) }}</p>{% endif %}
+</div>
+<form method="post" action="/admin/orgs/{{ org.id }}/{{ 'delete' if action == 'delete' else 'block' }}" class="card-form">
+  {% if typed %}
+  <input type="hidden" name="notify" value="{{ '1' if notify else '' }}">
+  <label for="confirm_name">{{ t('admin.confirm.type_name', name=org.name) }}</label>
+  <input type="text" id="confirm_name" name="confirm_name" required autocomplete="off">
+  {% endif %}
+  <div class="actions">
+    <button type="submit" class="danger">{{ t('admin.confirm.' ~ action ~ '.submit') }}</button>
+    <a class="btn secondary" href="/admin/orgs/{{ org.id }}">{{ t('admin.confirm.cancel') }}</a>
+  </div>
+</form>
+</div>
+{% endblock %}

@@ -9,7 +9,9 @@ from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .db import SessionLocal, Election, Invitation, Vote, Organization, MagicLink
+from .db import (
+    SessionLocal, Election, Invitation, Vote, Organization, MagicLink, AdminState, AuditLog,
+)
 from .mail import send_result_mail, send_vote_invitation, mail_queue, PRIORITY_BULK
 from .tokens import generate_token
 from .i18n import fmt_datetime
@@ -173,6 +175,38 @@ def invitations_last_24h(db: Session, org_id: str) -> int:
     )
 
 
+def get_admin_state(db: Session) -> AdminState:
+    state = db.query(AdminState).filter(AdminState.id == 1).first()
+    if not state:
+        state = AdminState(id=1)
+        db.add(state)
+        db.commit()
+    return state
+
+
+def audit(db: Session, action: str, target: str | None = None) -> None:
+    """Admin-Aktion protokollieren (nur Metadaten, keine Abstimmungsinhalte)."""
+    db.add(AuditLog(action=action, target=target))
+    db.commit()
+
+
+def org_recipient_limit(org: Organization) -> int:
+    return org.max_recipients or settings.max_recipients
+
+
+def decide_verification(db: Session, org: Organization, approve: bool) -> tuple[str, str]:
+    """Verifizierungsantrag entscheiden. Bei Ablehnung wird die Loge samt Daten gelöscht.
+    Gibt (Name, E-Mail) für die Benachrichtigung zurück."""
+    name, email = org.name, org.email
+    if approve:
+        org.verified = True
+        org.verification_token_hash = None
+        db.commit()
+    else:
+        purge_organization(db, org)
+    return name, email
+
+
 def is_verified(org: Organization) -> bool:
     """Ohne ADMIN_EMAIL ist die Verifizierung ausgeschaltet: alle gelten als verifiziert."""
     return (not settings.admin_email) or org.verified
@@ -242,8 +276,9 @@ def send_pending_result_mails(db: Session) -> None:
     now = utcnow()
     pending = (
         db.query(Election)
+        .join(Organization, Organization.id == Election.org_id)
         .filter(Election.status == "finished", Election.result_mail_sent.is_(False),
-                Election.result_mail_failed.is_(False))
+                Election.result_mail_failed.is_(False), Organization.blocked.is_(False))
         .all()
     )
     for election in pending:
@@ -282,8 +317,9 @@ def send_due_reminders(db: Session) -> None:
     now = utcnow()
     due = (
         db.query(Election)
+        .join(Organization, Organization.id == Election.org_id)
         .filter(Election.status == "open", Election.reminder_enabled.is_(True),
-                Election.reminder_sent.is_(False))
+                Election.reminder_sent.is_(False), Organization.blocked.is_(False))
         .all()
     )
     for election in due:
@@ -315,8 +351,9 @@ def dispatch_due_invitations(db: Session) -> None:
     now = utcnow()
     due = (
         db.query(Election)
+        .join(Organization, Organization.id == Election.org_id)
         .filter(Election.status == "open", Election.invitations_dispatched.is_(False),
-                Election.starts_at <= now)
+                Election.starts_at <= now, Organization.blocked.is_(False))
         .all()
     )
     for election in due:
@@ -402,8 +439,19 @@ def _finalize_all_due(db: Session) -> None:
         finalize_due(db, election_id)
 
 
+LAST_MAINTENANCE = {"at": None}
+
+
+AUDIT_RETENTION_DAYS = 365
+
+
+def purge_audit_log(db: Session) -> None:
+    db.query(AuditLog).filter(AuditLog.at < utcnow() - timedelta(days=AUDIT_RETENTION_DAYS)).delete()
+    db.commit()
+
+
 MAINTENANCE_STEPS = (_finalize_all_due, dispatch_due_invitations, send_pending_result_mails,
-                     send_due_reminders, purge_expired, mark_stalled_sends)
+                     send_due_reminders, purge_expired, mark_stalled_sends, purge_audit_log)
 
 
 def run_maintenance() -> None:
@@ -417,6 +465,7 @@ def run_maintenance() -> None:
             except Exception:
                 log.exception("Wartungsschritt %s fehlgeschlagen", step.__name__)
                 db.rollback()
+        LAST_MAINTENANCE["at"] = utcnow()
     finally:
         db.close()
 

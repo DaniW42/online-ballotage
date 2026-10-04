@@ -65,11 +65,12 @@ def _globals() -> dict[str, str]:
         "reminder_hours": str(settings.reminder_hours_before),
         "reminder_hours_plus": str(settings.reminder_hours_before + 1),
         "magic_minutes": str(settings.magic_link_ttl_minutes),
+        "session_days": str(settings.session_days),
     }
 
 
 _GLOBAL_PLACEHOLDER = re.compile(r"\{(min_voters_word|min_voters|test_max_voters_word|test_daily_word|"
-                                 r"retention_days|reminder_hours_plus|reminder_hours|magic_minutes)\}")
+                                 r"retention_days|reminder_hours_plus|reminder_hours|magic_minutes|session_days)\}")
 
 
 def fill_globals(value):

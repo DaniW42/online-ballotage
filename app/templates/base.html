@@ -28,7 +28,10 @@
         <a href="/faq"{% if request.url.path == '/faq' %} aria-current="page"{% endif %}>{{ t('nav.faq') }}</a>
       </nav>
       <div class="header-actions">
-        {% if logged_in %}
+        {% if is_admin %}
+          <a href="/admin">{{ t('nav.admin') }}</a>
+          <form method="post" action="/logout" class="inline"><button type="submit" class="linkbtn">{{ t('nav.logout') }}</button></form>
+        {% elif logged_in %}
           <a href="/dashboard">{{ t('nav.dashboard') }}</a>
           <a href="/account">{{ t('nav.account') }}</a>
           <form method="post" action="/logout" class="inline"><button type="submit" class="linkbtn">{{ t('nav.logout') }}</button></form>

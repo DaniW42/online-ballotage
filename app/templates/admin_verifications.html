@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.verifications.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.verifications.title') }}</h1>
+{% if not pending %}<p>{{ t('admin.verifications.empty') }}</p>{% endif %}
+{% for org in pending %}
+<div class="card stack">
+  <h3><a href="/admin/orgs/{{ org.id }}">{{ org.name }}</a></h3>
+  <dl class="facts">
+    <dt>{{ t('admin.org.login_email') }}</dt><dd>{{ org.email }}</dd>
+    <dt>{{ t('admin.verifications.contact') }}</dt><dd>{{ org.contact_name }} · {{ org.contact_email }}</dd>
+    <dt>{{ t('admin.verifications.website') }}</dt><dd>{{ org.contact_website or '–' }}</dd>
+    <dt>{{ t('admin.verifications.phone') }}</dt><dd>{{ org.contact_phone or '–' }}</dd>
+    <dt>{{ t('admin.verifications.requested') }}</dt><dd>{{ fmt_dt(org.verification_requested_at) }}</dd>
+  </dl>
+  <div class="actions">
+    <form method="post" action="/admin/orgs/{{ org.id }}/verify" class="inline"><button type="submit">{{ t('admin.verifications.approve') }}</button></form>
+    <a class="btn secondary" href="/admin/orgs/{{ org.id }}/delete?notify=1">{{ t('admin.verifications.reject') }}</a>
+  </div>
+</div>
+{% endfor %}
+<p class="hint">{{ t('admin.verifications.website_note') }}</p>
+</div>
+{% endblock %}

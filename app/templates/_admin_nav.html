@@ -1,0 +1,5 @@
+<nav class="subnav" aria-label="{{ t('admin.nav.label') }}">
+  {% for key, href in [('dashboard','/admin'),('verifications','/admin/verifications'),('orgs','/admin/orgs'),('mail','/admin/mail'),('system','/admin/system'),('privacy','/admin/privacy'),('audit','/admin/audit')] %}
+  <a href="{{ href }}"{% if section == key %} aria-current="page"{% endif %}>{{ t('admin.nav.' ~ key) }}</a>
+  {% endfor %}
+</nav>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.orgs.title') }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block main %}
+<div class="wrap narrow wide">
+{% include "_admin_nav.html" %}
+<h1>{{ t('admin.orgs.title') }}</h1>
+{% if request.query_params.get('msg') == 'deleted' %}<div class="notice ok">{{ t('admin.flash.deleted') }}</div>{% endif %}
+<form method="get" action="/admin/orgs" class="filters">
+  <input type="text" name="q" value="{{ q }}" placeholder="{{ t('admin.orgs.search') }}" aria-label="{{ t('admin.orgs.search') }}">
+  <select name="status" aria-label="{{ t('admin.orgs.status') }}">
+    <option value="">{{ t('admin.orgs.all') }}</option>
+    {% for s in ['testmode','verified','unconfirmed','blocked'] %}<option value="{{ s }}"{% if status == s %} selected{% endif %}>{{ t('admin.status.' ~ s) }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="secondary">{{ t('admin.orgs.filter') }}</button>
+</form>
+<p class="hint">{{ t('admin.orgs.count', n=total) }}</p>
+<div class="table-wrap"><table>
+  <tr><th>{{ t('admin.orgs.name') }}</th><th>{{ t('admin.org.login_email') }}</th><th>{{ t('admin.orgs.status') }}</th><th>{{ t('admin.orgs.elections') }}</th><th>{{ t('admin.orgs.last_active') }}</th><th>{{ t('admin.orgs.created') }}</th></tr>
+  {% for org, st, n in orgs %}
+  <tr><td><a href="/admin/orgs/{{ org.id }}">{{ org.name }}</a></td><td>{{ org.email }}</td>
+      <td><span class="status {{ 'open' if st == 'verified' else ('aborted' if st == 'blocked' else '') }}">{{ t('admin.status.' ~ st) }}</span></td>
+      <td>{{ n }}</td><td>{% if org.last_active_at %}{{ fmt_date(org.last_active_at) }}{% else %}–{% endif %}</td><td>{{ fmt_date(org.created_at) }}</td></tr>
+  {% endfor %}
+</table></div>
+{% if pages > 1 %}<p class="hint">{{ t('admin.orgs.page', page=page, pages=pages) }}
+  {% if page > 1 %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status }}&page={{ page - 1 }}">←</a>{% endif %}
+  {% if page < pages %}<a href="/admin/orgs?q={{ q|urlencode }}&status={{ status }}&page={{ page + 1 }}">→</a>{% endif %}</p>{% endif %}
+</div>
+{% endblock %}
