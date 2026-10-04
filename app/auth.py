@@ -10,17 +10,25 @@ COOKIE_SECURE = settings.base_url.startswith("https")  # lokal über http sonst 
 serializer = URLSafeTimedSerializer(settings.secret_key, salt="session")
 
 
-def create_session_cookie(org_id: str) -> str:
-    return serializer.dumps({"org_id": org_id})
+def create_session_cookie(org_id: str, version: int = 0) -> str:
+    return serializer.dumps({"org_id": org_id, "v": version})
 
 
-def read_session(request: Request) -> str | None:
-    """Gibt org_id zurück, falls eine gültige Session vorliegt, sonst None."""
+def read_session_data(request: Request) -> tuple[str, int] | None:
+    """(org_id, Sitzungsversion) aus dem Cookie, sofern die Signatur gültig ist."""
     raw = request.cookies.get(SESSION_COOKIE)
     if not raw:
         return None
     try:
         data = serializer.loads(raw, max_age=SESSION_MAX_AGE)
-        return data.get("org_id")
     except (BadSignature, SignatureExpired):
         return None
+    org_id = data.get("org_id")
+    return (org_id, int(data.get("v", 0))) if org_id else None
+
+
+def read_session(request: Request) -> str | None:
+    """Gibt org_id zurück, falls das Cookie gültig signiert ist, sonst None.
+    Ob die Sitzung serverseitig noch gilt (nicht abgemeldet), prüft current_org()."""
+    data = read_session_data(request)
+    return data[0] if data else None

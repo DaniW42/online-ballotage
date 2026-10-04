@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     test_mode_daily_invitations: int = 10
 
     # Obergrenzen gegen Missbrauch und Überlast
-    max_recipients: int = 500          # Empfänger pro Abstimmung
+    max_recipients: int = 100          # Empfänger pro Abstimmung
     max_title_length: int = 200
     max_options: int = 20
     max_option_length: int = 100

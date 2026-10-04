@@ -79,7 +79,7 @@
     "anon_points": [
       "Stimmen und Einladungen liegen in getrennten Tabellen – ohne Fremdschlüssel, ohne gemeinsame ID.",
       "Es wird kein Zeitpunkt der Stimmabgabe gespeichert. Eine Zuordnung über Zeitnähe ist damit nicht möglich.",
-      "Mindestens drei Stimmen, sonst gibt es kein Ergebnis – damit keine einzelne Stimme erkennbar wird."
+      "Mindestens {min_voters_word} Stimmen, sonst gibt es kein Ergebnis – damit keine einzelne Stimme erkennbar wird."
     ],
     "anon_link": "Mehr zur Sicherheit",
     "diagram_label": "Schema: Die Tabellen für Einladungen und Stimmen haben keine Verbindung zueinander.",
@@ -134,7 +134,7 @@
       },
       {
         "t": "Empfänger einfügen",
-        "d": "Adressen beliebig formatiert einfügen. Mindestens drei sind nötig. Die Liste wird für die nächste Kugelung vorbefüllt, wenn du das möchtest."
+        "d": "Adressen beliebig formatiert einfügen. Mindestens {min_voters_word} sind nötig. Die Liste wird für die nächste Kugelung vorbefüllt, wenn du das möchtest."
       },
       {
         "t": "Verlauf beobachten",
@@ -164,7 +164,7 @@
     "rules_lead": "Einige Regeln sind bewusst fest eingebaut, weil sie die Anonymität schützen.",
     "rules": [
       {
-        "t": "Mindestens drei Empfänger und drei Stimmen",
+        "t": "Mindestens {min_voters_word} Empfänger und {min_voters_word} Stimmen",
         "d": "Bei weniger Beteiligung würde die einzelne Stimme erkennbar. Dann gibt es kein Ergebnis, und die Stimmen werden gelöscht."
       },
       {
@@ -213,7 +213,7 @@
       [
         "Einladung",
         "E-Mail-Adresse, Versandstatus, ob abgestimmt wurde (ja/nein), Hash des Links",
-        "30 Tage nach Abschluss oder Abbruch, dann gelöscht"
+        "{retention_days} Tage nach Abschluss oder Abbruch, dann gelöscht"
       ],
       [
         "Stimme",
@@ -254,7 +254,7 @@
       },
       {
         "t": "Mindestbeteiligung",
-        "p": "Eine Abstimmung braucht mindestens drei Empfänger. Ein Ergebnis wird nur angezeigt, wenn mindestens drei Stimmen abgegeben wurden. Andernfalls erscheint kein Ergebnis, und die Stimmen werden gelöscht."
+        "p": "Eine Abstimmung braucht mindestens {min_voters_word} Empfänger. Ein Ergebnis wird nur angezeigt, wenn mindestens {min_voters_word} Stimmen abgegeben wurden. Andernfalls erscheint kein Ergebnis, und die Stimmen werden gelöscht."
       },
       {
         "t": "Kein Zwischenstand, kein Nachladen",
@@ -262,7 +262,7 @@
       },
       {
         "t": "Login ohne Passwort",
-        "p": "Organisatoren melden sich per Einmal-Link an, der 15 Minuten gültig ist. Es gibt keine Passwörter, die gestohlen werden können. Anfragen sind pro Adresse und IP begrenzt, die Antwort verrät nicht, ob eine Adresse existiert. Sitzungen laufen über signierte, nur per HTTP übertragene Cookies mit `SameSite=Lax`. Formulare werden nur angenommen, wenn sie von dieser Seite selbst stammen; so kann keine fremde Webseite Aktionen in deinem Namen auslösen oder dir ein fremdes Konto unterschieben."
+        "p": "Organisatoren melden sich per Einmal-Link an, der {magic_minutes} Minuten gültig ist. Es gibt keine Passwörter, die gestohlen werden können. Anfragen sind pro Adresse und IP begrenzt, die Antwort verrät nicht, ob eine Adresse existiert. Sitzungen laufen über signierte, nur per HTTP übertragene Cookies mit `SameSite=Lax`. „Abmelden“ beendet serverseitig **alle** Sitzungen dieses Kontos auf allen Geräten. Formulare werden nur angenommen, wenn sie von dieser Seite selbst stammen; so kann keine fremde Webseite Aktionen in deinem Namen auslösen oder dir ein fremdes Konto unterschieben."
       },
       {
         "t": "Browser-Härtung",
@@ -278,11 +278,11 @@
       },
       {
         "t": "Schutz vor Missbrauch",
-        "p": "Neue Logen arbeiten im Testmodus (höchstens drei Empfänger je Abstimmung und zehn Einladungen pro Tag), bis der Betreiber sie verifiziert hat. Der Server versendet höchstens eine E-Mail pro Sekunde, neue Links für dieselbe Adresse sind begrenzt, und Eingaben haben feste Obergrenzen. Nie bestätigte Registrierungen werden nach 24 Stunden gelöscht."
+        "p": "Neue Logen arbeiten im Testmodus (höchstens {test_max_voters_word} Empfänger je Abstimmung und {test_daily_word} Einladungen pro Tag), bis der Betreiber sie verifiziert hat. Der Server versendet höchstens eine E-Mail pro Sekunde, neue Links für dieselbe Adresse sind begrenzt, und Eingaben haben feste Obergrenzen. Nie bestätigte Registrierungen werden nach 24 Stunden gelöscht."
       }
     ],
     "limits_title": "Die Grenzen – ehrlich benannt",
-    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank abfragt oder einen Datenbank-Export (z. B. `pg_dump`) liest, einschließlich Organisator und Administratoren.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Dasselbe gilt für jemanden mit Zugriff auf die rohen Datenbankdateien, Festplatten-Snapshots oder das Transaktionsprotokoll (WAL): Dort können alte Zeilenversionen noch eine Weile lesbar sein. Betreibe eine Instanz deshalb in der Hand einer Stelle, der deine Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.\n\n**Der Organisator bestimmt die Empfänger.** Wer eine Abstimmung anlegt, sieht, wer bereits abgestimmt hat, und kann eigene Adressen einladen. Damit lässt sich die Mindestzahl von drei Stimmen mit eigenen Stimmen auffüllen und so die Stimme einer einzelnen Person erkennen. Technisch verhindern lässt sich das nicht; die Software schützt die Anonymität gegenüber der Datenbank, nicht gegenüber einem Organisator, der die Empfängerliste manipuliert. Die Loge sollte deshalb Empfängerliste und Beteiligung transparent machen.",
+    "limits": "Das System schützt zuverlässig gegen jeden, der **nachträglich** die Datenbank abfragt oder einen Datenbank-Export (z. B. `pg_dump`) liest, einschließlich Organisator und Administratoren.\n\nEs schützt **nicht** gegen jemanden, der den laufenden Server kontrolliert, den Programmcode verändert oder alle Server- und Proxy-Logs mitliest: Der Server sieht beim Abstimmen kurz Link und Auswahl im selben Vorgang. Dasselbe gilt für jemanden mit Zugriff auf die rohen Datenbankdateien, Festplatten-Snapshots oder das Transaktionsprotokoll (WAL): Dort können alte Zeilenversionen noch eine Weile lesbar sein. Betreibe eine Instanz deshalb in der Hand einer Stelle, der deine Mitglieder vertrauen – oder selbst.\n\nBei einstimmigen Ergebnissen ist die Wahl jedes Einzelnen logischerweise bekannt, und eine Person mit mehreren E-Mail-Adressen kann mehrfach eingeladen werden. Beides lässt sich technisch nicht verhindern.\n\n**Der Organisator bestimmt die Empfänger.** Wer eine Abstimmung anlegt, sieht, wer bereits abgestimmt hat, und kann eigene Adressen einladen. Damit lässt sich die Mindestzahl von {min_voters_word} Stimmen mit eigenen Stimmen auffüllen und so die Stimme einer einzelnen Person erkennen. Technisch verhindern lässt sich das nicht; die Software schützt die Anonymität gegenüber der Datenbank, nicht gegenüber einem Organisator, der die Empfängerliste manipuliert. Die Loge sollte deshalb Empfängerliste und Beteiligung transparent machen.",
     "report_title": "Schwachstelle gefunden?",
     "report": "Bitte melde sie vertraulich. Kontaktdaten stehen in der Datei [security.txt](/.well-known/security.txt) und im [Impressum](/impressum). Wir bedanken uns und beheben berechtigte Meldungen zügig.",
     "source_title": "Nachprüfen statt glauben",
@@ -303,7 +303,7 @@
           },
           {
             "q": "Brauche ich ein Passwort?",
-            "a": "Nein. Organisatoren melden sich mit einem Link an, den sie per E-Mail erhalten (15 Minuten gültig, einmal verwendbar). Wähler brauchen gar kein Konto, nur den Link aus ihrer Einladung."
+            "a": "Nein. Organisatoren melden sich mit einem Link an, den sie per E-Mail erhalten ({magic_minutes} Minuten gültig, einmal verwendbar). Wähler brauchen gar kein Konto, nur den Link aus ihrer Einladung."
           },
           {
             "q": "Unter welcher Lizenz steht es?",
@@ -311,7 +311,7 @@
           },
           {
             "q": "Was ist der Testmodus, und warum muss ich meine Loge verifizieren?",
-            "a": "Damit niemand den Dienst missbraucht, um fremde Adressen mit E-Mails zu überhäufen, sind neue Logen zunächst im **Testmodus**: Abstimmungen mit bis zu drei Empfängern sind sofort möglich, so lässt sich alles ausprobieren. Für größere Abstimmungen ist einmalig eine Verifizierung nötig. Dazu gibst du im Menü „Konto“ bzw. über den Hinweis im Dashboard den Namen einer verantwortlichen Person, deren E-Mail-Adresse und die Webseite deiner Loge, deines Vereins oder Clubs **oder** eine Telefonnummer an. Der Betreiber prüft den Antrag und schaltet deine Loge frei oder lehnt ab; du wirst per E-Mail informiert. Bei einer Ablehnung werden dein Konto und alle Daten gelöscht."
+            "a": "Damit niemand den Dienst missbraucht, um fremde Adressen mit E-Mails zu überhäufen, sind neue Logen zunächst im **Testmodus**: Abstimmungen mit bis zu {test_max_voters_word} Empfängern sind sofort möglich, so lässt sich alles ausprobieren. Für größere Abstimmungen ist einmalig eine Verifizierung nötig. Dazu gibst du im Menü „Konto“ bzw. über den Hinweis im Dashboard den Namen einer verantwortlichen Person, deren E-Mail-Adresse und die Webseite deiner Loge, deines Vereins oder Clubs **oder** eine Telefonnummer an. Der Betreiber prüft den Antrag und schaltet deine Loge frei oder lehnt ab; du wirst per E-Mail informiert. Bei einer Ablehnung werden dein Konto und alle Daten gelöscht."
           }
         ]
       },
@@ -324,7 +324,7 @@
           },
           {
             "q": "Kann der Organisator sehen, wer wie abgestimmt hat?",
-            "a": "Nein. Er sieht, wer **schon abgestimmt hat** und wer noch nicht, aber nicht, wie. Das Ergebnis erscheint erst nach Abschluss. Eine Grenze gibt es: Der Organisator bestimmt die Empfänger. Lädt er eigene Adressen ein, kann er die Mindestzahl von drei Stimmen selbst auffüllen und so in einer sehr kleinen Abstimmung auf einzelne Stimmen schließen. Macht die Empfängerliste deshalb in der Loge transparent."
+            "a": "Nein. Er sieht, wer **schon abgestimmt hat** und wer noch nicht, aber nicht, wie. Das Ergebnis erscheint erst nach Abschluss. Eine Grenze gibt es: Der Organisator bestimmt die Empfänger. Lädt er eigene Adressen ein, kann er die Mindestzahl von {min_voters_word} Stimmen selbst auffüllen und so in einer sehr kleinen Abstimmung auf einzelne Stimmen schließen. Macht die Empfängerliste deshalb in der Loge transparent."
           },
           {
             "q": "Gegen wen schützt das, und gegen wen nicht?",
@@ -332,7 +332,7 @@
           },
           {
             "q": "Was passiert bei sehr kleinen Gruppen?",
-            "a": "Eine Abstimmung braucht mindestens **drei** E-Mail-Adressen. Ein Ergebnis wird außerdem nur angezeigt, wenn mindestens drei Stimmen abgegeben wurden. Bei weniger würde die einzelne Stimme erkennbar. In diesem Fall wird kein Ergebnis angezeigt, und die abgegebenen Stimmen werden gelöscht.\n\nAuch bei größeren Gruppen gilt: Fällt das Ergebnis einstimmig aus, ist die Wahl jedes Einzelnen damit logischerweise bekannt. Das lässt sich technisch nicht vermeiden."
+            "a": "Eine Abstimmung braucht mindestens **{min_voters_word}** E-Mail-Adressen. Ein Ergebnis wird außerdem nur angezeigt, wenn mindestens {min_voters_word} Stimmen abgegeben wurden. Bei weniger würde die einzelne Stimme erkennbar. In diesem Fall wird kein Ergebnis angezeigt, und die abgegebenen Stimmen werden gelöscht.\n\nAuch bei größeren Gruppen gilt: Fällt das Ergebnis einstimmig aus, ist die Wahl jedes Einzelnen damit logischerweise bekannt. Das lässt sich technisch nicht vermeiden."
           },
           {
             "q": "Kann dieselbe Person zweimal abstimmen?",
@@ -385,7 +385,7 @@
           },
           {
             "q": "Gibt es Erinnerungen?",
-            "a": "Ja, standardmäßig aktiv (abwählbar unter „Erweiterte Einstellungen“). **24 Stunden vor Fristende** erhalten alle, die noch nicht abgestimmt haben, eine Erinnerung; der Zeitpunkt steht auf der Detailseite. Die Prüfung läuft im Hintergrund alle 30 Sekunden. Die Erinnerung enthält einen **neuen** Link; der früher zugesandte Link wird damit ungültig, und die Mail weist darauf hin. Bei Abstimmungen, die höchstens 25 Stunden laufen, wird keine Erinnerung versendet. Wird das Ende verlängert, wird die Erinnerung neu geplant."
+            "a": "Ja, standardmäßig aktiv (abwählbar unter „Erweiterte Einstellungen“). **{reminder_hours} Stunden vor Fristende** erhalten alle, die noch nicht abgestimmt haben, eine Erinnerung; der Zeitpunkt steht auf der Detailseite. Die Prüfung läuft im Hintergrund alle 30 Sekunden. Die Erinnerung enthält einen **neuen** Link; der früher zugesandte Link wird damit ungültig, und die Mail weist darauf hin. Bei Abstimmungen, die höchstens {reminder_hours_plus} Stunden laufen, wird keine Erinnerung versendet. Wird das Ende verlängert, wird die Erinnerung neu geplant."
           },
           {
             "q": "Kann ich die Empfängerliste wiederverwenden?",
@@ -407,7 +407,7 @@
         "items": [
           {
             "q": "Welche Daten werden gespeichert, und wie lange?",
-            "a": "- **Organisation:** Name der Loge und E-Mail-Adresse für den Login.\n- **Einladungen:** E-Mail-Adresse, Versandstatus und „hat abgestimmt“ je Wähler. Sie werden **30 Tage nach Abschluss oder Abbruch gelöscht**. Die Anzahl Eingeladener und Beteiligter bleibt als Zahl erhalten.\n- **Stimmen:** Auswahl und Zufalls-ID, ohne Zeitstempel, ohne Personenbezug. Sie bleiben für das Ergebnis erhalten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen unter drei Stimmen werden sofort gelöscht.\n- **Gespeicherte Empfängerliste:** bis du sie löschst oder änderst.\n- **Konto und Abstimmungen:** bis du sie selbst löschst.\n- **Login-Links:** werden nach Ablauf aufgeräumt.\n\nDetails stehen in der [Datenschutzerklärung](/datenschutz)."
+            "a": "- **Organisation:** Name der Loge und E-Mail-Adresse für den Login.\n- **Einladungen:** E-Mail-Adresse, Versandstatus und „hat abgestimmt“ je Wähler. Sie werden **{retention_days} Tage nach Abschluss oder Abbruch gelöscht**. Die Anzahl Eingeladener und Beteiligter bleibt als Zahl erhalten.\n- **Stimmen:** Auswahl und Zufalls-ID, ohne Zeitstempel, ohne Personenbezug. Sie bleiben für das Ergebnis erhalten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen unter {min_voters_word} Stimmen werden sofort gelöscht.\n- **Gespeicherte Empfängerliste:** bis du sie löschst oder änderst.\n- **Konto und Abstimmungen:** bis du sie selbst löschst.\n- **Login-Links:** werden nach Ablauf aufgeräumt.\n\nDetails stehen in der [Datenschutzerklärung](/datenschutz)."
           },
           {
             "q": "Werden Daten an Dritte übertragen?",
@@ -525,7 +525,7 @@
       },
       {
         "t": "5. Durchführung von Abstimmungen",
-        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden 30 Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als drei Stimmen werden sofort gelöscht. Titel, Zeitraum, Optionen und das Ergebnis (Anzahl je Option) einer Abstimmung bleiben gespeichert, bis die Organisatoren die Abstimmung löschen. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
+        "p": "Wenn Organisatoren eine Abstimmung anlegen, geben sie die E-Mail-Adressen der Stimmberechtigten ein. **Für diese Daten ist die jeweilige Loge bzw. der Verein verantwortlich; wir verarbeiten sie in deren Auftrag** (Art. 28 DSGVO). Organisatoren sind dafür verantwortlich, dass sie die Adressen verwenden dürfen und Betroffene informiert sind.\n\nGespeichert werden: die E-Mail-Adresse, der Versandstatus der Einladung, ob mit dem Link bereits abgestimmt wurde (ja/nein) und der Hash des Links. Die Stimme selbst wird getrennt davon und ohne Verbindung zur Einladung, ohne Zeitstempel und ohne Personenbezug gespeichert.\n\nDie Einladungsdaten werden {retention_days} Tage nach Abschluss oder Abbruch der Abstimmung gelöscht; übrig bleibt nur die Anzahl der Eingeladenen und Beteiligten. Stimmen aus abgebrochenen Abstimmungen und aus Abstimmungen mit weniger als {min_voters_word} Stimmen werden sofort gelöscht. Titel, Zeitraum, Optionen und das Ergebnis (Anzahl je Option) einer Abstimmung bleiben gespeichert, bis die Organisatoren die Abstimmung löschen. Organisatoren können außerdem eine Empfängerliste für künftige Abstimmungen speichern lassen und jederzeit löschen.\n\nHinweis: Bereits die Mitgliedschaft in einer Vereinigung kann Rückschlüsse auf weltanschauliche Überzeugungen zulassen. Organisatoren sollten dies bei der Auswahl der Empfänger berücksichtigen."
       },
       {
         "t": "6. E-Mail-Versand",
@@ -590,7 +590,8 @@
       "submit": "Jetzt anmelden"
     },
     "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
-    "invalid_name": "Bitte gib den Namen deiner Loge oder deines Vereins an (höchstens 200 Zeichen)."
+    "invalid_name": "Bitte gib den Namen deiner Loge oder deines Vereins an (höchstens 200 Zeichen).",
+    "logout_note": "Abmelden beendet alle Sitzungen auf allen Geräten."
   },
   "dashboard": {
     "meta_title": "Übersicht",
@@ -637,7 +638,7 @@
       "options": "Abstimmungsoptionen",
       "options_hint": "Komma-getrennt, mindestens zwei. Standard ist die klassische Kugelung.",
       "reminder": "Erinnerung vor Fristende an alle, die noch nicht abgestimmt haben",
-      "reminder_hint": "Wird {h} Stunden vor Fristende versendet (entfällt bei Abstimmungen, die höchstens {h1} Stunden laufen). Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
+      "reminder_hint": "Wird {reminder_hours} Stunden vor Fristende versendet (entfällt bei Abstimmungen, die höchstens {reminder_hours_plus} Stunden laufen). Die Erinnerung enthält einen neuen Link; der ursprüngliche wird damit ungültig.",
       "receipts": "Stimmen nachprüfbar machen",
       "receipts_hint": "Wähler erhalten nach der Stimmabgabe einen Quittungscode. Nach Abschluss sehen alle Eingeladenen über ihren Abstimmungslink eine Liste aller Stimmen (Code und Auswahl) – und damit auch das Ergebnis. So kann jede Person selbst prüfen, dass die eigene Stimme gezählt wurde. Nur aktivieren, wenn die Loge das ausdrücklich möchte.",
       "submit": "Abstimmung erstellen und einladen",

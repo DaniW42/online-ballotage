@@ -173,3 +173,42 @@ def test_legal_texts_keep_formal_address():
     catalog = i18n.CATALOGS["de"]
     legal = " ".join(t for k, v in catalog.items() if k.startswith(LEGAL_SECTIONS) for _, t in _strings(v, k))
     assert re.search(r"\bSie\b", legal) and "du " not in legal.lower()
+
+
+PUBLIC = ["/", "/how-it-works", "/security", "/faq", "/self-hosting", "/source", "/impressum", "/datenschutz"]
+
+
+def test_configurable_numbers_are_shown_dynamically(anon, monkeypatch):
+    from app.config import settings
+    pages = {p: anon.get(p).text for p in PUBLIC}
+    assert "30 Tage" in pages["/faq"] and "drei" in pages["/faq"] and "15 Minuten" in pages["/faq"]
+    monkeypatch.setattr(settings, "min_voters", 5)
+    monkeypatch.setattr(settings, "retention_days", 14)
+    monkeypatch.setattr(settings, "magic_link_ttl_minutes", 10)
+    monkeypatch.setattr(settings, "reminder_hours_before", 12)
+    monkeypatch.setattr(settings, "test_mode_max_voters", 4)
+    monkeypatch.setattr(settings, "test_mode_daily_invitations", 20)
+    faq, security, privacy = (anon.get(p).text for p in ("/faq", "/security", "/datenschutz"))
+    assert "14 Tage" in faq and "14 Tage" in security and "14 Tage" in privacy
+    assert "fünf" in faq and "fünf" in security and "fünf" in privacy
+    assert "10 Minuten" in faq and "10 Minuten" in security
+    assert "12 Stunden vor Fristende" in faq and "13 Stunden" in faq
+    assert "vier Empfänger" in security and "20 Einladungen" in security
+    assert "30 Tage" not in faq and "30 Tage nach" not in privacy
+
+
+def test_no_unresolved_placeholders_on_public_pages(anon):
+    for path in PUBLIC + ["/login", "/register"]:
+        html = anon.get(path).text
+        assert not re.search(r"\{[a-z_0-9]+\}", html), (path, re.findall(r"\{[a-z_0-9]+\}", html))
+
+
+def test_global_placeholders_are_the_same_in_every_language():
+    """Platzhalter-Konsistenz gilt auch für die Konfigurationswerte."""
+    default = i18n.CATALOGS[i18n.DEFAULT_LANG]
+    assert any("{min_voters_word}" in str(v) for v in default.values())
+
+
+def test_number_words():
+    from app import i18n as i
+    assert i._NUMBER_WORDS[3] == "drei"

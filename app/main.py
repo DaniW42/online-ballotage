@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import i18n
-from .auth import create_session_cookie, read_session, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
+from .auth import create_session_cookie, read_session, read_session_data, SESSION_COOKIE, SESSION_MAX_AGE, COOKIE_SECURE
 from .config import settings
 from .db import get_db, new_uuid, Organization, MagicLink, Election, Invitation, Vote
 from .mail import (
@@ -61,7 +61,7 @@ def _template_context(request: Request) -> dict:
     return {
         "lang": lang,
         "t": lambda key, **kw: i18n.t(lang, key, **kw),
-        "tl": lambda key: i18n.raw(lang, key),
+        "tl": lambda key: i18n.tl(lang, key),
         "fmt_dt": lambda dt: i18n.fmt_datetime(lang, dt),
         "fmt_date": lambda dt: i18n.fmt_date(lang, dt),
         "languages": i18n.languages(),
@@ -174,10 +174,12 @@ def _deny(request: Request):
 
 
 def current_org(request: Request, db: Session) -> Organization | None:
-    org_id = read_session(request)
-    if not org_id:
+    session = read_session_data(request)
+    if not session:
         return None
-    return db.query(Organization).filter(Organization.id == org_id).first()
+    org = db.query(Organization).filter(Organization.id == session[0]).first()
+    # Abgemeldete Sitzungen (alte Version im Cookie) gelten nicht mehr
+    return org if org and org.session_version == session[1] else None
 
 
 # ---------- Öffentliche Seiten ----------
@@ -354,7 +356,7 @@ def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
     response = RedirectResponse("/dashboard", status_code=303)
     response.set_cookie(
         SESSION_COOKIE,
-        create_session_cookie(link.org_id),
+        create_session_cookie(link.org_id, org.session_version if org else 0),
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
@@ -364,7 +366,12 @@ def auth_via_magic_link(token: str, db: Session = Depends(get_db)):
 
 
 @app.post("/logout")
-def logout():
+def logout(request: Request, db: Session = Depends(get_db)):
+    """Meldet serverseitig ALLE Sitzungen des Kontos ab (auch auf anderen Geräten)."""
+    org = current_org(request, db)
+    if org:
+        org.session_version += 1
+        db.commit()
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(SESSION_COOKIE)
     return response

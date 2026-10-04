@@ -54,7 +54,7 @@ Zwei Varianten, ausführlich unter `/self-hosting` bzw. in `app/locales/de.json`
 Mailpit (Override-Datei) startet dabei **nicht**. Vor dem öffentlichen Betrieb müssen die `LEGAL_*`-Angaben (Impressum) und `ADMIN_EMAIL` gesetzt sein.
 
 Konfiguration über Umgebungsvariablen: siehe `.env.example` und `app/config.py`
-(u. a. `TIMEZONE`, `ADMIN_EMAIL`, `TEST_MODE_MAX_VOTERS`, `TEST_MODE_DAILY_INVITATIONS`, `MAX_RECIPIENTS`,
+(u. a. `TIMEZONE`, `ADMIN_EMAIL`, `TEST_MODE_MAX_VOTERS`, `TEST_MODE_DAILY_INVITATIONS`, `MAX_RECIPIENTS` (Standard 100),
 `MAIL_MIN_INTERVAL_SECONDS`, `MIN_VOTERS`, `RETENTION_DAYS`, `APP_BIND`,
 `REMINDER_HOURS_BEFORE`, `RATE_LIMIT_PER_EMAIL`, `RATE_LIMIT_PER_IP`, `LEGAL_*`).
 `SECRET_KEY` muss mindestens 32 Zeichen lang sein, sonst startet die App nicht.
@@ -72,6 +72,9 @@ Mailserver nutzt STARTTLS (`SMTP_USE_TLS`) oder implizites TLS (`SMTP_SSL`) **mi
 – der Mailserver braucht also ein gültiges Zertifikat für `SMTP_HOST`. Geht der Prozess während
 eines Versands neu an, werden die betroffenen Einladungen nach 2 Stunden als Fehler markiert
 („Neuer Link“ hilft).
+
+`RETENTION_DAYS`, `MIN_VOTERS`, `REMINDER_HOURS_BEFORE` und `MAGIC_LINK_TTL_MINUTES` erscheinen automatisch in
+FAQ, Sicherheitsseite und Datenschutzerklärung (Platzhalter in `app/locales/*.json`, siehe docs/TRANSLATING.md).
 
 Betrieb mit genau **einem** uvicorn-Worker (Wartungslauf und Rate-Limits liegen im Prozess).
 

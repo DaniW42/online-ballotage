@@ -27,6 +27,9 @@ class Organization(Base):
     verified = Column(Boolean, default=False, nullable=False)
     # Erster erfolgreicher Login. Nie bestätigte Registrierungen werden nach 24 h gelöscht.
     confirmed_at = Column(DateTime, nullable=True)
+    # Wird beim Abmelden erhöht: macht alle bisher ausgestellten Sitzungs-Cookies ungültig
+    # (serverseitige Abmeldung auf allen Geräten).
+    session_version = Column(Integer, default=0, nullable=False, server_default="0")
     # Zuletzt verwendete Empfängerliste; füllt das Formular für die nächste Kugelung vor.
     # Kann jederzeit gelöscht werden (Datensparsamkeit).
     saved_recipients = Column(JSON, default=list, nullable=False)

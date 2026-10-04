@@ -209,3 +209,45 @@ def test_stalled_sends_are_marked(create_election, orga, db):
     db.expire_all()
     assert db.query(Invitation).filter_by(email="b@x.test").one().send_error == services.STALLED_SEND_ERROR
     assert db.query(Invitation).filter_by(email="a@x.test").one().send_error is None
+
+
+# ---------- Serverseitige Abmeldung ----------
+
+def test_logout_ends_all_sessions_on_all_devices(outbox):
+    phone = make_login(outbox)
+    laptop = TestClient(app, follow_redirects=False)
+    laptop.cookies.set("session", phone.cookies.get("session"))   # dieselbe Anmeldung auf einem zweiten Gerät
+    assert phone.get("/dashboard").status_code == 200 and laptop.get("/dashboard").status_code == 200
+    phone.post("/logout")
+    assert laptop.get("/dashboard").headers["location"] == "/login"   # Cookie ist serverseitig ungültig
+    assert phone.get("/dashboard").headers["location"] == "/login"
+
+
+def test_stolen_cookie_is_useless_after_logout(orga):
+    stolen = orga.cookies.get("session")
+    orga.post("/logout")
+    attacker = TestClient(app, follow_redirects=False)
+    attacker.cookies.set("session", stolen)
+    assert attacker.get("/dashboard").headers["location"] == "/login"
+    assert attacker.post("/elections/new", data={}).status_code in (303, 422)
+
+
+def test_login_works_again_after_logout(orga, outbox):
+    orga.post("/logout")
+    orga.post("/login", data={"email": "orga@loge.test"})
+    token = re.search(r"/auth/(\S+)", outbox.to("orga@loge.test")[-1].body).group(1)
+    assert orga.post(f"/auth/{token}").status_code == 303
+    assert orga.get("/dashboard").status_code == 200
+
+
+def test_old_cookies_without_version_still_work(orga, db):
+    from app.auth import serializer
+    org = db.query(Organization).one()
+    legacy = serializer.dumps({"org_id": org.id})        # Cookie aus der Zeit vor der Versionierung
+    client = TestClient(app, follow_redirects=False)
+    client.cookies.set("session", legacy)
+    assert client.get("/dashboard").status_code == 200
+
+
+def test_defaults():
+    assert settings.max_recipients == 100

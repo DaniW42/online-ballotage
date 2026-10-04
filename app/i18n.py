@@ -10,6 +10,7 @@ from pathlib import Path
 
 from markupsafe import Markup, escape
 
+from .config import settings
 from .timeutil import to_local
 
 log = logging.getLogger("kugelung")
@@ -46,6 +47,43 @@ def languages() -> list[tuple[str, str]]:
     return [(code, cat.get("meta.name", code)) for code, cat in CATALOGS.items()]
 
 
+_NUMBER_WORDS = {1: "ein", 2: "zwei", 3: "drei", 4: "vier", 5: "fünf", 6: "sechs", 7: "sieben",
+                 8: "acht", 9: "neun", 10: "zehn", 11: "elf", 12: "zwölf"}
+
+
+def _globals() -> dict[str, str]:
+    """Werte aus der Konfiguration, die in Texten als {platzhalter} stehen dürfen.
+    Zahlwörter (…_word) gibt es nur für 1-12 (deutsch), sonst die Ziffer."""
+    def word(n: int) -> str:
+        return _NUMBER_WORDS.get(n, str(n))
+    return {
+        "min_voters": str(settings.min_voters),
+        "min_voters_word": word(settings.min_voters),
+        "test_max_voters_word": word(settings.test_mode_max_voters),
+        "test_daily_word": word(settings.test_mode_daily_invitations),
+        "retention_days": str(settings.retention_days),
+        "reminder_hours": str(settings.reminder_hours_before),
+        "reminder_hours_plus": str(settings.reminder_hours_before + 1),
+        "magic_minutes": str(settings.magic_link_ttl_minutes),
+    }
+
+
+_GLOBAL_PLACEHOLDER = re.compile(r"\{(min_voters_word|min_voters|test_max_voters_word|test_daily_word|"
+                                 r"retention_days|reminder_hours_plus|reminder_hours|magic_minutes)\}")
+
+
+def fill_globals(value):
+    """Ersetzt Konfigurations-Platzhalter in Strings (auch in Listen/Dicts)."""
+    if isinstance(value, str):
+        values = _globals()
+        return _GLOBAL_PLACEHOLDER.sub(lambda m: values[m.group(1)], value)
+    if isinstance(value, list):
+        return [fill_globals(v) for v in value]
+    if isinstance(value, dict):
+        return {k: fill_globals(v) for k, v in value.items()}
+    return value
+
+
 def raw(lang: str, key: str):
     """Rohwert (String oder Liste) mit Rückfall auf die Standardsprache."""
     for code in (lang, DEFAULT_LANG):
@@ -57,10 +95,15 @@ def raw(lang: str, key: str):
 
 
 def t(lang: str, key: str, **params) -> str:
-    value = raw(lang, key)
+    value = fill_globals(raw(lang, key))
     if params and isinstance(value, str):
         return value.format(**params)
     return value
+
+
+def tl(lang: str, key: str):
+    """Liste/Struktur aus der Sprachdatei, Konfigurations-Platzhalter eingesetzt."""
+    return fill_globals(raw(lang, key))
 
 
 def pick_language(cookie_value: str | None, accept_language: str | None) -> str:

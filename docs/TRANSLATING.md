@@ -16,3 +16,11 @@ Der Code kennt keine festen Texte.
 Sprachwahl: Cookie `lang` (über `/lang/<code>`), sonst `Accept-Language` des Browsers, sonst Deutsch.
 Fehlt ein Schlüssel in einer Sprache, wird der deutsche Text angezeigt.
 E-Mails und die Abstimmungsseiten der Wähler erscheinen in der Sprache, in der die Abstimmung angelegt wurde.
+
+## Platzhalter aus der Konfiguration
+
+Texte dürfen diese Platzhalter enthalten; sie werden beim Anzeigen aus der Konfiguration eingesetzt,
+auch in Listen (FAQ, Sicherheitsseite): `{min_voters}`, `{min_voters_word}` (Zahlwort, z. B. „drei“),
+`{test_max_voters_word}`, `{test_daily_word}`, `{retention_days}`, `{reminder_hours}`,
+`{reminder_hours_plus}`, `{magic_minutes}`. Zahlwörter gibt es für 1–12 (deutsch), sonst die Ziffer;
+für andere Sprachen die Zahlwörter in `app/i18n.py` (`_NUMBER_WORDS`) ergänzen oder die Ziffern-Platzhalter nutzen.
